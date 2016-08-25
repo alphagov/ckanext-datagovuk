@@ -21,7 +21,8 @@ def process(source, output):
 def clean_and_write(entry):
     dataset = json.loads(entry)
 
-    for val in ['individual_resources', 'additional_resources', 'timeseries_resources']:
+    for val in ['individual_resources', 'additional_resources', 'timeseries_resources',
+                'tags', 'schema', 'codelist']:
         if val in dataset:
             del dataset[val]
 
