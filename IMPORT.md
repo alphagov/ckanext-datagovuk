@@ -1,23 +1,19 @@
 # Importing existing data
 
-To import existing data into this CKAN from DGU, you should take the following steps.
+These steps import existing data into this CKAN from the existing data.gov.uk:
 
 1. ssh into the vagrant box of this repo:
 
-    vagrant ssh
+       vagrant ssh
 
-2. Activate the Virtualenv:
+2. You will also need an apikey from the source server to download users.
 
-    . /usr/lib/ckan/bin/activate
-
-3. You will also need an apikey from the source server to download users.
-
-4. Ensure the local db is empty - returns [] for these:
+3. Ensure the local db is empty. These commands should both return []:
 
        ckanapi action package_list -r http://127.0.0.1:8080
        ckanapi action organization_list -r http://127.0.0.1:8080
 
-   And this should only have the "dgu" user:
+   And this one should only return the "dgu" user:
 
        ckanapi action user_list -r http://127.0.0.1:8080
 
@@ -28,7 +24,7 @@ To import existing data into this CKAN from DGU, you should take the following s
        sudo -u postgres createdb ckan -E UTF-8 -T template_postgis -O dgu
        paster --plugin=ckan db init -c /etc/ckan/ckan.ini
 
-5. Get data from remote CKAN to local files. This takes a long time.
+4. Get data from remote CKAN to local files.
 
 ```
 mkdir ~/dumps
@@ -45,12 +41,14 @@ curl https://data.gov.uk/data/dumps/data.gov.uk-ckan-meta-data-latest.organizati
 # ckanapi dump users --all -O users -z  -p 4  -r https://test.data.gov.uk
 ```
 
-6. Load the organization data into this box's CKAN:
+5. Load the organization data into this box's CKAN:
 
-    ckanapi load organizations -I organizations.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+       ckanapi load organizations -I organizations.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
-7. Migrate the dataset data and then import:
+6. Migrate the dataset data:
 
-    python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
-    ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+       python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
 
+7. Import the dataset data (this takes about an hour):
+
+       ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
