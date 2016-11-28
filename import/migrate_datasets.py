@@ -61,6 +61,16 @@ def clean_and_write(dataset_json):
                 ))
         keys_to_delete.append(key)
 
+    # Resource qa & archiver
+    # Need to be converted from a dict (which ends up as a single extra
+    # like: "qa": "{u'updated': u'2016-11-20T23:31:02.535445', ...
+    # to actual JSON like:
+    #       "qa": "{\"updated\": \"2016-11-20T23:31:02.535445\", ...
+    for res in dataset['resources']:
+        for key in ['qa', 'archiver']:
+            if key in res:
+                res[key] = json.dumps(res[key])
+
     # Delete keys
     for key in keys_to_delete:
         if key in dataset:
