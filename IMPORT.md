@@ -1,14 +1,12 @@
 # Importing existing data
 
-These steps import existing data into this CKAN from the existing data.gov.uk:
+These steps import existing data into this CKAN from the existing data.gov.uk.
 
 1. ssh into the vagrant box of this repo:
 
        vagrant ssh
 
-2. You will also need an apikey from the source server to download users.
-
-3. Ensure the local db is empty. These commands should both return []:
+2. Ensure the local db is empty. These commands should both return []:
 
        ckanapi action package_list -r http://127.0.0.1:8080
        ckanapi action organization_list -r http://127.0.0.1:8080
@@ -24,7 +22,7 @@ These steps import existing data into this CKAN from the existing data.gov.uk:
        sudo -u postgres createdb ckan -E UTF-8 -T template_postgis -O dgu
        paster --plugin=ckan db init -c /etc/ckan/ckan.ini
 
-4. Get data from remote CKAN to local files.
+3. Get data from remote CKAN to local files.
 
 ```
 mkdir ~/dumps
@@ -45,7 +43,7 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
 ```
 
-5. Migrate the user data:
+4. Migrate the user data:
 
        python /vagrant/import/migrate_users.py users.jsonl.gz drupal_users_table.csv.gz users_migrated.jsonl.gz
 
@@ -59,18 +57,18 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
        git pull origin print-result-stats
        cd ~/dumps
 
-6. Load the user data (into this box's CKAN):
+5. Load the user data (into this box's CKAN):
 
        ckanapi load users -I users_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
-7. Load the organization data (into this box's CKAN):
+6. Load the organization data (into this box's CKAN):
 
        ckanapi load organizations -I organizations.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
-8. Migrate the dataset data:
+7. Migrate the dataset data:
 
        python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
 
-9. Import the dataset data (this takes about an hour):
+8. Import the dataset data (this takes about an hour):
 
        ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
