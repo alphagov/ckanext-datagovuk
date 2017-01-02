@@ -30,8 +30,9 @@ These steps import existing data into this CKAN from the existing data.gov.uk:
 mkdir ~/dumps
 cd ~/dumps
 curl https://data.gov.uk/data/dumps/data.gov.uk-ckan-meta-data-latest.v2.jsonl.gz -o datasets.jsonl.gz
-rsync -L --progress co@co-prod2.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_private_data/users.jsonl.gz users.jsonl.gz
-rsync -L --progress co@co-prod2.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_private_data/data.gov.uk-ckan-meta-data-latest.organizations.jsonl.gz organizations.jsonl.gz
+rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_private_data/users.jsonl.gz users.jsonl.gz
+rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_private_data/data.gov.uk-ckan-meta-data-latest.organizations.jsonl.gz organizations.jsonl.gz
+rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_private_data/drupal_users_table.csv.gz drupal_users_table.csv.gz
 
 # Alternatively get the organizations without the editor/admins:
 # curl https://data.gov.uk/data/dumps/data.gov.uk-ckan-meta-data-latest.organizations.jsonl.gz -o organizations.jsonl.gz
@@ -44,20 +45,32 @@ rsync -L --progress co@co-prod2.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
 ```
 
-5. Load the user data (into this box's CKAN):
+5. Migrate the user data:
 
-       ckanapi load users -I users.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+       python /vagrant/import/migrate_users.py users.jsonl.gz drupal_users_table.csv.gz users_migrated.jsonl.gz
 
-   TODO get this working - currently it complains on missing password_hash
+*. Optional - upgrade ckanapi so that it summarizes load errors
 
-6. Load the organization data (into this box's CKAN):
+       sudo /usr/lib/ckan/bin/pip uninstall ckanapi
+       cd ~
+       git clone git@github.com:ckan/ckanapi.git
+       sudo /usr/lib/ckan/bin/pip install -e ckanapi
+       cd ckanapi
+       git pull origin print-result-stats
+       cd ~/dumps
+
+6. Load the user data (into this box's CKAN):
+
+       ckanapi load users -I users_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+
+7. Load the organization data (into this box's CKAN):
 
        ckanapi load organizations -I organizations.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
-7. Migrate the dataset data:
+8. Migrate the dataset data:
 
        python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
 
-8. Import the dataset data (this takes about an hour):
+9. Import the dataset data (this takes about an hour):
 
        ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
