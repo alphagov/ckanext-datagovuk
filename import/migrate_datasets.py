@@ -13,6 +13,11 @@ import sys
 import gzip
 import re
 
+from running_stats import Stats
+
+args = None
+stats = Stats()
+
 def process(source, output):
     with gzip.open(source, 'rb') as input_f, \
             gzip.open(output, 'wb') as output_f:
@@ -20,6 +25,9 @@ def process(source, output):
         for line in lines:
             new_entry = clean_and_write(line)
             output_f.write(new_entry + "\n")
+
+    print stats
+    print 'Written %s' % output
 
 
 def clean_and_write(dataset_json):
@@ -75,6 +83,8 @@ def clean_and_write(dataset_json):
     for key in keys_to_delete:
         if key in dataset:
             del dataset[key]
+
+    stats.add('Migrated dataset', dataset['name'])
 
     return json.dumps(dataset)
 
