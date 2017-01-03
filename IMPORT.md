@@ -49,10 +49,10 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
 *. Optional - upgrade ckanapi so that it summarizes load errors
 
-       sudo /usr/lib/ckan/bin/pip uninstall ckanapi
+       sudo /usr/lib/venv/bin/pip uninstall ckanapi
        cd ~
        git clone git@github.com:ckan/ckanapi.git
-       sudo /usr/lib/ckan/bin/pip install -e ckanapi
+       sudo /usr/lib/venv/bin/pip install -e ckanapi
        cd ckanapi
        git pull origin print-result-stats
        cd ~/dumps
