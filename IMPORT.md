@@ -57,18 +57,18 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
        git pull origin print-result-stats
        cd ~/dumps
 
-5. Load the user data (into this box's CKAN):
+5. Load the user data (takes an hour or so):
 
        ckanapi load users -I users_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
-6. Load the organization data (into this box's CKAN):
+6. Load the organization data (takes a few minutes):
 
        ckanapi load organizations -I organizations.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
-7. Migrate the dataset data:
+7. Migrate the dataset data (takes one minute):
 
        python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
 
-8. Import the dataset data (this takes about an hour):
+8. Import the dataset data (takes an hour or so):
 
        ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
