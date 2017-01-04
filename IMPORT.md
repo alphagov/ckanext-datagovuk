@@ -69,6 +69,6 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
        python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
 
-8. Import the dataset data (takes an hour or so):
+8. Import the dataset data (takes 4.5 hours on an EC2 t2.medium):
 
        ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
