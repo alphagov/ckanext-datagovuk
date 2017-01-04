@@ -45,3 +45,4 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         # registers itself as the default (above).
         return []
 
+    import ckanext.datagovuk.ckan_patches  # import does the monkey patching
