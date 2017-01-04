@@ -62,7 +62,7 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
                             drupal_id)
         else:
             # replace ckan password with the drupal one
-            user['password'] = drupal_user['pass']
+            user['password_hash'] = drupal_user['pass']
     else:
         # password is left as the ckan one - assuming we have PR merged:
         # https://github.com/datagovuk/ckan/pull/26
@@ -76,7 +76,7 @@ def drupal_to_ckan_user(drupal_user):
         name='user_d%s' % drupal_user['uid'],
         fullname=drupal_user['name'],
         email=drupal_user['mail'],
-        password=drupal_user['pass'],
+        password_hash=drupal_user['pass'],
         sysadmin=False,  # TODO
         about='User account imported from Drupal system',
         created=created.strftime('%Y-%m-%dT%H:%M:%S'),  # 2011-07-18T11:44:28
