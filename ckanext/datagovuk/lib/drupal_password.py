@@ -1,6 +1,14 @@
 '''Does the same password hash function that Drupal 7 does.
 
 Based on /var/www/drupal/dgud7/current/includes/password.inc
+
+Drupal stores the password hash as:
+  $S$ - id of the hash algorithm
+  D - the number of hash iterations, encoded using itoa64()
+  2B6/Pd7Z - salt, which is a random 8 digits of base 64
+  ZJNIs9XL4X0QjY2mC4nwZz9pIYe8P3TXzuE9c2dLIytw
+    - the actual password hash, which is 43 digits of base 64
+
 '''
 import os
 import hashlib
@@ -23,7 +31,9 @@ def password_generate_salt(count_log2):
     return output
 
 def password_itoa64():
-    '''For encoding an iteration count as a letter'''
+    '''For encoding an iteration count as a letter
+    NB it is not the standard base64 alphabet, so not compatible with RFC 3548
+    '''
     return './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 def drupal_random_bytes(count):
@@ -31,6 +41,7 @@ def drupal_random_bytes(count):
     return os.urandom(count)
 
 def password_base64_encode(input, count):
+    '''Drupal's own weird version of base64 encoding'''
     output = ''
     i = 0
     itoa64 = password_itoa64()
