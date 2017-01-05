@@ -56,6 +56,11 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
     # password comes from Drupal
     if user['name'].startswith('user_d'):
         drupal_id = user['name'].replace('user_d', '')
+        if user['fullname']:
+            user['name'] = user['fullname']
+            user['fullname'] = ''
+        else:
+            print stats.add('Error changing name from drupal id', drupal_id)
         drupal_user = drupal_users.get(drupal_id)
         if not drupal_user:
             print stats.add('Cannot find drupal equivalent to ckan user',
@@ -73,12 +78,12 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
 def drupal_to_ckan_user(drupal_user):
     created = datetime.datetime.fromtimestamp(int(drupal_user['created']))
     user = dict(
-        name='user_d%s' % drupal_user['uid'],
-        fullname=drupal_user['name'],
+        name=drupal_user['name'],
+        fullname='',
         email=drupal_user['mail'],
         password_hash=drupal_user['pass'],
         sysadmin=False,  # TODO
-        about='User account imported from Drupal system',
+        about='User account %s imported from Drupal system' % drupal_user['uid'],
         created=created.strftime('%Y-%m-%dT%H:%M:%S'),  # 2011-07-18T11:44:28
         activity_streams_email_notifications=False,
         state='active',
