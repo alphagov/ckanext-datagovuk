@@ -3,6 +3,8 @@ import ckan.plugins.toolkit as toolkit
 
 import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
+import ckanext.datagovuk.action.create
+
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
@@ -15,14 +17,15 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     def update_config(self, config_):
         pass
 
-    def get_actions(self):
-        return {}
+    # IAuthFunctions
 
     def get_auth_functions(self):
         return {
             'group_create': auth.group_create,
             'organization_create': auth.organization_create
         }
+
+    # IDatasetForm
 
     def create_package_schema(self):
         from ckan.logic.schema import default_create_package_schema
@@ -44,5 +47,13 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
         # This plugin doesn't handle any special package types, it just
         # registers itself as the default (above).
         return []
+
+    # IActions
+
+    def get_actions(self):
+        actions = dict(
+            user_create=ckanext.datagovuk.action.create.user_create
+            )
+        return actions
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
