@@ -36,3 +36,4 @@ class TestLogin:
 
         user = model.User.get(user_dict['id'])
         assert_true(user.validate_password('pass'))
+
