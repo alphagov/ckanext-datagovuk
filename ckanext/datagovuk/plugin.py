@@ -4,6 +4,7 @@ import ckan.plugins.toolkit as toolkit
 import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
 import ckanext.datagovuk.action.create
+import ckanext.datagovuk.action.get
 
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
@@ -22,7 +23,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     def get_auth_functions(self):
         return {
             'group_create': auth.group_create,
-            'organization_create': auth.organization_create
+            'organization_create': auth.organization_create,
+            'user_auth': auth.user_auth
         }
 
     # IDatasetForm
@@ -51,9 +53,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
     # IActions
 
     def get_actions(self):
-        actions = dict(
-            user_create=ckanext.datagovuk.action.create.user_create
-            )
-        return actions
+        return dict(
+            user_create=ckanext.datagovuk.action.create.user_create,
+            user_auth=ckanext.datagovuk.action.get.user_auth
+        )
+
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
