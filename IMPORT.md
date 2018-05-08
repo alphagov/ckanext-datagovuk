@@ -43,7 +43,7 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
 ```
 
-4. Migrate the user data (takes 10s):
+4. Migrate the user data into a file ready for the next step(takes 10s):
 
        python /vagrant/import/migrate_users.py users.jsonl.gz drupal_users_table.csv.gz users_migrated.jsonl.gz
 
