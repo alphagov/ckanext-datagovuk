@@ -21,7 +21,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/datagovuk/ckanext-datagovuk',
+    url='https://github.com/alphagov/ckanext-datagovuk',
 
     # Author details
     author='''GDS''',
