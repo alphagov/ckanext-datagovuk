@@ -51,7 +51,7 @@ Development Installation
 To install ckanext-datagovuk for development, activate your CKAN virtualenv and
 do::
 
-    git clone https://github.com/datagovuk/ckanext-datagovuk.git
+    git clone https://github.com/alphagov/ckanext-datagovuk.git
     cd ckanext-datagovuk
     python setup.py develop
     pip install -r dev-requirements.txt
