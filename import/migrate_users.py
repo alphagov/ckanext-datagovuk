@@ -8,6 +8,8 @@ import os
 import gzip
 import csv
 import datetime
+import random
+import string
 
 from running_stats import Stats
 
@@ -66,12 +68,13 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
             print stats.add('Cannot find drupal equivalent to ckan user',
                             drupal_id)
         else:
-            # replace ckan password with the drupal one
-            user['password_hash'] = drupal_user['pass']
+            # replace ckan password with the drupal one (in production mode only)
+            user['password_hash'] = drupal_user['pass'] if args.production else random_password_hash(50)
     else:
         # password is left as the ckan one - assuming we have PR merged:
         # https://github.com/datagovuk/ckan/pull/26
         drupal_id = None
+        user['password_hash'] = drupal_user['pass'] if args.production else random_password_hash(50)
 
     return user, drupal_id
 
@@ -81,7 +84,7 @@ def drupal_to_ckan_user(drupal_user):
         name=drupal_user['name'],
         fullname='',
         email=drupal_user['mail'],
-        password_hash=drupal_user['pass'],
+        password_hash=drupal_user['pass'] if args.production else random_password_hash(50),
         sysadmin=False,  # TODO
         about='User account %s imported from Drupal system' % drupal_user['uid'],
         created=created.strftime('%Y-%m-%dT%H:%M:%S'),  # 2011-07-18T11:44:28
@@ -90,6 +93,8 @@ def drupal_to_ckan_user(drupal_user):
         )
     return user, drupal_user['uid']
 
+def random_password_hash(length):
+    return ''.join((random.choice(string.letters + string.digits + string.punctuation)) for x in range(length))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
@@ -99,6 +104,9 @@ if __name__ == '__main__':
                         help='Specify the location of the Drupal users table csv.gz file')
     parser.add_argument('output_fpath',
                         help='Specify the location of the output file')
+    parser.add_argument('--production',
+                        help='Specify to import password hashes from Drupal, else random strings are generated as passwords',
+                        action="store_true")
 
     args = parser.parse_args()
     for fpath in (args.ckan_users_fpath, args.drupal_users_table_fpath):

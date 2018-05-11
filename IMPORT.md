@@ -47,6 +47,10 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
        python /vagrant/import/migrate_users.py users.jsonl.gz drupal_users_table.csv.gz users_migrated.jsonl.gz
 
+   Alternatively add the production flag to use Drupal password hashes (else they are randomised):
+
+       python /vagrant/import/migrate_users.py users.jsonl.gz drupal_users_table.csv.gz users_migrated.jsonl.gz --production
+
 *. Optional - upgrade ckanapi so that it summarizes load errors
 
        sudo /usr/lib/venv/bin/pip uninstall ckanapi
