@@ -29,7 +29,6 @@ def process(source, output):
     print stats
     print 'Written %s' % output
 
-
 def clean_and_write(dataset_json):
     dataset = json.loads(dataset_json)
 
@@ -52,6 +51,13 @@ def clean_and_write(dataset_json):
             tag_dict['name'] = munged_tag
     for tag in tags_to_delete:
         dataset['tags'].remove(tag)
+
+    # Email address cleansing
+    for key in ['author_email', 'contact_email', 'maintainer_email']:
+        if key in dataset:
+            if dataset[key]:
+                # Remove the non-ASCII characters
+                dataset[key] = dataset[key].encode("ascii", errors="ignore").decode()
 
     # Shunt custom fields into extras (while we work out what to do with them)
     for key in ['schema', 'codelist',
