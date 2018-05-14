@@ -31,8 +31,10 @@ def process():
         # migrate ckan users
         drupal_ids_written = set()
         lines = ckan_users_f.readlines()
+        ckan_user_map = {}
         for line in lines:
-            user, drupal_id = migrate_ckan_user(line, drupal_users)
+            user, drupal_id, old_user_name = migrate_ckan_user(line, drupal_users)
+            ckan_user_map[old_user_name] = user['name'] # create a dictionary for mapping old user names to new user names
             output_f.write(json.dumps(user) + '\n')
             if drupal_id is not None:
                 stats.add('Migrated CKAN-Drupal user', drupal_id)
@@ -45,15 +47,38 @@ def process():
             set(drupal_users.keys()) - drupal_ids_written))
         for drupal_id in drupal_only_users:
             drupal_user = drupal_users[drupal_id]
-            user, drupal_id = drupal_to_ckan_user(drupal_user)
+            user, drupal_id, old_user_name = drupal_to_ckan_user(drupal_user)
+            ckan_user_map[old_user_name] = user['name']
             output_f.write(json.dumps(user) + '\n')
             stats.add('Migrated pure Drupal user', drupal_id)
+
+    # update the user identifiers in the organisations file
+    with gzip.open(args.ckan_organisation_fpath, 'rb') as ckan_organisation_f, \
+            gzip.open(args.output_organisation_fpath, 'wb') as output_f:
+        lines = ckan_organisation_f.readlines()
+        for line in lines:
+            organisation = migrate_ckan_organisation(line, ckan_user_map)
+            output_f.write(json.dumps(organisation) + '\n')
 
     print stats
     print 'Written %s' % args.output_fpath
 
+def migrate_ckan_organisation(ckan_organisation_json, ckan_user_map):
+    organisation = json.loads(ckan_organisation_json)
+    
+    # get the users and update their name 
+    for user in organisation['users']:
+      if user['name'] in ckan_user_map:
+          user['name'] = ckan_user_map[user['name']]
+      else:
+          print stats.add('No mapping found for organisation user', user['name'])
+    
+    return organisation
+
 def migrate_ckan_user(ckan_user_json, drupal_users):
     user = json.loads(ckan_user_json)
+
+    old_user_name = user['name']
 
     # password comes from Drupal
     if user['name'].startswith('user_d'):
@@ -76,10 +101,11 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
         drupal_id = None
         user['password_hash'] = drupal_user['pass'] if args.production else random_password_hash(50)
 
-    return user, drupal_id
+    return user, drupal_id, old_user_name
 
 def drupal_to_ckan_user(drupal_user):
     created = datetime.datetime.fromtimestamp(int(drupal_user['created']))
+    old_user_name = drupal_user['name']
     user = dict(
         name=drupal_user['name'],
         fullname='',
@@ -91,7 +117,7 @@ def drupal_to_ckan_user(drupal_user):
         activity_streams_email_notifications=False,
         state='active',
         )
-    return user, drupal_user['uid']
+    return user, drupal_user['uid'], old_user_name
 
 def random_password_hash(length):
     return ''.join((random.choice(string.letters + string.digits + string.punctuation)) for x in range(length))
@@ -103,13 +129,17 @@ if __name__ == '__main__':
     parser.add_argument('drupal_users_table_fpath',
                         help='Specify the location of the Drupal users table csv.gz file')
     parser.add_argument('output_fpath',
-                        help='Specify the location of the output file')
+                        help='Specify the location of the user output file')
+    parser.add_argument('ckan_organisation_fpath',
+                        help='Specify the location of the organisation file')
+    parser.add_argument('output_organisation_fpath',
+                        help='Specify the location of the organisation output file')
     parser.add_argument('--production',
                         help='Specify to import password hashes from Drupal, else random strings are generated as passwords',
                         action="store_true")
 
     args = parser.parse_args()
-    for fpath in (args.ckan_users_fpath, args.drupal_users_table_fpath):
+    for fpath in (args.ckan_users_fpath, args.drupal_users_table_fpath, args.ckan_organisation_fpath):
         if not os.path.exists(args.ckan_users_fpath):
             args.error('Source file {} could not be found' % fpath)
 
