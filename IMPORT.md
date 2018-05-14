@@ -76,3 +76,8 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 8. Import the dataset data (takes 4.5 hours on an EC2 t2.medium):
 
        ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+
+9. Migrate the harvest sources from legacy (takes about 5 minutes):
+
+       cd /vagrant/import
+       python migrate_harvest_sources.py (--production when in production)
