@@ -15,8 +15,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     # IConfigurer
 
-    def update_config(self, config_):
-        pass
+    def update_config(self, config):
+        toolkit.add_template_directory(config, 'templates')
+        toolkit.add_public_directory(config, 'public')
 
     # IAuthFunctions
 
