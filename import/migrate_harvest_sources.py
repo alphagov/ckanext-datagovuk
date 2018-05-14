@@ -4,15 +4,9 @@ suitable for loading into a vanilla CKAN.
 '''
 import argparse
 import os
-import uuid
 
 import ckan
 import ckanapi
-
-from running_stats import Stats
-
-args = None
-stats = Stats()
 
 TYPE_TRANSLATION = {
     'gemini-single': 'single-doc',
@@ -20,6 +14,7 @@ TYPE_TRANSLATION = {
     'gemini-waf': 'waf',
     'data_json': 'dcat_json'
 }
+
 
 def ckan_prep():
     """ Loads and prepares CKAN for use, in a script that isn't part of
@@ -69,36 +64,40 @@ def process(ckan_host, production=False):
             harvest_source['frequency'] = 'MANUAL'
 
         if harvest_source['type'] in ['inventory', 'dkan']:
-            print "Skipping unsupported format ({}) for now".format(harvest_source['type'])
+            print "Skipping unsupported format ({}) for now"\
+                .format(harvest_source['type'])
             continue
 
         harvest_source['owner_org'] = harvest_source['publisher_name']
-        harvest_source['source_type'] = TYPE_TRANSLATION.get(harvest_source['type'], harvest_source['type'])
+        harvest_source['source_type'] = \
+            TYPE_TRANSLATION.get(harvest_source['type'],
+                                 harvest_source['type'])
         del harvest_source['id']
 
         update_local_harvest_source(local_ckan, harvest_source)
-
 
 
 def update_local_harvest_source(local_ckan, harvest_source):
     action = local_ckan.action.harvest_source_create
 
     try:
-        existing_source = local_ckan.action.harvest_source_show(id=harvest_source['name'])
+        local_ckan.action.harvest_source_show(id=harvest_source['name'])
         action = local_ckan.action.harvest_source_update
         print "Updating ... {}".format(harvest_source['name'])
     except ckan.logic.NotFound:
         print "Creating ... {}".format(harvest_source['name'])
-        pass
-    except ckan.logic.ValidationError as e:
-        print "Error validating harvest source on read ... {}".format(harvest_source['name'])
+    except ckan.logic.ValidationError:
+        print "Error validating harvest source on read ... {}"\
+            .format(harvest_source['name'])
         return
 
     try:
         action(**harvest_source)
-    except ckan.logic.ValidationError as e:
-        print "Error validating harvest source on write ... {}".format(harvest_source['name'])
+    except ckan.logic.ValidationError:
+        print "Error validating harvest source on write ... {}"\
+            .format(harvest_source['name'])
         return
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
