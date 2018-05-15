@@ -86,6 +86,9 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
         if user['fullname']:
             user['name'] = user['fullname']
             user['fullname'] = ''
+            if 'activity' in user:
+                for activity in user['activity']:
+                  activity['author'] = user['name']
         else:
             print stats.add('Error changing name from drupal id', drupal_id)
         drupal_user = drupal_users.get(drupal_id)
