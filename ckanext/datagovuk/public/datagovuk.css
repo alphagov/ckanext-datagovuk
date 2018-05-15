@@ -1,0 +1,18 @@
+.account-masthead, .navbar, .site-footer, .module-search {
+  background-color: rgb(11, 12, 12);
+}
+
+body {
+  font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serifm;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.masthead .navigation .nav-pills li.active a {
+  background-color: rgb(0, 130, 59);
+}
+
+a.btn-primary, a.btn-primary:hover, a.btn-primary:visited {
+  background-color: rgb(0, 130, 59);
+  background-image: none;
+}
