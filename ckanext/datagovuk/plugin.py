@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan.lib.plugins import DefaultTranslation
 
 import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
@@ -7,7 +8,8 @@ import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
 
 
-class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm):
+class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
+    plugins.implements(plugins.ITranslation)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IActions)
