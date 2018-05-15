@@ -25,6 +25,15 @@ def process():
             for user_dict in csv_reader
             )
 
+    ckan_users_in_organisations = {}
+    with gzip.open(args.ckan_organisation_fpath, 'rb') as ckan_organisation_f:
+        lines = ckan_organisation_f.readlines()
+        for line in lines:
+           organisation = json.loads(line)
+           if 'users' in organisation:
+              for user in organisation['users']:
+                  ckan_users_in_organisations[user['name']] = 1
+
     with gzip.open(args.ckan_users_fpath, 'rb') as ckan_users_f, \
             gzip.open(args.output_fpath, 'wb') as output_f:
 
@@ -35,12 +44,15 @@ def process():
         for line in lines:
             user, drupal_id, old_user_name = migrate_ckan_user(line, drupal_users)
             ckan_user_map[old_user_name] = user['name'] # create a dictionary for mapping old user names to new user names
-            output_f.write(json.dumps(user) + '\n')
-            if drupal_id is not None:
-                stats.add('Migrated CKAN-Drupal user', drupal_id)
-                drupal_ids_written.add(drupal_id)
+            if old_user_name in ckan_users_in_organisations:
+                output_f.write(json.dumps(user) + '\n')
+                if drupal_id is not None:
+                    stats.add('Migrated CKAN-Drupal user', drupal_id)
+                    drupal_ids_written.add(drupal_id)
+                else:
+                    stats.add('Migrated pure CKAN user', user['name'])
             else:
-                stats.add('Migrated pure CKAN user', user['name'])
+                stats.add('CKAN user not found in organisation', user['name'])
 
         # migrate drupal-only users
         drupal_only_users = sorted(list(
@@ -49,8 +61,9 @@ def process():
             drupal_user = drupal_users[drupal_id]
             user, drupal_id, old_user_name = drupal_to_ckan_user(drupal_user)
             ckan_user_map[old_user_name] = user['name']
-            output_f.write(json.dumps(user) + '\n')
-            stats.add('Migrated pure Drupal user', drupal_id)
+            if old_user_name in ckan_users_in_organisations:
+                output_f.write(json.dumps(user) + '\n')
+                stats.add('Migrated pure Drupal user', drupal_id)
 
     # update the user identifiers in the organisations file
     with gzip.open(args.ckan_organisation_fpath, 'rb') as ckan_organisation_f, \
