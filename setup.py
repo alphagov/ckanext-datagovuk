@@ -80,6 +80,7 @@ setup(
     entry_points='''
         [ckan.plugins]
         datagovuk=ckanext.datagovuk.plugin:DatagovukPlugin
+        inventory_harvester=ckanext.datagovuk.harvesters.inventory_harvester:InventoryHarvester
 
 	[babel.extractors]
 	ckan = ckan.lib.extract:extract_ckan
