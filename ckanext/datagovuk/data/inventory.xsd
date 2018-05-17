@@ -1,0 +1,123 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://schemas.esd.org.uk/inventory" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Inventory">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:string" name="Identifier" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:anyURI" name="Creator" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="Metadata">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:anyURI" name="Publisher" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:string" name="Title" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:string" name="Description" minOccurs="0" maxOccurs="1"/>
+              <xs:element name="Coverage" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:anyURI" name="Spatial" minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Datasets">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Dataset" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="Identifier" minOccurs="1" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="Title" minOccurs="1" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="Description" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:anyURI" name="Rights" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="Protected" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="ProtectedText" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="Context" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="RightsHolder" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="ChargeURL" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:date" name="CommittmentDate" minOccurs="0" maxOccurs="1"/>
+                    <xs:element type="xs:string" name="RelationType" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="Relations" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:anyURI" name="Relation"/>
+            </xs:sequence>
+              </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Subjects" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                          <xs:element name="Subject" maxOccurs="unbounded" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:string" name="Service" minOccurs="0" maxOccurs="1"/>
+                                <xs:element type="xs:string" name="Function" minOccurs="0" maxOccurs="1"/>
+                              </xs:sequence>
+                              <xs:attribute type="xs:string" name="Scheme"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Resources">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Resource" maxOccurs="unbounded" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:string" name="Identifier" minOccurs="1" maxOccurs="1"/>
+                                <xs:element type="xs:string" name="Title" minOccurs="1" maxOccurs="1"/>
+                                <xs:element type="xs:string" name="Description" minOccurs="0" maxOccurs="1"/>
+                                <xs:element name="Coverage" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence maxOccurs="unbounded" minOccurs="0">
+                                      <xs:element type="xs:anyURI" name="Spatial"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:date" name="TemporalFrom" use="optional"/>
+                                    <xs:attribute type="xs:date" name="TemporalTo" use="optional"/>
+                                  </xs:complexType>
+                                </xs:element>
+                                <xs:element name="Renditions">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="Rendition">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element type="xs:anyURI" name="Identifier" minOccurs="1" maxOccurs="1"/>
+                                            <xs:element type="xs:string" name="MimeType" minOccurs="0" maxOccurs="1"/>
+                                            <xs:element type="xs:string" name="Title" minOccurs="0" maxOccurs="1"/>
+                                            <xs:element type="xs:string" name="Description" minOccurs="0" maxOccurs="1"/>
+                                            <xs:element type="xs:string" name="Availability" minOccurs="0" maxOccurs="1"/>
+                                            <xs:element type="xs:string" name="ConformsTo" minOccurs="0" maxOccurs="unbounded"/>
+                                          </xs:sequence>
+                                          <xs:attribute type="xs:string" name="Active" use="optional"/>
+                                          <xs:attribute type="xs:date" name="Modified" use="optional"/>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:string" name="Type" use="required"/>
+                              <xs:attribute type="xs:date" name="Modified" use="optional"/>
+                              <xs:attribute type="xs:string" name="Active" use="optional"/>
+                              <xs:attribute type="xs:string" name="Language" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:date" name="Modified"/>
+                  <xs:attribute type="xs:string" name="Active"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:date" name="Modified" use="required"/>
+      <xs:attribute type="xs:string" name="Language"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
