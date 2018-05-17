@@ -262,6 +262,7 @@ class InventoryHarvester(DguHarvesterBase):
         if not pkg.get('name'):
             # append the publisher name to differentiate similar titles better
             # than just a numbers suffix
+            # TODO: We do not get the org this way any more ....
             publisher = model.Group.get(harvest_object.job.source.publisher_id)
             publisher_abbrev = self._get_publisher_abbreviation(publisher)
             pkg['name'] = self._gen_new_name(
