@@ -63,12 +63,13 @@ def process(ckan_host, production=False):
         if not production:
             harvest_source['frequency'] = 'MANUAL'
 
-        if harvest_source['type'] in ['inventory', 'dkan']:
+        if harvest_source['type'] in ['dkan']:
             print "Skipping unsupported format ({}) for now"\
                 .format(harvest_source['type'])
             continue
 
         harvest_source['owner_org'] = harvest_source['publisher_name']
+
         harvest_source['source_type'] = \
             TYPE_TRANSLATION.get(harvest_source['type'],
                                  harvest_source['type'])
