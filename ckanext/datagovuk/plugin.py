@@ -14,6 +14,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IDatasetForm, inherit=True)
+    plugins.implements(plugins.IRoutes, inherit=True)
 
     # IConfigurer
 
@@ -52,6 +53,12 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # This plugin doesn't handle any special package types, it just
         # registers itself as the default (above).
         return []
+
+    # IRoutes
+
+    def after_map(self, map):
+        map.connect('harvest_index', '/harvest', action='index')
+        return map
 
     # IActions
 
