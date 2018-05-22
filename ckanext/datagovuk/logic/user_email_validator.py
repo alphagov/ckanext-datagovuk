@@ -1,11 +1,13 @@
 from ckan.common import _
+from ckan.common import config
 from ckan.plugins.toolkit import Invalid
 
 import re
 
 def correct_email_suffix(key, data, errors, context):
     value = data.get(key)
-    permitted_regexes = (r'gov.uk$', r'nhs.uk$')
+    suffix = config.get('ckan.valid_email_regexes')
+    permitted_regexes = suffix.split()
     for regex in permitted_regexes:
         if re.search(regex, value):
             return
