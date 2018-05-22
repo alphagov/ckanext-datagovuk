@@ -34,3 +34,13 @@ def show_package_schema(schema_dict):
         })
 
     return schema_dict
+
+def user_new_form_schema():
+    from ckan.logic.schema import user_new_form_schema as default_user_new_form_schema
+    schema = default_user_new_form_schema()
+    schema.update({'email': [
+               toolkit.get_validator('not_empty'),
+               toolkit.get_validator('correct_email_suffix'),
+               unicode]})
+    return schema
+
