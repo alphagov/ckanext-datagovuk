@@ -14,6 +14,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IDatasetForm, inherit=True)
+    plugins.implements(plugins.IValidators)
     plugins.implements(plugins.IRoutes, inherit=True)
 
     # IConfigurer
@@ -68,5 +69,26 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             user_auth=ckanext.datagovuk.action.get.user_auth
         )
 
+    # IValidators
+
+    def get_validators(self):
+        from ckanext.datagovuk.logic.user_email_validator import correct_email_suffix
+        return {
+            'correct_email_suffix': correct_email_suffix,
+        }
+
+    # IRoutes
+
+    def before_map(self, route_map):
+        user_controller = 'ckanext.datagovuk.controllers.user:UserController'
+        route_map.connect('register',
+                          '/user/register',
+                          controller=user_controller,
+                          action='register')
+
+        return route_map
+
+    def after_map(self, route_map):
+        return route_map
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
