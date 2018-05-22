@@ -1,0 +1,32 @@
+  {% set truncate = truncate or 0 %}
+  {% set url = h.url_for(organization.type + '_read', id=organization.name, ) %}
+
+    {% block info %}
+    <div class="module module-narrow module-shallow context-info">
+      {% if has_context_title %}
+        <h2 class="module-heading"><i class="fa fa-building-o"></i> {{ _('Organization') }}</h2>
+      {% endif %}
+      <section class="module-content">
+        {% block inner %}
+        {% block image %}{% endblock image %}
+        {% block heading %}
+        <h1 class="heading" style="word-wrap: initial;">{{ organization.title or organization.name }}
+          {% if organization.state == 'deleted' %}
+            [{{ _('Deleted') }}]
+          {% endif %}
+        </h1>
+        {% endblock %}
+        {% block description %}{% endblock description %}
+          {% block nums %}
+          <div class="nums">
+            <dl>
+              <dt>{{ _('Datasets') }}</dt>
+              <dd>{{ h.SI_number_span(organization.package_count) }}</dd>
+            </dl>
+          </div>
+          {% endblock %}
+          {% block follow %}{% endblock follow %}
+        {% endblock %}
+      </section>
+    </div>
+    {% endblock %}
