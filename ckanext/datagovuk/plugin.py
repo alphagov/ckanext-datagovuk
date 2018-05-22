@@ -55,12 +55,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # registers itself as the default (above).
         return []
 
-    # IRoutes
-
-    def after_map(self, map):
-        map.connect('harvest_index', '/harvest', action='index')
-        return map
-
     # IActions
 
     def get_actions(self):
@@ -89,6 +83,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         return route_map
 
     def after_map(self, route_map):
+        route_map.connect('harvest_index', '/harvest', action='index')
         return route_map
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
