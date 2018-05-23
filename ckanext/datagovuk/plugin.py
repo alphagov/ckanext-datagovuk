@@ -29,7 +29,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         return {
             'group_create': auth.group_create,
             'organization_create': auth.organization_create,
-            'user_auth': auth.user_auth
+            'user_auth': auth.user_auth,
+            'package_update': auth.package_update,
+            'package_delete': auth.package_delete
         }
 
     # IDatasetForm
