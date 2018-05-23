@@ -4,6 +4,7 @@ suitable for loading into a vanilla CKAN.
 '''
 import argparse
 import os
+from urlparse import urljoin
 
 import ckan
 import ckanapi
@@ -63,10 +64,12 @@ def process(ckan_host, production=False):
         if not production:
             harvest_source['frequency'] = 'MANUAL'
 
-        if harvest_source['type'] in ['dkan']:
-            print "Skipping unsupported format ({}) for now"\
-                .format(harvest_source['type'])
-            continue
+        if harvest_source['type'] == 'dkan':
+            # We know this is Cambridgeshire insight, so let's
+            # just change the details to something we know works
+            print '--> Fixing Cambridgeshire insight source'
+            harvest_source['type'] = 'dcat_json'
+            harvest_source['url'] = urljoin(harvest_source['url'], 'data.json')
 
         harvest_source['owner_org'] = harvest_source['publisher_name']
 
