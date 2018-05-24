@@ -82,8 +82,11 @@ setup(
         datagovuk=ckanext.datagovuk.plugin:DatagovukPlugin
         inventory_harvester=ckanext.datagovuk.harvesters.inventory_harvester:InventoryHarvester
 
-	[babel.extractors]
-	ckan = ckan.lib.extract:extract_ckan
+        [paste.paster_command]
+        passwords_reset = ckanext.datagovuk.lib.cli:PasswordResetsCommand
+
+        [babel.extractors]
+        ckan = ckan.lib.extract:extract_ckan
     ''',
 
     # If you are changing from the default layout of your extension, you may
