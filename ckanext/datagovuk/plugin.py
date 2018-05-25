@@ -1,6 +1,7 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.lib.plugins import DefaultTranslation
+from ckan.config.routing import SubMapper
 
 import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
@@ -98,11 +99,43 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                           '/user/register',
                           controller=user_controller,
                           action='register')
-
+        route_map.connect('harvest_index', '/harvest', action='index')
         return route_map
 
     def after_map(self, route_map):
-        route_map.connect('harvest_index', '/harvest', action='index')
+        # Deletes all the organization routes
+        delete_routes_by_path_startswtih(route_map, '/organization')
+
+        # Recreates the organization routes with /publisher instead.
+        with SubMapper(route_map, controller='organization') as m:
+            m.connect('organizations_index', '/publisher', action='index')
+            m.connect('organization_index', '/publisher', action='index')
+            m.connect('organization_new', '/publisher/new', action='new')
+            for action in [
+            'delete',
+            'admins',
+            'member_new',
+            'member_delete',
+            'history']:
+                m.connect('organization_' + action,
+                        '/publisher/' + action + '/{id}',
+                        action=action)
+
+            m.connect('organization_activity', '/publisher/activity/{id}/{offset}',
+                    action='activity')
+            m.connect('organization_read', '/publisher/{id}', action='read')
+            m.connect('organization_about', '/publisher/about/{id}',
+                    action='about')
+            m.connect('organization_read', '/publisher/{id}', action='read',
+                    ckan_icon='sitemap')
+            m.connect('organization_edit', '/publisher/edit/{id}',
+                    action='edit')
+            m.connect('organization_members', '/publisher/members/{id}',
+                    action='members')
+            m.connect('organization_bulk_process',
+                    '/publisher/bulk_process/{id}',
+                    action='bulk_process')
+
         return route_map
 
     # ITemplateHelpers
@@ -111,3 +144,19 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         return {'themes': ckanext.datagovuk.helpers.themes}
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
+
+def delete_routes_by_path_startswtih(map, path_startswith):
+    """
+    This function will remove from the routing map any
+    path that starts with the provided argument (/ required).
+
+    Not really a great thing to be doing, but CKAN doesn't
+    provide a way to i18n URLs because it'll likely cause
+    clashes with other group subclasses.
+    """
+    matches_to_delete = []
+    for match in map.matchlist:
+        if match.routepath.startswith(path_startswith):
+            matches_to_delete.append(match)
+    for match in matches_to_delete:
+        map.matchlist.remove(match)
