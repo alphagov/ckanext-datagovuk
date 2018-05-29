@@ -36,7 +36,7 @@ class InventoryHarvester(DguHarvesterBase):
                 "description": "Dataset metadata published according to the Inventory XML format: http://schemas.opendata.esd.org.uk/Inventory with XSD: https://github.com/datagovuk/ckanext-datagovuk/blob/master/ckanext/datagovuk/data/inventory.xsd"
             }
 
-    def gather_stage(self, harvest_job):
+    def gather_stage(self, harvest_job, test_content=None):
         '''
         Fetches the single inventory document containing all of the
         datasets to be created/modified.
@@ -54,19 +54,22 @@ class InventoryHarvester(DguHarvesterBase):
         self.last_run = None
 
         log.debug('Resolving source: %s', harvest_job.source.url)
-        try:
-            req = requests.get(harvest_job.source.url)
-            e = req.raise_for_status()
-        except requests.exceptions.RequestException, e:
-            # e.g. requests.exceptions.ConnectionError
-            self._save_gather_error(
-                'Failed to get content from URL: %s Error:%s %s' %
-                (harvest_job.source.url, e.__class__.__name__, e),
-                harvest_job)
-            return None
+        content = test_content
+        if not content:
+            try:
+                req = requests.get(harvest_job.source.url)
+                e = req.raise_for_status()
+                content = req.content
+            except requests.exceptions.RequestException, e:
+                # e.g. requests.exceptions.ConnectionError
+                self._save_gather_error(
+                    'Failed to get content from URL: %s Error:%s %s' %
+                    (harvest_job.source.url, e.__class__.__name__, e),
+                    harvest_job)
+                return None
 
         try:
-            doc = InventoryDocument(req.content)
+            doc = InventoryDocument(content)
         except InventoryXmlError, e:
             self._save_gather_error(
                 'Failed to parse or validate the XML document: %s %s' %
@@ -262,11 +265,7 @@ class InventoryHarvester(DguHarvesterBase):
         if not pkg.get('name'):
             # append the publisher name to differentiate similar titles better
             # than just a numbers suffix
-            # TODO: We do not get the org this way any more ....
-            publisher = model.Group.get(harvest_object.job.source.publisher_id)
-            publisher_abbrev = self._get_publisher_abbreviation(publisher)
-            pkg['name'] = self._gen_new_name(
-                '%s %s' % (pkg['title'], publisher_abbrev))
+            pkg['name'] = self._munge_title_to_name(pkg['title'])
 
         # Themes based on services/functions
         if 'tags' not in pkg:
@@ -274,9 +273,3 @@ class InventoryHarvester(DguHarvesterBase):
 
         pkg['extras'] = self.extras_from_dict(pkg['extras'])
         return pkg
-
-    @staticmethod
-    def _get_publisher_abbreviation(publisher):
-        if publisher:
-          return re.sub('[^A-Z]', '', publisher.title)
-        return ''
