@@ -16,6 +16,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IDatasetForm, inherit=True)
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.IRoutes, inherit=True)
+    plugins.implements(plugins.ITemplateHelpers)
 
     # IConfigurer
 
@@ -34,17 +35,33 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # IDatasetForm
 
+    def _modify_package_schema(self, schema):
+        schema.update({
+            'theme-primary': [toolkit.get_validator('ignore_missing'),
+                              toolkit.get_converter('convert_to_extras')]
+        })
+        return schema
+
     def create_package_schema(self):
         from ckan.logic.schema import default_create_package_schema
-        return schema_defs.create_package_schema(default_create_package_schema())
+        schema = schema_defs.create_package_schema(default_create_package_schema())
+        schema = self._modify_package_schema(schema)
+        return schema
 
     def update_package_schema(self):
         from ckan.logic.schema import default_update_package_schema
-        return schema_defs.update_package_schema(default_update_package_schema())
+        schema = schema_defs.update_package_schema(default_update_package_schema())
+        schema = self._modify_package_schema(schema)
+        return schema
 
     def show_package_schema(self):
         from ckan.logic.schema import default_show_package_schema
-        return schema_defs.show_package_schema(default_show_package_schema())
+        schema = schema_defs.show_package_schema(default_show_package_schema())
+        schema.update({
+            'theme-primary': [toolkit.get_converter('convert_from_extras'),
+                              toolkit.get_validator('ignore_missing')]
+        })
+        return schema
 
     def is_fallback(self):
         # This is the default dataset form
@@ -85,5 +102,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def after_map(self, route_map):
         route_map.connect('harvest_index', '/harvest', action='index')
         return route_map
+
+    # ITemplateHelpers
+
+    def get_helpers(self):
+        return {'themes': ckanext.datagovuk.helpers.themes}
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
