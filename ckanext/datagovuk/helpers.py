@@ -90,3 +90,21 @@ def detect_license_id(licence_str):
         is_wholely_identified = None
 
     return license_id, is_wholely_identified
+
+def themes():
+    themes_dict = {
+        "business-and-economy": "Business and economy",
+        "environment": "Environment",
+        "mapping": "Mapping",
+        "crime-and-justice": "Crime and justice",
+        "government": "Government",
+        "society": "Society",
+        "defence": "Defence",
+        "government-spending": "Government spending",
+        "towns-and-cities": "Towns and cities",
+        "education": "Education",
+        "health": "Health",
+        "transport": "Transport",
+    }
+    return themes_dict
+
