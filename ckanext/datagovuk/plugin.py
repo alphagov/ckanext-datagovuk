@@ -7,6 +7,7 @@ import ckanext.datagovuk.schema as schema_defs
 import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
 
+from ckanext.datagovuk.logic.theme_validator import valid_theme
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.ITranslation)
@@ -37,7 +38,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def _modify_package_schema(self, schema):
         schema.update({
-            'theme-primary': [toolkit.get_validator('ignore_missing'),
+            'theme-primary': [toolkit.get_validator('valid_theme'),
                               toolkit.get_converter('convert_to_extras')]
         })
         return schema
@@ -86,6 +87,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.logic.user_email_validator import correct_email_suffix
         return {
             'correct_email_suffix': correct_email_suffix,
+            'valid_theme': valid_theme,
         }
 
     # IRoutes
