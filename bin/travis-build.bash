@@ -25,6 +25,18 @@ python setup.py develop
 pip install -r pip-requirements.txt
 cd -
 
+echo "Installing ckanext-spatial and its Python dependencies..."
+git clone https://github.com/ckan/ckanext-spatial
+cd ckanext-spatial
+python setup.py develop
+pip install -r pip-requirements.txt
+cd -
+
+echo "Updating Solr configuration..."
+cd ckan
+sed -i -e 's/^solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr/' test-core.ini
+cd -
+
 echo "Creating the PostgreSQL user and database..."
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
 sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
@@ -44,3 +56,4 @@ mkdir subdir
 mv test.ini subdir
 
 echo "travis-build.bash is done."
+
