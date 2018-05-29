@@ -59,9 +59,27 @@ def clean_and_write(dataset_json):
                 # Remove the non-ASCII characters
                 dataset[key] = dataset[key].encode("ascii", errors="ignore").decode()
 
+    # Update the theme-primary mapping
+    themes_dict = {
+        "Business & Economy": "business-and-economy",
+        "Environment": "environment",
+        "Mapping": "mapping",
+        "Crime & Justice": "crime-and-justice",
+        "Government": "government",
+        "Society": "society",
+        "Defence": "defence",
+        "Government Spending": "government-spending",
+        "Towns & Cities": "towns-and-cities",
+        "Education": "education",
+        "Health": "health",
+        "Transport": "transport",
+    }
+    if 'theme-primary' in dataset:
+        dataset['theme-primary'] = themes_dict[dataset['theme-primary']]
+
     # Shunt custom fields into extras (while we work out what to do with them)
     for key in ['schema', 'codelist',
-                'archival', 'qa']:
+                'archival', 'qa']
         if key not in dataset:
             continue
         # delete an extra in that name if it exists
