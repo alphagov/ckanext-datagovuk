@@ -328,6 +328,25 @@ class DguHarvesterBase(HarvesterBase):
         '''
         pass
 
+    def _transfer_current(self, previous_object, harvest_object):
+            '''Transfer "current" flag to this harvest_object to show it is was the
+            last successful import.
+            NB This should be called at the end of a successful import. The problem
+            with doing it any earlier is that a harvest that gets skipped after
+            this point will still be marked 'current'. This gives two problems:
+            1. queue.py will set obj.report_status = 'updated' rather than
+            'unchanged'.
+            2. harvest_object_show with param dataset_id will show you the skipped
+            object.
+            '''
+            if previous_object:
+                previous_object.current = False
+                harvest_object.package_id = previous_object.package_id
+                previous_object.add()
+            harvest_object.current = True
+            model.Session.commit()
+    model.Session.remove()
+
     @classmethod
     def get_metadata_provenance_for_just_this_harvest(cls, harvest_object):
         return {
