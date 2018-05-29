@@ -104,7 +104,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def after_map(self, route_map):
         # Deletes all the organization routes
-        delete_routes_by_path_startswtih(route_map, '/organization')
+        delete_routes_by_path_startswith(route_map, '/organization')
 
         # Recreates the organization routes with /publisher instead.
         with SubMapper(route_map, controller='organization') as m:
@@ -145,7 +145,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
 
-def delete_routes_by_path_startswtih(map, path_startswith):
+def delete_routes_by_path_startswith(map, path_startswith):
     """
     This function will remove from the routing map any
     path that starts with the provided argument (/ required).
