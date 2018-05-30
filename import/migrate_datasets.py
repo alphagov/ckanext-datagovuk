@@ -75,7 +75,11 @@ def clean_and_write(dataset_json):
         "Transport": "transport",
     }
     if 'theme-primary' in dataset:
-        dataset['theme-primary'] = themes_dict[dataset['theme-primary']]
+        if dataset['theme-primary'] in themes_dict:
+            dataset['theme-primary'] = themes_dict[dataset['theme-primary']]
+        else:
+            dataset['theme-primary'] = 'None'
+            stats.add('Primary theme mapping not possible', dataset['name'])
 
     # Shunt custom fields into extras (while we work out what to do with them)
     for key in ['schema', 'codelist',
