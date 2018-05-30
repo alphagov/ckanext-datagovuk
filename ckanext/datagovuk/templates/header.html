@@ -1,5 +1,14 @@
 {% ckan_extends %}
 
+{% block header_logo %}
+  <span class="header-logo">
+    <a href="{{ h.url_for('home') }}">
+      {{ g.site_title }}
+      {% if g.site_description %} | {{ g.site_description }}{% endif %}
+    </a>
+  </span>
+{% endblock %}
+
 {% block header_site_navigation_tabs %}
   {{ h.build_nav_main(
     ('search', _('Datasets')),
