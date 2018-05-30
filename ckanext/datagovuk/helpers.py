@@ -108,3 +108,6 @@ def themes():
     }
     return themes_dict
 
+def activate_upload(pkg):
+    return 'organogram' in pkg.get('title', '').lower()
+
