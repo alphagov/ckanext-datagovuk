@@ -141,7 +141,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # ITemplateHelpers
 
     def get_helpers(self):
-        return {'themes': ckanext.datagovuk.helpers.themes}
+        import ckanext.datagovuk.helpers as h
+        return {
+            'themes': h.themes,
+            'activate_upload': h.activate_upload
+        }
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
 
