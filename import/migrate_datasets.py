@@ -84,7 +84,7 @@ def clean_and_write(dataset_json):
     # Shunt custom fields into extras (while we work out what to do with them)
     for key in ['schema', 'codelist',
                 'archival', 'qa',
-                'theme-primary', 'theme-secondary']:
+                'theme-secondary']:
         if key not in dataset:
             continue
         # delete an extra in that name if it exists
@@ -97,6 +97,12 @@ def clean_and_write(dataset_json):
                 value=json.dumps(dataset[key])
                 ))
         keys_to_delete.append(key)
+
+    # Some extras are defined in the schema, so need removing from extras
+    for key in ['theme-primary']:
+        for extra in dataset['extras'][:]:
+            if extra['key'] == key:
+                dataset['extras'].remove(extra)
 
     # Resource qa & archiver
     # Need to be converted from a dict (which ends up as a single extra
