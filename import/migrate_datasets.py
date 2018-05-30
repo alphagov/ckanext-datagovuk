@@ -79,7 +79,8 @@ def clean_and_write(dataset_json):
 
     # Shunt custom fields into extras (while we work out what to do with them)
     for key in ['schema', 'codelist',
-                'archival', 'qa']:
+                'archival', 'qa',
+                'theme-primary', 'theme-secondary']:
         if key not in dataset:
             continue
         # delete an extra in that name if it exists
