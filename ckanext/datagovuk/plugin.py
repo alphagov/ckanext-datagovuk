@@ -99,7 +99,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                           '/user/register',
                           controller=user_controller,
                           action='register')
-        route_map.connect('harvest_index', '/harvest', action='index')
         return route_map
 
     def after_map(self, route_map):
@@ -138,6 +137,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             m.connect('organization_bulk_process',
                     '/publisher/bulk_process/{id}',
                     action='bulk_process')
+
+        route_map.connect('harvest_index', '/harvest', action='index')
 
         return route_map
 
