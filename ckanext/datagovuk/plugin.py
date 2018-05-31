@@ -106,6 +106,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # Deletes all the organization routes
         delete_routes_by_path_startswith(route_map, '/organization')
 
+        harvest_org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
+        route_map.connect('harvest_org_list', '/publisher/harvest/' + '{id}', controller=harvest_org_controller, action='source_list')
+
         # Recreates the organization routes with /publisher instead.
         with SubMapper(route_map, controller='organization') as m:
             m.connect('organizations_index', '/publisher', action='index')
