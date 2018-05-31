@@ -33,10 +33,10 @@ class PasswordResetsCommand(CkanCommand):
 
         with open(output_file, 'wb') as f:
             writer = csv.writer(f)
-            writer.writerow(['email-address', 'reset-key'])
+            writer.writerow(['id', 'email-address', 'reset-key'])
 
             for user in model.User.all():
                 create_reset_key(user)
                 user.save()
 
-                writer.writerow([user.email, user.reset_key])
+                writer.writerow([user.id, user.email, user.reset_key])
