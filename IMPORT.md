@@ -67,7 +67,7 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
 6. Load the organization data (takes a few minutes):
 
-       ckanapi load organizations -I organizations.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+       ckanapi load organizations -I organizations_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
 7. Migrate the dataset data (takes one minute):
 
