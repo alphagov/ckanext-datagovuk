@@ -40,6 +40,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def _modify_package_schema(self, schema):
         schema.update({
             'theme-primary': [toolkit.get_validator('valid_theme'),
+                              toolkit.get_validator('ignore_missing'),
                               toolkit.get_converter('convert_to_extras')]
         })
         return schema
