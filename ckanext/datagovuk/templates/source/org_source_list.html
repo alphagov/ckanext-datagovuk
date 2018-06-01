@@ -1,0 +1,30 @@
+{% extends 'organization/read_base.html' %}
+
+{% block subtitle %}{{ _('Harvest Sources') }} - {{ super() }}{% endblock %}
+
+{% block primary_content_inner %}
+  <div class="clearfix">
+    <h1 class="hide-heading">{{ _('Harvest Sources') }}</h1>
+    <div>
+      <a href="{{ h.url_for('harvest_new', group=c.group_dict.id) }}" class="btn pull-right">
+        <i class="fa fa-plus-square icon-plus-sign-alt"></i>
+        {{ _('Add Harvest Source') }}
+      </a>
+      <h3 class="results page-heading">
+        {%- if c.page.item_count -%}
+          {{ c.page.item_count }} harvest sources{{ _(" found for \"{query}\"").format(query=c.q) if c.q }}
+        {%- elif request.params -%}
+          {{ _('Sorry no harvest sources found for "{query}"').format(query=c.q) }}
+        {%- else -%}
+          {{ _('Harvest Sources') }}
+        {%- endif -%}
+      </h3>
+      {% if c.page.item_count %}
+        {% snippet 'snippets/source_list.html', sources=c.page.items, within_organization=true %}
+      {% else %}
+        <p class="empty">{{ _('Sorry no harvest sources found') }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {{ c.page.pager() }}
+{% endblock %}
