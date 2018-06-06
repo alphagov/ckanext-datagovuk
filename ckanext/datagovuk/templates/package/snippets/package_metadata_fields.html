@@ -26,5 +26,41 @@
 <div class="control-group">
   {{ _("By default, the contact details for your organisation will be displayed alongside this dataset.  You can override them for only this dataset by specifying them here.") }}
 </div>
+<div class="control-group">
+  <label class="control-label" for="contact-name">{{ _("Contact Name") }}</label>
+  <div class="controls">
+    <input type="text" id="field-contact-name" name="contact-name" value="{{ data.get('contact-name','') }}">
+  </div>
+</div>
+<div class="control-group">
+  <label class="control-label" for="contact-email">{{ _("Contact Email") }}</label>
+  <div class="controls">
+    <input type="text" id="field-contact-email" name="contact-email" value="{{ data.get('contact-email','') }}">
+  </div>
+</div>
+<div class="control-group">
+  <label class="control-label" for="contact-phone">{{ _("Contact Phone") }}</label>
+  <div class="controls">
+    <input type="text" id="field-contact-phone" name="foi-contact-phone" value="{{ data.get('contact-phone','') }}">
+  </div>
+</div>
+<div class="control-group">
+  <label class="control-label" for="foi-name">{{ _("FOI Name") }}</label>
+  <div class="controls">
+    <input type="text" id="field-foi-name" name="foi-name" value="{{ data.get('foi-name','') }}">
+  </div>
+</div>
+<div class="control-group">
+  <label class="control-label" for="foi-email">{{ _("FOI Email") }}</label>
+  <div class="controls">
+    <input type="text" id="field-foi-email" name="foi-email" value="{{ data.get('foi-email','') }}">
+  </div>
+</div>
+<div class="control-group">
+  <label class="control-label" for="foi-web">{{ _("FOI Web") }}</label>
+  <div class="controls">
+    <input type="text" id="field-foi-web" name="foi-web" value="{{ data.get('foi-web','') }}">
+  </div>
+</div>
 {% endblock %}
 

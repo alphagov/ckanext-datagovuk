@@ -43,6 +43,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                               toolkit.get_validator('ignore_missing'),
                               toolkit.get_converter('convert_to_extras')]
         })
+        for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+            schema.update({
+                contact_key: [toolkit.get_validator('ignore_missing'),
+                              toolkit.get_converter('convert_to_extras')]
+            })
         return schema
 
     def create_package_schema(self):
@@ -64,6 +69,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'theme-primary': [toolkit.get_converter('convert_from_extras'),
                               toolkit.get_validator('ignore_missing')]
         })
+        for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+            schema.update({
+                contact_key: [toolkit.get_converter('convert_from_extras'),
+                              toolkit.get_validator('ignore_missing')]
+            })
         return schema
 
     def is_fallback(self):
