@@ -1,5 +1,15 @@
 {% ckan_extends %}
 
+{% block custom_fields %}
+  {{ form.input('contact-name', label=_('Contact Name'), id='field-contact-name', value=data.get('contact-name',''), error=errors.get('contact-name','')) }}
+  {{ form.input('contact-email', label=_('Contact Email'), id='field-contact-email', value=data.get('contact-email',''), error=errors.get('contact-email','')) }}
+  {{ form.input('contact-phone', label=_('Contact Phone'), id='field-contact-phone', value=data.get('contact-phone',''), error=errors.get('contact-phone','')) }}
+  {{ form.input('foi-name', label=_('FOI Name'), id='field-foi-name', value=data.get('foi-name',''), error=errors.get('foi-name','')) }}
+  {{ form.input('foi-email', label=_('FOI Email'), id='field-foi-email', value=data.get('foi-email',''), error=errors.get('foi-email','')) }}
+  {{ form.input('foi-web', label=_('FOI Web'), id='field-foi-web', value=data.get('foi-web',''), error=errors.get('foi-web','')) }}
+  {{ form.input('foi-phone', label=_('FOI Phone'), id='field-foi-phone', value=data.get('foi-phone',''), error=errors.get('foi-phone','')) }}
+{% endblock %}
+
   {% block basic_fields %}
     {% set attrs = {'data-module': 'slug-preview-target'} %}
     {{ form.input('title', label=_('Name'), id='field-name', placeholder=_('My Organization'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs) }}
