@@ -9,3 +9,7 @@
   {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': '/', 'data-module-placeholder': '<dataset>'} %}
   {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
 {% endblock %}
+
+{% block package_metadata_fields_visibility %}
+      <input type="hidden" name="private" value="False">
+{% endblock %}
