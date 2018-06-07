@@ -1,6 +1,24 @@
 {% ckan_extends %}
 
+{% set res = c.resource %}
+
 {% block basic_fields_url %}
+  {% if 'resource-type' in res and res['resource-type'] == 'supporting-document' %}
+    {% set supp = True %}
+  {% else %}
+    {% set supp = False %}
+  {% endif %}
+  <label class="control-label" for="field-resource-type">{{ _('Resource Type') }}</label>
+  <div class="controls">
+    <label class="radio">
+       <input type="radio" id="resource-type-data-link" name="resource-type" value="data-link" {{ "checked" if supp == False }}>
+       {{ _('Data Link') }}
+    </label>
+    <label class="radio">
+       <input type="radio" id="resource-type-supporting-document" name="resource-type" value="supporting-document" {{ "checked" if supp == True }}>
+       {{ _('Supporting Document') }}
+    </label>
+  </div>
   {% set is_upload = (data.url_type == 'upload') %}
   {{ form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
       is_upload_enabled=h.uploads_enabled() and h.activate_upload(data), is_url=data.url and not is_upload, is_upload=is_upload,
