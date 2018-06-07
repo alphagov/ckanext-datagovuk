@@ -3,7 +3,7 @@
 }
 
 body {
-  font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serifm;
+  font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serif;
   font-size: 16px;
 }
 
@@ -22,4 +22,25 @@ body {
 a.btn-primary, a.btn-primary:hover, a.btn-primary:visited {
   background-color: rgb(0, 130, 59);
   background-image: none;
+}
+
+a.btn-primary .icon-plus-sign-alt {
+  background-image: url('/images/glyphicons-halflings-white.png');
+  width:14px;
+  height:14px;
+  background-position: 62px 64px;
+}
+
+a.btn .icon-refresh {
+  background-image: url('/images/glyphicons-halflings.png');
+  width:14px;
+  height:14px;
+  background-position: 134px 64px;
+}
+
+a.btn .icon-briefcase {
+  background-image: url('/images/glyphicons-halflings.png');
+  width:14px;
+  height:14px;
+  background-position: 36px 17px;
 }
