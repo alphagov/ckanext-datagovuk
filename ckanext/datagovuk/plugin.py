@@ -48,6 +48,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                 contact_key: [toolkit.get_validator('ignore_missing'),
                               toolkit.get_converter('convert_to_extras')]
             })
+        schema['resources'].update({ 'resource-type' : [toolkit.get_validator('ignore_missing')] })
         return schema
 
     def create_package_schema(self):
@@ -74,6 +75,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                 contact_key: [toolkit.get_converter('convert_from_extras'),
                               toolkit.get_validator('ignore_missing')]
             })
+        schema['resources'].update({ 'resource-type' : [toolkit.get_validator('ignore_missing')] })
         return schema
 
     def is_fallback(self):
