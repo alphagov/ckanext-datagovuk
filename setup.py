@@ -80,6 +80,7 @@ setup(
     entry_points='''
         [ckan.plugins]
         datagovuk=ckanext.datagovuk.plugin:DatagovukPlugin
+        datagovuk_publisher_form=ckanext.datagovuk.forms.publisher:PublisherForm
         inventory_harvester=ckanext.datagovuk.harvesters.inventory_harvester:InventoryHarvester
 
         [paste.paster_command]
