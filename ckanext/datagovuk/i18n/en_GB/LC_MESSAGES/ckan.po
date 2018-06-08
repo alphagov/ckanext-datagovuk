@@ -923,7 +923,7 @@ msgstr "Formats"
 #: ckan/controllers/group.py:309 ckan/controllers/home.py:65
 #: ckan/controllers/package.py:244 ckan/lib/helpers.py:837
 msgid "Licenses"
-msgstr "Licenses"
+msgstr "Licences"
 
 #: ckan/controllers/group.py:395 ckan/controllers/group.py:512
 #: ckan/controllers/package.py:326 ckan/controllers/package.py:767
@@ -2281,7 +2281,7 @@ msgstr "Valid API key needed to edit a group"
 
 #: ckan/model/license.py:222
 msgid "License not specified"
-msgstr "License not specified"
+msgstr "Licence not specified"
 
 #: ckan/model/license.py:232
 msgid "Open Data Commons Public Domain Dedication and License (PDDL)"
@@ -3747,7 +3747,7 @@ msgstr "Format"
 #: ckan/templates/package/snippets/package_basic_fields.html:30
 #: ckan/templates/snippets/license.html:21
 msgid "License"
-msgstr "License"
+msgstr "Licence"
 
 #: ckan/templates/package/resource_views.html:10
 msgid "New view"
@@ -4229,7 +4229,7 @@ msgstr "Go"
 
 #: ckan/templates/snippets/license.html:14
 msgid "No License Provided"
-msgstr "No License Provided"
+msgstr "No Licence Provided"
 
 #: ckan/templates/snippets/license.html:28
 msgid "This dataset satisfies the Open Definition."
