@@ -222,7 +222,7 @@ msgstr "Label"
 #: ckanext/datastore/templates/datastore/dictionary.html:21
 #: ckanext/datastore/templates/package/resource_read.html:21
 msgid "Description"
-msgstr "Description"
+msgstr "Summary"
 
 #: ckan/templates/group/member_new.html:60
 #: ckanext/datastore/templates/datastore/dictionary.html:26
@@ -923,7 +923,7 @@ msgstr "Formats"
 #: ckan/controllers/group.py:309 ckan/controllers/home.py:65
 #: ckan/controllers/package.py:244 ckan/lib/helpers.py:837
 msgid "Licenses"
-msgstr "Licenses"
+msgstr "Licences"
 
 #: ckan/controllers/group.py:395 ckan/controllers/group.py:512
 #: ckan/controllers/package.py:326 ckan/controllers/package.py:767
@@ -1758,7 +1758,7 @@ msgstr "Must be at least %s characters long"
 #: ckan/logic/validators.py:340 ckan/logic/validators.py:623
 #, python-format
 msgid "Name must be a maximum of %i characters long"
-msgstr "Name must be a maximum of %i characters long"
+msgstr "URL must be a maximum of %i characters long"
 
 #: ckan/logic/validators.py:343
 msgid ""
@@ -1851,7 +1851,7 @@ msgstr ""
 #: ckan/logic/validators.py:620
 #, python-format
 msgid "Name must be at least %s characters long"
-msgstr "Name must be at least %s characters long"
+msgstr "URL must be at least %s characters long"
 
 #: ckan/logic/validators.py:628
 msgid "That vocabulary name is already in use."
@@ -2281,7 +2281,7 @@ msgstr "Valid API key needed to edit a group"
 
 #: ckan/model/license.py:222
 msgid "License not specified"
-msgstr "License not specified"
+msgstr "Licence not specified"
 
 #: ckan/model/license.py:232
 msgid "Open Data Commons Public Domain Dedication and License (PDDL)"
@@ -2616,7 +2616,7 @@ msgstr "Log out"
 
 #: ckan/templates/header.html:56 ckan/templates/user/logout_first.html:15
 msgid "Log in"
-msgstr "Log in"
+msgstr "Sign in"
 
 #: ckan/templates/header.html:58 ckan/templates/user/new.html:3
 msgid "Register"
@@ -3747,7 +3747,7 @@ msgstr "Format"
 #: ckan/templates/package/snippets/package_basic_fields.html:30
 #: ckan/templates/snippets/license.html:21
 msgid "License"
-msgstr "License"
+msgstr "Licence"
 
 #: ckan/templates/package/resource_views.html:10
 msgid "New view"
@@ -3934,7 +3934,7 @@ msgstr "Are you sure you want to delete this dataset?"
 
 #: ckan/templates/package/snippets/package_form.html:43
 msgid "Next: Add Data"
-msgstr "Next: Add Data"
+msgstr "Next"
 
 #: ckan/templates/package/snippets/package_metadata_fields.html:6
 msgid "http://example.com/dataset.json"
@@ -4040,7 +4040,7 @@ msgstr "A resource can be any file or link to a file containing useful data."
 
 #: ckan/templates/package/snippets/resource_item.html:23
 msgid "Explore"
-msgstr "Explore"
+msgstr "More"
 
 #: ckan/templates/package/snippets/resource_item.html:35
 msgid "More information"
@@ -4229,7 +4229,7 @@ msgstr "Go"
 
 #: ckan/templates/snippets/license.html:14
 msgid "No License Provided"
-msgstr "No License Provided"
+msgstr "No Licence Provided"
 
 #: ckan/templates/snippets/license.html:28
 msgid "This dataset satisfies the Open Definition."
