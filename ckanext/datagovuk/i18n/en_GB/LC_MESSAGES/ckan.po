@@ -2616,7 +2616,7 @@ msgstr "Log out"
 
 #: ckan/templates/header.html:56 ckan/templates/user/logout_first.html:15
 msgid "Log in"
-msgstr "Log in"
+msgstr "Sign in"
 
 #: ckan/templates/header.html:58 ckan/templates/user/new.html:3
 msgid "Register"
