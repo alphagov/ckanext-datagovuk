@@ -24,3 +24,7 @@
       is_upload_enabled=h.uploads_enabled() and h.activate_upload(data), is_url=data.url and not is_upload, is_upload=is_upload,
       upload_label=_('Data'), url_label=_('URL'), placeholder=_('http://example.com/external-data.csv')) }}
 {% endblock basic_fields_url %}
+
+{% block save_button %}
+<button class="btn btn-primary" name="save" value="go-metadata" type="submit">{% block save_button_text %}{{ _('Publish') }}{% endblock %}</button>
+{% endblock %}
