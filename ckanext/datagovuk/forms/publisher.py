@@ -1,4 +1,3 @@
-log = __import__('logging').getLogger(__name__)
 import os
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -18,7 +17,6 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
     def form_to_db_schema(self):
         from ckan.logic.schema import group_form_schema
         schema = group_form_schema()
-        log.debug("c")
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({contact_key: [toolkit.get_validator('ignore_missing'),
                                          toolkit.get_converter('convert_to_extras'),
@@ -40,7 +38,6 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
         schema['revision_id'] = []
         schema['state'] = []
         schema['users'] = {'__extras': [toolkit.get_validator('keep_extras')]}
-        log.debug(schema)
         return schema
 
     def group_types(self):
