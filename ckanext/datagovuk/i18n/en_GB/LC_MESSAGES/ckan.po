@@ -1758,7 +1758,7 @@ msgstr "Must be at least %s characters long"
 #: ckan/logic/validators.py:340 ckan/logic/validators.py:623
 #, python-format
 msgid "Name must be a maximum of %i characters long"
-msgstr "Name must be a maximum of %i characters long"
+msgstr "URL must be a maximum of %i characters long"
 
 #: ckan/logic/validators.py:343
 msgid ""
@@ -1851,7 +1851,7 @@ msgstr ""
 #: ckan/logic/validators.py:620
 #, python-format
 msgid "Name must be at least %s characters long"
-msgstr "Name must be at least %s characters long"
+msgstr "URL must be at least %s characters long"
 
 #: ckan/logic/validators.py:628
 msgid "That vocabulary name is already in use."
