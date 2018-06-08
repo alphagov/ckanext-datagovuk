@@ -96,9 +96,8 @@ def migrate_ckan_user(ckan_user_json, drupal_users):
     # password comes from Drupal
     if user['name'].startswith('user_d'):
         drupal_id = user['name'].replace('user_d', '')
-        if user['fullname']:
-            user['name'] = user['fullname']
-            user['fullname'] = ''
+        if user['email']:
+            user['name'] = user['email']
             if 'activity' in user:
                 for activity in user['activity']:
                   activity['author'] = user['name']
@@ -123,8 +122,8 @@ def drupal_to_ckan_user(drupal_user):
     created = datetime.datetime.fromtimestamp(int(drupal_user['created']))
     old_user_name = drupal_user['name']
     user = dict(
-        name=drupal_user['name'],
-        fullname='',
+        name=drupal_user['mail'],
+        fullname=drupal_user['name'],
         email=drupal_user['mail'],
         password_hash=drupal_user['pass'] if args.production else random_password_hash(50),
         sysadmin=False,  # TODO
