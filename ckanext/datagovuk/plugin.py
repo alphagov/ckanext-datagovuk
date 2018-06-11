@@ -114,10 +114,12 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def before_map(self, route_map):
         user_controller = 'ckanext.datagovuk.controllers.user:UserController'
+        healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
         route_map.connect('register',
                           '/user/register',
                           controller=user_controller,
                           action='register')
+        route_map.connect('/healthcheck', controller=healthcheck_controller, action='healthcheck')
         return route_map
 
     def after_map(self, route_map):
