@@ -4,10 +4,18 @@
 {# This block is located between the Title and Description in the default CKAN templates #}
 {% endblock %}
 
+{% block package_basic_fields_title %}
+  {{ form.input('title', id='field-title', label=_('Title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target'}) }}
+{% endblock %}
+
 {% block package_basic_fields_url %}
   {% set prefix = h.url_for(controller='package', action='read', id='') %}
   {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': '/', 'data-module-placeholder': '<dataset>'} %}
   {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
+{% endblock %}
+
+{% block package_basic_fields_description %}
+  {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
 {% endblock %}
 
 {% block package_metadata_fields_visibility %}

@@ -22,8 +22,22 @@
   {% set is_upload = (data.url_type == 'upload') %}
   {{ form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
       is_upload_enabled=h.uploads_enabled() and h.activate_upload(data), is_url=data.url and not is_upload, is_upload=is_upload,
-      upload_label=_('Data'), url_label=_('URL'), placeholder=_('http://example.com/external-data.csv')) }}
+      upload_label=_('Data'), url_label=_('URL'), placeholder=' ') }}
 {% endblock basic_fields_url %}
+
+{% block basic_fields_name %}
+  {{ form.input('name', id='field-name', label=_('Name'), value=data.name, error=errors.name, classes=['control-full']) }}
+{% endblock %}
+
+{% block basic_fields_format %}
+    {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
+    {% call form.input('format', id='field-format', label=_('Format'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs) %}
+      <span class="info-block info-block-small">
+        <i class="fa fa-info-circle"></i>
+        {{ _('This will be guessed automatically. Leave blank if you wish') }}
+      </span>
+    {% endcall %}
+{% endblock %}
 
 {% block save_button %}
 <button class="btn btn-primary" name="save" value="go-metadata" type="submit">{% block save_button_text %}{{ _('Publish') }}{% endblock %}</button>
