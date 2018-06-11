@@ -14,14 +14,19 @@
   {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
 {% endblock %}
 
-{% block package_basic_fields_description %}
-  {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
+{% block package_basic_fields_license %}
+{{ super() }}
+<div class="control-group">
+  <label class="control-label" for="licence-custom">{{ _("Licence Information") }}</label>
+  <div class="controls">
+    <input type="text" id="field-licence-custom" name="licence-custom" value="{{ data.get('licence-custom','') }}">
+  </div>
+</div>
 {% endblock %}
 
 {% block package_metadata_fields_visibility %}
-      <input type="hidden" name="private" value="False">
+  <input type="hidden" name="private" value="False">
 {% endblock %}
 
 {% block package_basic_fields_tags %}
 {% endblock %}
-
