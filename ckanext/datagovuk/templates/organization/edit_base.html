@@ -1,0 +1,6 @@
+{% ckan_extends %}
+
+{% block content_primary_nav %}
+  {{ h.build_nav_icon('organization_edit', _('Edit'), id=c.group_dict.name) }}
+  {{ h.build_nav_icon('organization_members', _('Members'), id=c.group_dict.name) }}
+{% endblock %}
