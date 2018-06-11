@@ -34,4 +34,5 @@
 {% endblock %}
 
 {% block basic_fields_description %}
+  {{ form.input('datafile-date', type='date', label=_('Date'), id='field-datafile-date', value=res['datafile-date']) }}
 {% endblock %}
