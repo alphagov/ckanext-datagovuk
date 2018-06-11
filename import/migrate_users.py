@@ -85,7 +85,15 @@ def migrate_ckan_organisation(ckan_organisation_json, ckan_user_map):
           user['name'] = ckan_user_map[user['name']]
       else:
           print stats.add('No mapping found for organisation user', user['name'])
-    
+
+    # promote some of the extras to schema fields
+    keys = ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']
+    for key in keys:
+        for extra in organisation['extras']:
+            if extra['key'] == key:
+                organisation[key] = extra['value']
+                organisation['extras'].remove(extra)
+ 
     return organisation
 
 def migrate_ckan_user(ckan_user_json, drupal_users):
