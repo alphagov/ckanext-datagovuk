@@ -177,7 +177,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         import ckanext.datagovuk.helpers as h
         return {
             'themes': h.themes,
-            'activate_upload': h.activate_upload
+            'activate_upload': h.activate_upload,
+            'schemas': h.schemas,
         }
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
