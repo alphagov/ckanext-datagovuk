@@ -209,5 +209,48 @@ def get_dataset_schemas(a_string):
     list = a_string.replace("{", "").replace("}", "").split(",")
     return list
 
+def codelist():
+    codelist_dict = {
+        "7a3ce9e2-a383-4cd7-9ced-eef1b6769fe2": "Current Care Organisation Code: Clinical Commissioning Groups -",
+        "f882a403-724c-4d72-bdec-413248637faf": "Current Care Organisation: Clinical Commissioning Groups -",
+        "c52ccb62-03bb-4846-ae40-4d46d0118ceb": "Estate Type (Land Registry) - http://landregistry.data.gov.uk/def/ppi/estateType",
+        "9b870ab5-2d5f-4d87-918a-c1f2ffebe647": "GDC Code -",
+        "4622615d-d211-495b-ab07-9b7629dcb86b": "GDC Code: The Practitioners General Dental Council Code -",
+        "e4a870ca-c4c8-498d-b820-f273157b8026": "GMC Code -",
+        "55804660-bef5-4d38-835a-732aac634366": "GMCNumber: http://www.gmc-uk.org/doctors/register/LRMP.asp -",
+        "6bb235ba-4997-41a6-9229-0e9d52ba9440": "GOR Code: Commissioning Regions, Area Teams, Government Office Regions -",
+        "8223c8ac-106f-4dbd-8779-01e64c5dfe0c": "High Level Health Geography: Commissioning Regions, Area Teams, Government Office Regions -",
+        "bcf8a2dd-1a63-48f2-9178-692c705074e8": "Land Registry Application counts - http://landregistry.data.gov.uk/def/trans/ApplicationCounts",
+        "4d321c5a-c47f-4f7c-ac91-cff5c6cf9c34": "Location Organisation Code: NHS Trusts/Care Trusts -",
+        "7d9abd07-2cb2-4eba-99d7-8edb1e7bdb6d": "National Grouping: Commissioning Regions, Area Teams, Government Office Regions -",
+        "356e7994-9fbf-49ee-912b-c322da4a55d0": "OrganisationCode: General Medical Practices -",
+        "9b9d4619-59ef-412f-bb4c-351f5c693865": "OrganisationCode: NHS Trust Sites -",
+        "2b94685b-91c2-40d3-8ae0-71676c8a49a2": "OrganisationCode: Regulated Care Providers -",
+        "6a854309-9267-4814-96db-74c2e896c2c6": "OrganisationID: Social care locations -",
+        "3ae301b2-dbdd-42fc-b9b9-1d359e92edd7": "OrganisationId: GP practice and surgeries -",
+        "59cf2da9-d7c0-4a75-babc-4528bc8c1b52": "OrganisationId: Opticians -",
+        "4cdb87aa-963b-4433-a71a-4d5e453f532b": "OrganisationId: Pharmacies -",
+        "5ebf102f-7545-4ad1-8fe6-96b0092ae3ed": "Parent Organisation Code: Care Home HQ -",
+        "d69b32a7-f343-4fdf-9747-ebbf497f68ef": "Parent Organisation Code: Care Trusts -",
+        "e3375fff-ef92-454f-99af-667c09f30c42": "Parent Organisation Code: Clinical Commissioning Groups -",
+        "2c96d638-b1be-4baa-808f-0c083e8ffaab": "Parent Organisation Code: Commissioning Regions, Area Teams, Government Office Regions -",
+        "96325be0-33de-425d-8ca0-3a2957fcc59e": "Parent Organisation Code: Commissioning Support Units -",
+        "7ba0f3de-1793-4da7-83cf-a11cb7c51028": "Parent Organisation Code: General Dental Practices -",
+        "b6e36b4f-eac1-49fa-b7c7-f1327e5aa81d": "Parent Organisation Code: General Medical Practices -",
+        "3d85cb83-c23a-4e25-9ad7-80dbcea4542c": "Parent Organisation Code: Independent Sector Healthcare Providers -",
+        "f08fdf34-11fd-48b7-80e5-6685779dc95d": "Parent Organisation Code: NHS Trusts -",
+        "30d9e072-ad9e-49c6-aa07-62f7a301a285": "Parent Organisation Code: Optical Headquarters -",
+        "337c85e4-1e32-47bc-a699-479c5f32918b": "Parent Organisation Code: Pharmacy headquarters -",
+        "d7d80931-4b88-44cf-b8f5-4c83fd2e1245": "Parent Organisation Code: Special Health Authorities -",
+        "90cf2737-db06-4d6e-99be-23fd3a2ddda1": "ParentODSCode: Commissioning Regions, Area Teams, Government Office Regions -",
+        "b39a0ede-9220-4264-b1ef-a0056f19aab4": "ParentODSCode: NHS Trusts -",
+        "77533c3e-3f43-46e9-b414-cf4a067a0175": "ParentODSCode: Social care providers -",
+        "72991ee5-73ce-4e32-b2da-4382f28270b8": "Practicioner Code: General Dental Practicioners -",
+        "fded9c2d-1fed-4e80-bd38-2114eae165ce": "Property Type (Land Registry) - http://landregistry.data.gov.uk/def/ppi/propertyType",
+        "50c6c13f-b1a1-4b78-9c62-5c7eb2097e40": "Record Status (Land Registry) - http://landregistry.data.gov.uk/def/ppi/recordStatus",
+        "3b063793-61ec-47ca-bbd1-784ba4b5960b": "Speciality Function Code: NHS Data Model &amp; Dictionary -",
+    }
+    return codelist_dict
+
 def activate_upload(pkg):
     return 'organogram' in pkg.get('title', '').lower()
