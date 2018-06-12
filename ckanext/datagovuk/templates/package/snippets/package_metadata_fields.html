@@ -27,6 +27,21 @@
   </div>
 </div>
 <div class="control-group">
+  <label class="control-label" for="schema-vocabulary">{{ _("Schema/Vocabulary") }}</label>
+  <div class="controls">
+    <select multiple id="field-schema-vocabulary" name="schema-vocabulary">
+      {% for schema_id, schema_name in h.schemas().iteritems() %}
+      <option value="{{ schema_id }}" {% if data.get('schema-vocabulary', '') == schema_id %}selected="selected"{% endif %}>{{ schema_name.decode("utf8") }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.get('schema-vocabulary', '') %}
+    <span class="error-block">
+      <p class="field_error">{{errors.get('schema-vocabulary', '')}}</p>
+    </span>
+    {% endif %}
+  </div>
+</div>
+<div class="control-group">
   {{ _("By default, the contact details for your organisation will be displayed alongside this dataset.  You can override them for only this dataset by specifying them here.") }}
 </div>
 <div class="control-group">
