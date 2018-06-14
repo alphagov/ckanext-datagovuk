@@ -206,8 +206,11 @@ def schemas():
 
 
 def split_values(string):
-    list = string.replace("{", "").replace("}", "").split(",")
-    return list
+    if string[0] == "{":
+        list = string.replace("{", "").replace("}", "").split(",")
+        return list
+    else:
+        return [string]
 
 def codelist():
     codelist_dict = {
