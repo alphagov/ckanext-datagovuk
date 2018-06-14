@@ -46,6 +46,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                               toolkit.get_converter('convert_to_extras')],
             'schema-vocabulary': [toolkit.get_validator('ignore_missing'),
                                   toolkit.get_converter('convert_to_extras')],
+            'codelist': [toolkit.get_validator('ignore_missing'),
+                         toolkit.get_converter('convert_to_extras')],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -80,6 +82,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                                toolkit.get_validator('ignore_missing')],
             'schema-vocabulary': [toolkit.get_converter('convert_from_extras'),
                                   toolkit.get_validator('ignore_missing')],
+            'codelist': [toolkit.get_converter('convert_from_extras'),
+                         toolkit.get_validator('ignore_missing')],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
