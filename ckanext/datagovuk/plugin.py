@@ -184,7 +184,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'themes': h.themes,
             'activate_upload': h.activate_upload,
             'schemas': h.schemas,
-            'get_dataset_schemas': h.get_dataset_schemas,
+            'split_values': h.split_values,
             'codelist': h.codelist,
         }
 

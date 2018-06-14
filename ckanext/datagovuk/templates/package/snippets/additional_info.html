@@ -11,8 +11,19 @@
     <tr>
       <th scope="row" class="dataset-label">{{ _("Schema/Vocabulary") }}</th>
       <td class="dataset-details">
-        {% for schema in h.get_dataset_schemas(pkg_dict.get('schema-vocabulary', [])) %}
+        {% for schema in h.split_values(pkg_dict.get('schema-vocabulary', '')) %}
           {{ h.schemas()[schema] }}
+          <br>
+        {% endfor %}
+      </td>
+    </tr>
+  {% endif %}
+  {% if pkg_dict.get('codelist') %}
+    <tr>
+      <th scope="row" class="dataset-label">{{ _("Code Lists") }}</th>
+      <td class="dataset-details">
+        {% for code in h.split_values(pkg_dict.get('codelist', '')) %}
+          {{ h.codelist()[code] }}
           <br>
         {% endfor %}
       </td>

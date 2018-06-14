@@ -205,8 +205,8 @@ def schemas():
     return schemas_dict
 
 
-def get_dataset_schemas(a_string):
-    list = a_string.replace("{", "").replace("}", "").split(",")
+def split_values(string):
+    list = string.replace("{", "").replace("}", "").split(",")
     return list
 
 def codelist():
