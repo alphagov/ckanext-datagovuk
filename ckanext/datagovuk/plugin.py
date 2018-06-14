@@ -43,7 +43,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                               toolkit.get_validator('ignore_missing'),
                               toolkit.get_converter('convert_to_extras')],
             'licence-custom': [toolkit.get_validator('ignore_missing'),
-                              toolkit.get_converter('convert_to_extras')]
+                              toolkit.get_converter('convert_to_extras')],
+            'schema-vocabulary': [toolkit.get_validator('ignore_missing'),
+                                  toolkit.get_converter('convert_to_extras')],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -52,7 +54,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             })
         schema['resources'].update({
                 'resource-type' : [toolkit.get_validator('ignore_missing')],
-                'datafile-date' : [toolkit.get_validator('ignore_missing')]
+                'datafile-date' : [toolkit.get_validator('ignore_missing')],
              })
         return schema
 
@@ -75,7 +77,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'theme-primary': [toolkit.get_converter('convert_from_extras'),
                               toolkit.get_validator('ignore_missing')],
             'licence-custom': [toolkit.get_converter('convert_from_extras'),
-                              toolkit.get_validator('ignore_missing')]
+                               toolkit.get_validator('ignore_missing')],
+            'schema-vocabulary': [toolkit.get_converter('convert_from_extras'),
+                                  toolkit.get_validator('ignore_missing')],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -174,7 +178,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         import ckanext.datagovuk.helpers as h
         return {
             'themes': h.themes,
-            'activate_upload': h.activate_upload
+            'activate_upload': h.activate_upload,
+            'schemas': h.schemas,
+            'get_dataset_schemas': h.get_dataset_schemas
         }
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
