@@ -3387,7 +3387,7 @@ msgstr "There are currently no publishers for this site"
 #: ckan/templates/user/request_reset.html:16
 #: ckan/templates/user/snippets/login_form.html:20
 msgid "Username"
-msgstr "Username"
+msgstr "Email"
 
 #: ckan/templates/organization/member_new.html:50
 msgid "Email address"

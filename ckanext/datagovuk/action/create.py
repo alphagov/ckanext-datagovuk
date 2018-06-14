@@ -51,6 +51,9 @@ def user_create(context, data_dict):
 
     _check_access('user_create', context, data_dict)
 
+    if 'name' not in data_dict:
+        data_dict['name'] = data_dict['email']
+
     data, errors = _validate(data_dict, schema, context)
 
     if errors:
