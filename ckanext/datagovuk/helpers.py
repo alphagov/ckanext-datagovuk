@@ -205,5 +205,9 @@ def schemas():
     return schemas_dict
 
 
+def get_dataset_schemas(a_string):
+    list = a_string.replace("{", "").replace("}", "").split(",")
+    return list
+
 def activate_upload(pkg):
     return 'organogram' in pkg.get('title', '').lower()
