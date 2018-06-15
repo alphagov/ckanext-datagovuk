@@ -1,0 +1,11 @@
+{% ckan_extends %}
+
+{% set user_is_sysadmin = h.check_access('sysadmin') %}
+
+{% block primary_content %}
+{% if user_is_sysadmin %}
+  {{ super() }}
+{% else %}
+  {{_('You must be a system administrator to view the user list')}}
+{% endif %}
+{% endblock %}
