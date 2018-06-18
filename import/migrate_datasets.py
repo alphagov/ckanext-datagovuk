@@ -89,7 +89,7 @@ def clean_and_write(dataset_json):
         dataset['schema-vocabulary'] = list_of_ids
         dataset.pop('schema')
     # Shunt custom fields into extras (while we work out what to do with them)
-    for key in ['schema', 'codelist',
+    for key in ['codelist',
                 'archival', 'qa',
                 'theme-secondary']:
         if key not in dataset:
@@ -106,7 +106,7 @@ def clean_and_write(dataset_json):
         keys_to_delete.append(key)
 
     # Some extras are defined in the schema, so need removing from extras
-    for key in ['theme-primary', 'contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+    for key in ['schema', 'theme-primary', 'contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
         for extra in dataset['extras'][:]:
             if extra['key'] == key:
                 dataset['extras'].remove(extra)
