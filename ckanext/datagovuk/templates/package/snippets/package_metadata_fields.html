@@ -42,6 +42,21 @@
   </div>
 </div>
 <div class="control-group">
+  <label class="control-label" for="codelist">{{ _("Code Lists") }}</label>
+  <div class="controls">
+    <select multiple id="field-codelist" name="codelist">
+      {% for codelist_id, codelist_name in h.codelist().iteritems() %}
+      <option value="{{ codelist_id }}" {% if data.get('codelist', '') == codelist_id %}selected="selected"{% endif %}>{{ codelist_name.decode("utf8") }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.get('codelist', '') %}
+    <span class="error-block">
+      <p class="field_error">{{errors.get('codelist', '')}}</p>
+    </span>
+    {% endif %}
+  </div>
+</div>
+<div class="control-group">
   {{ _("By default, the contact details for your organisation will be displayed alongside this dataset.  You can override them for only this dataset by specifying them here.") }}
 </div>
 <div class="control-group">
