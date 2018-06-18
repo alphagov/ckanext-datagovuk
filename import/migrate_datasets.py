@@ -81,6 +81,13 @@ def clean_and_write(dataset_json):
             dataset['theme-primary'] = 'None'
             stats.add('Primary theme mapping not possible', dataset['name'])
 
+    # Set 'codelist' to a list of codelist ids
+    if 'codelist' in dataset:
+        list_of_ids = []
+        for code in dataset['codelist']:
+            list_of_ids.append(code['id'])
+        dataset['codelist'] = list_of_ids
+
     # Rename schema to schema-vocabulary and set to a list of schema ids
     if 'schema' in dataset:
         list_of_ids = []
