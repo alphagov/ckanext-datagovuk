@@ -12,11 +12,11 @@
 {% block custom_fields %}
 {# This block appears at the bottom of the form, in place of the custom fields in default CKAN #}
 <div class="control-group">
-  <label class="control-label" for="theme-primary">{{ _("Primary Theme") }}</label>
+  <label class="control-label" for="theme-primary">{{ _("Theme") }}</label>
   <div class="controls">
     <select id="field-theme-primary" name="theme-primary" data-module="autocomplete">
-      {% for theme_key, theme_val in h.themes().iteritems() %}
-        <option value="{{ theme_key }}" {% if data.get('theme-primary', '') == theme_key %}selected="selected"{% endif %}>{{ theme_val }}</option>
+      {% for theme in h.alphabetised_themes() %}
+        <option value="{{ theme[0] }}" {% if data.get('theme-primary', '') == theme[0] %}selected="selected"{% endif %}>{{ theme[1] }}</option>
       {% endfor %}
     </select>
     {% if errors.get('theme-primary', '') %}

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import operator
 from ckan.lib.munge import munge_tag
 
 def remove_duplicates_in_a_list(list_):
@@ -108,6 +109,10 @@ def themes():
         "transport": "Transport",
     }
     return themes_dict
+
+def alphabetised_themes():
+    alphabetised_themes = sorted(themes().items(), key=operator.itemgetter(1))
+    return alphabetised_themes
 
 def schemas():
     schemas_dict = {

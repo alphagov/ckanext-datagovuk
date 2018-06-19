@@ -2612,7 +2612,7 @@ msgstr "Settings"
 
 #: ckan/templates/header.html:43 ckan/templates/header.html:45
 msgid "Log out"
-msgstr "Log out"
+msgstr "Sign out"
 
 #: ckan/templates/header.html:56 ckan/templates/user/logout_first.html:15
 msgid "Log in"
