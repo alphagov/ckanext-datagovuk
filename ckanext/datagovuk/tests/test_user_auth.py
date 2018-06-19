@@ -35,7 +35,7 @@ class TestUserAuth:
             helpers.call_action,
             'user_auth',
             self.context,
-            email='',
+            name='',
             password='hello'
         )
 
@@ -45,7 +45,7 @@ class TestUserAuth:
             helpers.call_action,
             'user_auth',
             self.context,
-            email=self.user.email,
+            name=self.user.name,
             password=''
         )
 
@@ -55,7 +55,7 @@ class TestUserAuth:
             helpers.call_action,
             'user_auth',
             self.context,
-            email='not-correct@localhost',
+            name='not-correct@localhost',
             password='hello'
         )
 
@@ -65,7 +65,7 @@ class TestUserAuth:
             helpers.call_action,
             'user_auth',
             self.context,
-            email=self.user.email,
+            name=self.user.name,
             password='goodbye'
         )
 
@@ -75,6 +75,6 @@ class TestUserAuth:
             helpers.call_action,
             'user_auth',
             self.context,
-            email='wrong',
+            name='wrong',
             password='password'
         )

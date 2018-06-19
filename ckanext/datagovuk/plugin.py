@@ -131,6 +131,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                           '/user/register',
                           controller=user_controller,
                           action='register')
+        route_map.connect('user_edit',
+                          '/user/edit/{id:.*}',
+                          controller=user_controller,
+                          action='edit')
         route_map.connect('/healthcheck', controller=healthcheck_controller, action='healthcheck')
         return route_map
 
