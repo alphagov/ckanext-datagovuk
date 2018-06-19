@@ -3,7 +3,7 @@
 {% block extras %}
   {% if pkg_dict.get('theme-primary','') %}
     <tr>
-      <th scope="row" class="dataset-label">{{ _("Primary Theme") }}</th>
+      <th scope="row" class="dataset-label">{{ _("Theme") }}</th>
       <td class="dataset-details">{{ h.themes()[pkg_dict.get('theme-primary','')] }}</td>
     </tr>
   {% endif %}
