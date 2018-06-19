@@ -30,8 +30,8 @@
   <label class="control-label" for="schema-vocabulary">{{ _("Schema/Vocabulary") }}</label>
   <div class="controls">
     <select multiple id="field-schema-vocabulary" name="schema-vocabulary">
-      {% for schema_id, schema_name in h.schemas().iteritems() %}
-      <option value="{{ schema_id }}" {% if data.get('schema-vocabulary', '') == schema_id %}selected="selected"{% endif %}>{{ schema_name.decode("utf8") }}</option>
+      {% for schema in h.alphabetise_dict(h.schemas()) %}
+        <option value="{{ schema[0] }}" {% if data.get('schema-vocabulary', '') == schema[0] %}selected="selected"{% endif %}>{{ schema[1].decode("utf8") }}</option>
       {% endfor %}
     </select>
     {% if errors.get('schema-vocabulary', '') %}
