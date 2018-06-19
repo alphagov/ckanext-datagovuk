@@ -23,3 +23,10 @@
 {# Remove the search box from header #}
 {% endblock %}
 
+{% block header_account_log_out_link %}
+  <li>
+    <a href="{{ h.url_for('/user/_logout') }}" title="{{ _('Log out') }}">
+      {{ _('Log out') }}
+    </a>
+  </li>
+{% endblock %}
