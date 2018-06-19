@@ -222,7 +222,7 @@ msgstr "Label"
 #: ckanext/datastore/templates/datastore/dictionary.html:21
 #: ckanext/datastore/templates/package/resource_read.html:21
 msgid "Description"
-msgstr "Summary"
+msgstr "Description"
 
 #: ckan/templates/group/member_new.html:60
 #: ckanext/datastore/templates/datastore/dictionary.html:26
