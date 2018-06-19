@@ -110,9 +110,9 @@ def themes():
     }
     return themes_dict
 
-def alphabetised_themes():
-    alphabetised_themes = sorted(themes().items(), key=operator.itemgetter(1))
-    return alphabetised_themes
+def alphabetise_dict(dict):
+    alphabetised_dict = sorted(dict.items(), key=operator.itemgetter(1))
+    return alphabetised_dict
 
 def schemas():
     schemas_dict = {
