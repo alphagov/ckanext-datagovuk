@@ -134,6 +134,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             m.connect('/user/logged_in', action='logged_in')
             m.connect('/user/edit', action='edit')
             m.connect('/user/edit/{id:.*}', action='edit')
+            m.connect('/user/reset', action='request_reset')
         route_map.connect('/healthcheck', controller=healthcheck_controller, action='healthcheck')
         return route_map
 
