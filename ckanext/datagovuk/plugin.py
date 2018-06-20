@@ -117,11 +117,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def get_validators(self):
         from ckanext.datagovuk.logic.user_email_validator import correct_email_suffix
-        from ckanext.datagovuk.logic.validators import user_password_validator
         return {
             'correct_email_suffix': correct_email_suffix,
             'valid_theme': valid_theme,
-            'user_password_validator_dgu': user_password_validator,
         }
 
     # IRoutes
@@ -129,11 +127,12 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def before_map(self, route_map):
         user_controller = 'ckanext.datagovuk.controllers.user:UserController'
         healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
+        route_map.connect('register',
+                          '/user/register',
+                          controller=user_controller,
+                          action='register')
         with SubMapper(route_map, controller=user_controller) as m:
-            m.connect('register', '/user/register', action='register')
             m.connect('/user/logged_in', action='logged_in')
-            m.connect('/user/edit', action='edit')
-            m.connect('/user/edit/{id:.*}', action='edit')
         route_map.connect('/healthcheck', controller=healthcheck_controller, action='healthcheck')
         return route_map
 
