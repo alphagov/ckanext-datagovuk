@@ -37,20 +37,9 @@ def clean_and_write(dataset_json):
     keys_to_delete = ['individual_resources', 'additional_resources',
                       'timeseries_resources']
 
-    # Tags on old DGU had looser validation than default ckan
-    tags_to_delete = []
-    for tag_dict in dataset['tags'][:]:
-        tag = tag_dict['name']
-        # get rid of tags of 1 character e.g. B (chemical name for Boron)
-        if len(tag) < 2:
-            tags_to_delete.append(tag_dict)
-            continue
-        # munge to get rid of disallowed symbols
-        munged_tag = munge_tag(tag)
-        if munged_tag != tag:
-            tag_dict['name'] = munged_tag
-    for tag in tags_to_delete:
-        dataset['tags'].remove(tag)
+    # Remove the tags
+    dataset.pop('tags')
+    dataset.pop('num_tags')
 
     # Email address cleansing
     for key in ['author_email', 'contact_email', 'maintainer_email']:
