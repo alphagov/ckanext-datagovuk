@@ -131,6 +131,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                           '/user/register',
                           controller=user_controller,
                           action='register')
+        with SubMapper(route_map, controller=user_controller) as m:
+            m.connect('/user/logged_in', action='logged_in')
         route_map.connect('/healthcheck', controller=healthcheck_controller, action='healthcheck')
         return route_map
 
