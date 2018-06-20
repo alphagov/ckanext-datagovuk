@@ -42,5 +42,14 @@ def user_new_form_schema():
                toolkit.get_validator('not_empty'),
                toolkit.get_validator('correct_email_suffix'),
                unicode]})
+    schema['password1'] = [unicode, toolkit.get_validator('user_both_passwords_entered'),
+                           toolkit.get_validator('user_password_validator_dgu'), toolkit.get_validator('user_passwords_match')]
+    return schema
+
+def user_edit_form_schema():
+    from ckan.logic.schema import user_edit_form_schema as default_user_edit_form_schema
+    schema = default_user_edit_form_schema()
+    schema['password1'] = [unicode, toolkit.get_validator('user_both_passwords_entered'),
+                       toolkit.get_validator('user_password_validator_dgu'), toolkit.get_validator('user_passwords_match')]
     return schema
 
