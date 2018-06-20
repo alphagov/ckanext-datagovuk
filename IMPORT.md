@@ -73,9 +73,17 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
        python /vagrant/import/migrate_datasets.py -s datasets.jsonl.gz -o datasets_migrated.jsonl.gz
 
+*. Optional - perform an incremental update by selecting only datasets that have been modified or created since a time, given as a ISO8601 timestamp (e.g. 2018-04-12T17:07:36.284461)
+
+       python /vagrant/import/incremental_update.py -s datasets_migrated.jsonl.gz -o datasets_migrated_incremental.jsonl.gz -t <timestamp>
+
 8. Import the dataset data (takes 4.5 hours on an EC2 t2.medium):
 
        ckanapi load datasets -I datasets_migrated.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
+
+   If performing an incremental update, use the incremental migration data only:
+
+       ckanapi load datasets -I datasets_migrated_incremental.jsonl.gz -z -p 3 -c /etc/ckan/ckan.ini
 
 9. Migrate the harvest sources from legacy (takes about 5 minutes):
 
