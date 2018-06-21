@@ -262,3 +262,7 @@ def codelist():
 
 def activate_upload(pkg):
     return 'organogram' in pkg.get('title', '').lower()
+
+def roles():
+    roles_list = ['Admin', 'Editor']
+    return roles_list

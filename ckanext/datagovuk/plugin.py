@@ -189,6 +189,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'split_values': h.split_values,
             'codelist': h.codelist,
             'alphabetise_dict': h.alphabetise_dict,
+            'roles': h.roles,
         }
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
