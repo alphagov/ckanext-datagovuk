@@ -57,3 +57,7 @@ a.btn .icon-briefcase {
   width: 100%;
   height: 120px;
 }
+
+.add-member-form .control-set label{
+  margin-top: 14px;
+}
