@@ -7,7 +7,7 @@ import re
 
 def valid_theme(key, data, errors, context):
     value = data.get(key)
-    if value in themes():
+    if value in themes() or value == 'None':
         return
     else:
         raise Invalid(_('Primary theme {theme} is not valid'.format(theme=value)))
