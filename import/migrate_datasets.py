@@ -69,6 +69,8 @@ def clean_and_write(dataset_json):
         else:
             dataset['theme-primary'] = 'None'
             stats.add('Primary theme mapping not possible', dataset['name'])
+    else:
+        dataset['theme-primary'] = 'None'
 
     # Set 'codelist' to a list of codelist ids
     if 'codelist' in dataset:
