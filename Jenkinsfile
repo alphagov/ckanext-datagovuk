@@ -30,7 +30,7 @@ node {
       }
 
       stage('Deploy to Integration') {
-        govuk.deployIntegration(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
+        govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
       }
     }
   } catch (e) {
