@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan import model
 from ckan.lib.plugins import DefaultTranslation
 from ckan.config.routing import SubMapper
 
@@ -9,6 +10,7 @@ import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
 
 from ckanext.datagovuk.logic.theme_validator import valid_theme
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.ITranslation)
@@ -19,6 +21,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     # IConfigurer
 
@@ -104,6 +107,26 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # This plugin doesn't handle any special package types, it just
         # registers itself as the default (above).
         return []
+
+    # IPackageController
+
+    def after_show(self, context, data_dict):
+        if 'type' in data_dict and data_dict['type'] != 'harvest':
+            harvest_object = model.Session.query(HarvestObject) \
+                    .filter(HarvestObject.package_id==data_dict['id']) \
+                    .filter(HarvestObject.current==True) \
+                    .first()
+
+            if harvest_object:
+                data_dict['harvest'] = []
+                for key, value in [
+                    ('harvest_object_id', harvest_object.id),
+                    ('harvest_source_id', harvest_object.source.id),
+                    ('harvest_source_title', harvest_object.source.title),
+                        ]:
+                    data_dict['harvest'].append({'key': key, 'value': value})
+
+        return data_dict
 
     # IActions
 
