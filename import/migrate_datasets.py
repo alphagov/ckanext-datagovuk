@@ -80,7 +80,7 @@ def clean_and_write(dataset_json):
         dataset['schema-vocabulary'] = list_of_ids
         dataset.pop('schema')
     # Shunt custom fields into extras (while we work out what to do with them)
-    for key in ['archival', 'qa', 'theme-secondary']:
+    for key in ['archival', 'qa', 'theme-secondary', 'geographic_coverage']:
         if key not in dataset:
             continue
         # delete an extra in that name if it exists
