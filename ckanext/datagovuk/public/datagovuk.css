@@ -62,3 +62,7 @@ a.btn .icon-briefcase {
 .add-member-form .control-set label{
   margin-top: 14px;
 }
+
+label:after {
+  content: "";
+}
