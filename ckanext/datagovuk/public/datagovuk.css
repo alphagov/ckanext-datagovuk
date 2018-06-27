@@ -66,11 +66,16 @@ a.btn .icon-briefcase {
   margin-left: 145px;
 }
 
-.controls select {
+.controls #field-schema-vocabulary,
+.controls #field-codelist {
   width: 100%;
   height: 120px;
 }
 
 .add-member-form .control-set label{
   margin-top: 14px;
+}
+
+label:after {
+  content: "";
 }
