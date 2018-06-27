@@ -1,0 +1,18 @@
+{% ckan_extends %}
+
+{% block primary_content %}
+  <article class="module">
+    <div class="module-content">
+      {% block primary_content_inner %}
+      <h1 class="page-heading">
+        {% block page_heading %}{{ _('Register for an Account') }}{% endblock %}
+      </h1>
+      <div>
+        <p><a href="https://data.gov.uk/support">Contact us</a> to become a publisher for your organisation.  Please give us any details about the senior manager or colleagues you work with to manage the data for your organisation, and give us the full name of your organisation (without acronyms).</p>
+        
+        <p>We recommend you register with an email account for your organisation rather than a personal email account so that you meet the requirements. For example, we do not accept  Gmail addresses.</p>
+      </div>
+      {% endblock %}
+    </div>
+  </article>
+{% endblock %}
