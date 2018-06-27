@@ -41,13 +41,6 @@ def clean_and_write(dataset_json):
     dataset.pop('tags')
     dataset.pop('num_tags')
 
-    # Email address cleansing
-    for key in ['author_email', 'contact_email', 'maintainer_email']:
-        if key in dataset:
-            if dataset[key]:
-                # Remove the non-ASCII characters
-                dataset[key] = dataset[key].encode("ascii", errors="ignore").decode()
-
     # Update the theme-primary mapping
     themes_dict = {
         "Business & Economy": "business-and-economy",
@@ -69,6 +62,8 @@ def clean_and_write(dataset_json):
         else:
             dataset['theme-primary'] = 'None'
             stats.add('Primary theme mapping not possible', dataset['name'])
+    else:
+        dataset['theme-primary'] = 'None'
 
     # Set 'codelist' to a list of codelist ids
     if 'codelist' in dataset:
@@ -85,7 +80,7 @@ def clean_and_write(dataset_json):
         dataset['schema-vocabulary'] = list_of_ids
         dataset.pop('schema')
     # Shunt custom fields into extras (while we work out what to do with them)
-    for key in ['archival', 'qa', 'theme-secondary']:
+    for key in ['archival', 'qa', 'theme-secondary', 'geographic_coverage']:
         if key not in dataset:
             continue
         # delete an extra in that name if it exists
@@ -104,6 +99,14 @@ def clean_and_write(dataset_json):
         for extra in dataset['extras'][:]:
             if extra['key'] == key:
                 dataset['extras'].remove(extra)
+
+    # Email address cleansing
+    for key in ['author_email', 'contact_email', 'maintainer_email', 'contact-email', 'foi-email']:
+        if key in dataset and dataset[key] is not None:
+            dataset[key] = re.sub(r'$\s+', '', dataset[key])
+            dataset[key] = re.sub(r'\s+^', '', dataset[key])
+            dataset[key] = re.sub(r'$mailto:', '', dataset[key])
+            dataset[key] = dataset[key].encode("ascii", errors="ignore").decode() # Removes the non-ASCII characters
 
     # Resource qa & archiver
     # Need to be converted from a dict (which ends up as a single extra

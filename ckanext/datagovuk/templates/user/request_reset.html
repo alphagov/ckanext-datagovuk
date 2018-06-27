@@ -9,3 +9,11 @@
     {% endblock %}
   </form>
 {% endblock %}
+
+{% block help_inner %}
+<h2 class="module-heading">{{ _('Create password') }}</h2>
+<div class="module-content">
+  <p>{% trans %}Enter your username into the box and we will send you
+  an email with a link to enter a new password.{% endtrans %}</p>
+</div>
+{% endblock %}
