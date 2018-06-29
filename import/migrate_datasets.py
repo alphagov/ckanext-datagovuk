@@ -95,7 +95,7 @@ def clean_and_write(dataset_json):
         keys_to_delete.append(key)
 
     # Some extras are defined in the schema, so need removing from extras
-    for key in ['codelist', 'schema', 'theme-primary', 'contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+    for key in ['codelist', 'schema', 'theme-primary', 'contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone', 'date_update_future']:
         for extra in dataset['extras'][:]:
             if extra['key'] == key:
                 dataset['extras'].remove(extra)
