@@ -51,6 +51,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                                   toolkit.get_converter('convert_to_extras')],
             'codelist': [toolkit.get_validator('ignore_missing'),
                          toolkit.get_converter('convert_to_extras')],
+            'author_email': [toolkit.get_validator('ignore_missing'),
+                             unicode],
+            'maintainer_email': [toolkit.get_validator('ignore_missing'),
+                             unicode],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
