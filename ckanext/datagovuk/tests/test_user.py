@@ -86,3 +86,22 @@ class TestUserController(helpers.FunctionalTestBase):
 
         assert_true('The passwords you entered do not match' in response)
 
+    def test_edit_user_form_password_missing(self):
+        user = factories.User(password='pass')
+        app = self._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url=url_for(controller='user', action='edit'),
+            extra_environ=env,
+        )
+
+        form = response.forms['user-edit-form']
+
+        # Modify the values
+        form['old_password'] = 'pass'
+        form['password1'] = ''
+        form['password2'] = ''
+        response = webtest_submit(form, 'save', status=200, extra_environ=env)
+
+        assert_true('Please enter both passwords' in response)
+
