@@ -12,9 +12,14 @@ class TestHelpers:
     def setup_class(cls):
         return
 
-    def test_split_values(self):
+    def test_split_values_multiple(self):
         string_to_test = '{value_a,value_b,value_c}'
         list_output = ['value_a', 'value_b', 'value_c']
+        assert h.split_values(string_to_test) == list_output
+
+    def test_split_values_single(self):
+        string_to_test = 'value_a'
+        list_output = ['value_a']
         assert h.split_values(string_to_test) == list_output
 
     def test_alphabetise_dict(self):
