@@ -89,3 +89,7 @@ rsync -L --progress co@co-prod3.dh.bytemark.co.uk:/var/lib/ckan/ckan/dumps_with_
 
        cd /vagrant/import
        python migrate_harvest_sources.py (--production when in production)
+
+10. Perform an integrity check between the old and new instances (uses the API)
+
+       python /vagrant/import/compare_ckan_data.py -1 OLD_CKAN_URL -2 NEW_CKAN_URL
