@@ -7,7 +7,20 @@ body {
   font-size: 16px;
 }
 
+.masthead .navigation .nav-pills li a,
 .masthead .navigation .nav-pills li.active a {
+
+  background-color: #003647;
+}
+
+.dataset .masthead .navigation .nav-pills li a[href="/dataset"],
+.dataset .masthead .navigation .nav-pills li.active a[href="/dataset"],
+.publisher .masthead .navigation .nav-pills li a[href="/publisher"],
+.publisher .masthead .navigation .nav-pills li.active a[href="/publisher"],
+.harvest .masthead .navigation .nav-pills li a[href="/harvest"],
+.harvest .masthead .navigation .nav-pills li.active a[href="/harvest"],
+.site .masthead .navigation .nav-pills li a[href="/site-usage"],
+.site .masthead .navigation .nav-pills li.active a[href="/site-usage"] {
   background-color: rgb(0, 130, 59);
 }
 
@@ -61,4 +74,8 @@ a.btn .icon-briefcase {
 
 .add-member-form .control-set label{
   margin-top: 14px;
+}
+
+label:after {
+  content: "";
 }

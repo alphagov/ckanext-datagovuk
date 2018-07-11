@@ -1315,7 +1315,7 @@ msgstr "Invalid reset key. Please try again."
 
 #: ckan/controllers/user.py:541
 msgid "Your password has been reset."
-msgstr "Your password has been reset."
+msgstr "Your password has been reset, you can now sign in."
 
 #: ckan/controllers/user.py:562
 msgid "Your password must be 4 characters or longer."
@@ -4551,15 +4551,15 @@ msgstr "Registration"
 
 #: ckan/templates/user/new.html:14
 msgid "Register for an Account"
-msgstr "Register for an Account"
+msgstr "Register for an account"
 
 #: ckan/templates/user/new.html:26
 msgid "Why Sign Up?"
-msgstr "Why Sign Up?"
+msgstr "Getting started"
 
 #: ckan/templates/user/new.html:28
 msgid "Create datasets, groups and other exciting things"
-msgstr "Create datasets, groups and other exciting things"
+msgstr "To publish data, you must set up a Data publisher account."
 
 #: ckan/templates/user/new_user_form.html:5
 msgid "username"
@@ -4630,19 +4630,17 @@ msgstr "Reset your password"
 
 #: ckan/templates/user/request_reset.html:6
 msgid "Password reset"
-msgstr "Password reset"
+msgstr "Reset your password"
 
 #: ckan/templates/user/request_reset.html:19
 msgid "Request reset"
-msgstr "Request reset"
+msgstr "Send"
 
 #: ckan/templates/user/request_reset.html:34
 msgid ""
 "Enter your username into the box and we will send you an email with a link "
 "to enter a new password."
-msgstr ""
-"Enter your username into the box and we will send you an email with a link "
-"to enter a new password."
+msgstr "Enter your registered details and we'll send you a link to set a new password."
 
 #: ckan/templates/user/snippets/followee_dropdown.html:14
 #: ckan/templates/user/snippets/followee_dropdown.html:15

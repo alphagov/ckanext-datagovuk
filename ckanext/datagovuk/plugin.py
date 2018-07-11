@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan import model
 from ckan.lib.plugins import DefaultTranslation
 from ckan.config.routing import SubMapper
 
@@ -9,6 +10,7 @@ import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
 
 from ckanext.datagovuk.logic.theme_validator import valid_theme
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.ITranslation)
@@ -19,6 +21,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     # IConfigurer
 
@@ -39,8 +42,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def _modify_package_schema(self, schema):
         schema.update({
-            'theme-primary': [toolkit.get_validator('valid_theme'),
-                              toolkit.get_validator('ignore_missing'),
+            'theme-primary': [toolkit.get_validator('ignore_missing'),
+                              toolkit.get_validator('valid_theme'),
                               toolkit.get_converter('convert_to_extras')],
             'licence-custom': [toolkit.get_validator('ignore_missing'),
                               toolkit.get_converter('convert_to_extras')],
@@ -48,6 +51,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                                   toolkit.get_converter('convert_to_extras')],
             'codelist': [toolkit.get_validator('ignore_missing'),
                          toolkit.get_converter('convert_to_extras')],
+            'author_email': [toolkit.get_validator('ignore_missing'),
+                             unicode],
+            'maintainer_email': [toolkit.get_validator('ignore_missing'),
+                             unicode],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -105,6 +112,26 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # registers itself as the default (above).
         return []
 
+    # IPackageController
+
+    def after_show(self, context, data_dict):
+        if 'type' in data_dict and data_dict['type'] != 'harvest':
+            harvest_object = model.Session.query(HarvestObject) \
+                    .filter(HarvestObject.package_id==data_dict['id']) \
+                    .filter(HarvestObject.current==True) \
+                    .first()
+
+            if harvest_object:
+                data_dict['harvest'] = []
+                for key, value in [
+                    ('harvest_object_id', harvest_object.id),
+                    ('harvest_source_id', harvest_object.source.id),
+                    ('harvest_source_title', harvest_object.source.title),
+                        ]:
+                    data_dict['harvest'].append({'key': key, 'value': value})
+
+        return data_dict
+
     # IActions
 
     def get_actions(self):
@@ -135,7 +162,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             m.connect('/user/edit', action='edit')
             m.connect('/user/edit/{id:.*}', action='edit')
             m.connect('/user/reset', action='request_reset')
-        route_map.connect('/healthcheck', controller=healthcheck_controller, action='healthcheck')
+        route_map.connect('healthcheck', '/healthcheck', controller=healthcheck_controller, action='healthcheck')
         return route_map
 
     def after_map(self, route_map):

@@ -1,5 +1,19 @@
 {% ckan_extends %}
 
+{% block bodytag %} data-site-root="{{ h.url_for('/', locale='default', qualified=true) }}" data-locale-root="{{ h.url_for('/', qualified=true) }}"
+  {%- if 'dataset' in self.subtitle().lower() -%}
+    class="dataset"
+  {%- elif 'publisher' in self.subtitle().lower() -%}
+    class="publisher"
+  {%- elif 'harvest' in self.subtitle().lower() -%}
+    class="harvest"
+  {%- elif 'usage' in self.subtitle().lower() -%}
+    class="site"
+  {% else %}
+    {# no highlight class needed #}
+  {%- endif %}
+{% endblock %}
+
 {% block styles %}
   {{ super() }}
   <link rel="stylesheet" href="/datagovuk.css" />

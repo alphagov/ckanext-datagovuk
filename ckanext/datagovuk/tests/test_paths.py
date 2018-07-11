@@ -9,3 +9,14 @@ def test_edit_path():
     path = toolkit.url_for('organization_edit', id='cabinet-office')
     assert(path == '/publisher/edit/cabinet-office')
 
+def test_analytics_path():
+    path = toolkit.url_for('site_analytics')
+    assert(path == '/data/site-usage')
+
+def test_harvest_path():
+    path = toolkit.url_for('harvest_index')
+    assert(path == '/harvest')
+
+def test_healthcheck_path():
+    path = toolkit.url_for('healthcheck')
+    assert(path == '/healthcheck')
