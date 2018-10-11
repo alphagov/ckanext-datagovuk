@@ -8,6 +8,7 @@
   {% else %}
     {% set supp = False %}
   {% endif %}
+  {% if not h.activate_upload(pkg_name) %}
   <label class="control-label" for="field-resource-type">{{ _('Resource Type') }}</label>
   <div class="controls">
     <label class="radio">
@@ -19,9 +20,10 @@
        {{ _('Supporting Document') }}
     </label>
   </div>
+  {% endif %}
   {% set is_upload = (data.url_type == 'upload') %}
   {{ form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
-      is_upload_enabled=h.uploads_enabled() and h.activate_upload(data), is_url=data.url and not is_upload, is_upload=is_upload,
+      is_upload_enabled=h.uploads_enabled() and h.activate_upload(pkg_name), is_url=data.url and not is_upload, is_upload=is_upload,
       upload_label=_('Data'), url_label=_('URL'), placeholder=' ') }}
 {% endblock basic_fields_url %}
 

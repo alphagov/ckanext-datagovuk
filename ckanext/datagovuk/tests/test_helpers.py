@@ -4,12 +4,25 @@ from nose.tools import assert_true, assert_false, assert_raises
 from ckan import model
 from ckan import logic
 from ckan.tests import factories, helpers
+from ckanext.harvest import model as harvest_model
 
 import ckanext.datagovuk.helpers as h
 
 class TestHelpers:
     @classmethod
     def setup_class(cls):
+        return
+
+    @classmethod
+    def setup(cls):
+        helpers.reset_db()
+        harvest_model.setup()
+        sysadmin = factories.Sysadmin()
+        cls.context = {'user': sysadmin['name']}
+        return
+
+    @classmethod
+    def teardown_class(cls):
         return
 
     def test_split_values_multiple(self):
@@ -193,3 +206,22 @@ class TestHelpers:
                 "3b063793-61ec-47ca-bbd1-784ba4b5960b": "Speciality Function Code: NHS Data Model &amp; Dictionary -",
             }
             assert h.codelist() == codelist_dict
+
+    def test_activate_upload_government(self):
+        dataset = factories.Dataset(name='government-organogram', title='An organogram uploaded by a government department')
+        dataset['schema-vocabulary'] = 'd3c0b23f-6979-45e4-88ed-d2ab59b005d0'
+        helpers.call_action('package_update', self.context, **dataset)
+        assert_true(h.activate_upload('government-organogram'))
+
+    def test_activate_upload_local_authority(self):
+        dataset = factories.Dataset(name='la-organogram', title='An organogram uploaded by a local authority')
+        dataset['schema-vocabulary'] = '538b857a-64ba-490e-8440-0e32094a28a7'
+        helpers.call_action('package_update', self.context, **dataset)
+        assert_true(h.activate_upload('la-organogram'))
+
+    def test_activate_upload_false(self):
+        dataset = factories.Dataset(name='not-an-organogram', title='A dataset that is not an organogram')
+        dataset['schema-vocabulary'] = 'fc3043a5-52e7-42fe-be7c-d3e0ef576c1d'
+        helpers.call_action('package_update', self.context, **dataset)
+        assert_false(h.activate_upload('not-an-organogram'))
+
