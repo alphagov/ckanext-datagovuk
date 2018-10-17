@@ -203,7 +203,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                     action='bulk_process')
 
         route_map.connect('harvest_index', '/harvest', action='index')
-        route_map.connect('site_analytics', '/data/site-usage', action='index')
 
         return route_map
 
