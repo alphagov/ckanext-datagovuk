@@ -23,6 +23,7 @@ import argparse
 import string
 import logging
 import itertools
+import io
 
 log = __import__('logging').getLogger(__name__)
 
@@ -1082,6 +1083,19 @@ def write_output_files(input_xls_filepath, output_folder, senior_df, junior_df):
     save_csvs(senior_filename, junior_filename, senior_df, junior_df)
 
     return senior_filename, junior_filename
+
+
+def create_organogram_csvs(input_xls_file):
+    senior_df, junior_df, errors, warnings, _will_display = \
+        load_xls_and_get_errors(input_xls_file)
+
+    senior_csv = io.BytesIO()
+    junior_csv = io.BytesIO()
+
+    if not errors:
+        save_csvs(senior_csv, junior_csv, senior_df, junior_df)
+
+    return errors, warnings, senior_csv, junior_csv
 
 
 def main(input_xls_filepath, output_folder):
