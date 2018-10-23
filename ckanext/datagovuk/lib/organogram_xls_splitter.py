@@ -1060,6 +1060,30 @@ def dedupe_list(things):
     return [x for x in things if not (x in seen or seen_add(x))]
 
 
+def calculate_organogram_name(org):
+    org = org[org.notnull()].unique()
+
+    name = " & ".join(org)
+
+    if name == u'Ministry of Defence':
+        _unit = senior_df['Unit']
+        _unit = _unit[_unit.notnull()].unique()
+        name += " - " + (" & ".join(_unit))
+
+    return name
+
+
+def write_output_files(input_xls_filepath, output_folder, senior_df, junior_df):
+    basename, extension = os.path.splitext(os.path.basename(input_xls_filepath))
+    senior_filename = os.path.join(output_folder, basename + '-senior.csv')
+    junior_filename = os.path.join(output_folder, basename + '-junior.csv')
+    print "Writing", senior_filename, junior_filename
+
+    save_csvs(senior_filename, junior_filename, senior_df, junior_df)
+
+    return senior_filename, junior_filename
+
+
 def main(input_xls_filepath, output_folder):
     print "Loading", input_xls_filepath
 
@@ -1070,28 +1094,19 @@ def main(input_xls_filepath, output_folder):
         verify_level = get_verify_level(date_, input_xls_filepath)
     else:
         verify_level = 'load, display and be valid'
+
     failure_stage, senior_df, junior_df, errors, warnings = \
         load_xls_and_stop_on_errors(input_xls_filepath, verify_level,
                                     print_errors=True)
+
     if failure_stage != None:
         # fatal error has been printed
         return
 
-    # Calculate Organogram name
-    _org = senior_df['Organisation']
-    _org = _org[_org.notnull()].unique()
-    name = " & ".join(_org)
-    if name == u'Ministry of Defence':
-        _unit = senior_df['Unit']
-        _unit = _unit[_unit.notnull()].unique()
-        name += " - " + (" & ".join(_unit))
-    # Write output files
-    basename, extension = os.path.splitext(os.path.basename(input_xls_filepath))
-    senior_filename = os.path.join(output_folder, basename + '-senior.csv')
-    junior_filename = os.path.join(output_folder, basename + '-junior.csv')
-    print "Writing", senior_filename, junior_filename
+    senior_filename, junior_filename = \
+        write_output_files(input_xls_filepath, output_folder, senior_df, junior_df)
 
-    save_csvs(senior_filename, junior_filename, senior_df, junior_df)
+    name = calculate_organogram_name(senior_df['Organisation'])
 
     # Write index file - used by Drupal
     index = [{'name': name, 'value': basename}]  # a list because of legacy
@@ -1101,6 +1116,7 @@ def main(input_xls_filepath, output_folder):
     with open(index_filename, 'w') as f:
         json.dump(index, f)
     print "Done."
+
     # return values are only for the tests
     return senior_filename, junior_filename, senior_df, junior_df
 
