@@ -7,7 +7,12 @@ from ckan.plugins.toolkit import (
     )
 import ckan.lib.dictization.model_save as model_save
 import ckan.lib.dictization.model_dictize as model_dictize
+from ckan.logic.action.create import resource_create as resource_create_core
+from ckan.logic import get_or_bust
+from ckanext.datagovuk.lib.organogram_xls_splitter import create_organogram_csvs
 
+import cgi
+import mimetypes
 
 log = __import__('logging').getLogger(__name__)
 
@@ -16,6 +21,64 @@ log = __import__('logging').getLogger(__name__)
 # function copied from there
 _check_access = check_access
 _validate = navl_validate
+
+class FakeFieldStorage(cgi.FieldStorage):
+    def __init__(self, destination_filename, stream):
+        self.name = 'upload'
+        self.filename = destination_filename
+        self.file = stream
+        self.file.seek(0)
+
+def resource_create(context, data_dict):
+    '''Wraps the original CKAN resource creation
+    to handle XLS organogram uploads and split them into
+    component CSVs.
+
+    Passes all non-organogram resources through to CKAN
+    as normal.
+
+    See ckan.logic.action.create.resource_create for
+    documentation on the original function.
+    '''
+    mimetype = mimetypes.guess_type(data_dict['url'])[0]
+
+    if mimetype == 'application/vnd.ms-excel':
+        package_id = get_or_bust(data_dict, 'package_id')
+
+        pkg_dict = get_action('package_show')(
+            dict(context, return_type='dict'),
+            {'id': package_id})
+
+        organogram_ids = {
+            '538b857a-64ba-490e-8440-0e32094a28a7', # Local authority
+            'd3c0b23f-6979-45e4-88ed-d2ab59b005d0', # Departmental
+            }
+
+        if pkg_dict['schema-vocabulary'] in organogram_ids:
+            file_handle = data_dict['upload'].file
+
+            errors, warnings, senior_csv, junior_csv = create_organogram_csvs(file_handle)
+
+            if errors:
+                context['session'].rollback()
+                raise ValidationError(errors)
+            else:
+                senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context)
+                junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context)
+
+                return senior_resource
+
+    return resource_create_core(context, data_dict)
+
+def _create_csv_resource(junior_senior, csv, resource_data, context):
+    filename = 'organogram-%s-posts.csv' % junior_senior.lower()
+    csv_wrapper = FakeFieldStorage(filename, csv)
+
+    resource_data['name'] = 'Organogram (%s posts)' % junior_senior
+    resource_data['url'] = filename
+    resource_data['upload'] = csv_wrapper
+
+    resource_create_core(context, resource_data)
 
 
 def user_create(context, data_dict):
