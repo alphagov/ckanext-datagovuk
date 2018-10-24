@@ -128,7 +128,7 @@ class DguHarvesterBase(HarvesterBase):
 
         if status == 'delete':
             # Delete package
-            tk.get_action('package_delete')(context, {'id': harvest_object.package_id})
+            tk.get_action('package_delete')(context.copy(), {'id': harvest_object.package_id})
             log.info('Deleted package {0} with guid {1}'.format(harvest_object.package_id, harvest_object.guid))
             previous_object.save()
             self._transfer_current(previous_object, harvest_object)
@@ -142,16 +142,11 @@ class DguHarvesterBase(HarvesterBase):
 
         if existing_dataset:
             package_dict_defaults['name'] = existing_dataset.name
-        if source_config.get('remote_orgs') not in ('only_local', 'create'):
-            # Assign owner_org to the harvest_source's publisher
-            #master would get the harvest_object.source.publisher_id this way:
-            #source_dataset = tk.get_action('package_show')(context, {'id': harvest_object.source.id})
-            #local_org = source_dataset.get('owner_org')
-            package_dict_defaults['owner_org'] = harvest_object.source.publisher_id
-        elif existing_dataset and existing_dataset.owner_org:
+        if existing_dataset and existing_dataset.owner_org:
             package_dict_defaults['owner_org'] = existing_dataset.owner_org
         else:
-            package_dict_defaults['owner_org'] = harvest_object.source.publisher_id
+            source_dataset = tk.get_action('package_show')(context.copy(), {'id': harvest_object.source.id})
+            package_dict_defaults['owner_org'] = source_dataset.get('owner_org')
 
         package_dict_defaults['tags'] = source_config.get('default_tags', [])
         package_dict_defaults['groups'] = source_config.get('default_groups', [])
@@ -267,7 +262,7 @@ class DguHarvesterBase(HarvesterBase):
 
             log.debug('package_create: %r', package_dict)
             try:
-                package_dict_created = tk.get_action('package_create')(context, package_dict)
+                package_dict_created = tk.get_action('package_create')(context.copy(), package_dict)
                 log.info('Created new package name=%s id=%s guid=%s', package_dict.get('name'), package_dict_created['id'], harvest_object.guid)
             except tk.ValidationError, e:
                 self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
@@ -277,7 +272,7 @@ class DguHarvesterBase(HarvesterBase):
             package_dict['id'] = package_id
             log.debug('package_update: %r', package_dict)
             try:
-                package_dict_updated = tk.get_action('package_update')(context, package_dict)
+                package_dict_updated = tk.get_action('package_update')(context.copy(), package_dict)
                 log.info('Updated package name=%s id=%s guid=%s', package_dict.get('name'), package_dict_updated['id'], harvest_object.guid)
             except tk.ValidationError, e:
                 self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
