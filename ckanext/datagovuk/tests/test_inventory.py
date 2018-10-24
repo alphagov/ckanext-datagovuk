@@ -39,9 +39,13 @@ class TestInventory:
 
         # We only want one for testing
         harvest_object_id = result[0]
+        harvest_obj = HarvestObject.get(harvest_object_id)
+
+        # Run the fetch stage
+        fetch_result = harvester.fetch_stage(harvest_obj)
+        assert(fetch_result is True)
 
         # Make sure we can create a dataset by running the import stage
-        harvest_obj = HarvestObject.get(harvest_object_id)
         harvester.import_stage(harvest_obj)
         assert(harvest_obj.package_id is not None)
 
