@@ -15,6 +15,7 @@ from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.datagovuk.helpers import (munge_tags, remove_duplicates_in_a_list)
 
+log = logging.getLogger(__name__ + '.import')
 
 class DguHarvesterBase(HarvesterBase):
     '''
@@ -64,7 +65,6 @@ class DguHarvesterBase(HarvesterBase):
           package, for extras etc
         '''
 
-        log = logging.getLogger(__name__ + '.import')
         log.debug('Import stage for harvest object: %s', harvest_object.id)
 
         if not harvest_object:
@@ -377,6 +377,48 @@ class DguHarvesterBase(HarvesterBase):
             [cls.get_metadata_provenance_for_just_this_harvest(harvest_object)]
         return json.dumps(metadata_provenance)
 
+    @classmethod
+    def _match_resources_with_existing_ones(cls, res_dicts,
+                                            existing_resources):
+        '''Adds IDs to given resource dicts, based on existing resources, so
+        that when we do package_update the resources are updated rather than
+        deleted and recreated.
+
+        Edits the res_dicts in-place
+
+        :param res_dicts: Resources to have the ID added
+        :param existing_resources: Existing resources - have IDs. dicts or
+                                   Resource objects
+        :returns: None
+        '''
+        unmatched_res_dicts = [res_dict for res_dict in res_dicts]
+        if not unmatched_res_dicts:
+            log.info('Resource IDs exist alread (%s resources)',
+                     len(res_dicts))
+            return
+        if existing_resources and isinstance(existing_resources[0], dict):
+            unmatched_existing_res_dicts = [res_dict
+                                            for res_dict in existing_resources]
+        else:
+            unmatched_existing_res_dicts = [dict(id=res.id, url=res.url,
+                                                 name=res.name,
+                                                 description=res.description)
+                                            for res in existing_resources]
+
+        def find_matches(match_func):
+            for res_dict in unmatched_res_dicts[:]:
+                for existing_res_dict in unmatched_existing_res_dicts:
+                    if match_func(res_dict, existing_res_dict):
+                        res_dict['id'] = existing_res_dict['id']
+                        unmatched_existing_res_dicts.remove(existing_res_dict)
+                        unmatched_res_dicts.remove(res_dict)
+                        break
+        find_matches(lambda res1, res2: res1['url'] == res2['url'] and
+                     res1.get('name') == res2['name'] and
+                     res1.get('description') == res2['description'])
+        find_matches(lambda res1, res2: res1['url'] == res2['url'])
+        log.info('Matched resources to existing ones: %s/%s',
+                 len(res_dicts)-len(unmatched_res_dicts), len(res_dicts))
 
 class PackageDictError(Exception):
     pass
