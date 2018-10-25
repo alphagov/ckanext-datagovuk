@@ -3,8 +3,10 @@ import uuid
 
 import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
+import ckanext.harvest.tests.factories as harvest_factories
 from ckan.model import Package
 from ckanext.datagovuk.harvesters.inventory_harvester import InventoryHarvester
+from ckanext.harvest import model as harvest_model
 from ckanext.harvest.model import setup as db_setup
 from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
                                    HarvestObjectError, HarvestSource,
@@ -14,18 +16,16 @@ class TestInventory:
 
     def setup(self):
         db_setup()
+        harvest_model.setup()
 
         self.sysadmin = factories.Sysadmin()
         self.publisher = factories.Organization()
-        self.source = HarvestSource(
-            url = 'file:///',
-            type = 'inventory',
-            publisher_id = self.publisher['id']
-        )
-        self.source.save()
-
-    def teardown(self):
-        self.source.delete()
+        data_dict = {
+            'url': 'file:///',
+            'source_type': 'inventory',
+            'owner_org': self.publisher['id'],
+        }
+        self.source = harvest_factories.HarvestSourceObj(**data_dict)
 
     def test_harvester(self):
         job = HarvestJob(source = self.source)
