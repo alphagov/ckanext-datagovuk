@@ -41,8 +41,11 @@ def resource_create(context, data_dict):
     documentation on the original function.
     '''
     mimetype = mimetypes.guess_type(data_dict['url'])[0]
+    log.debug("Mimetype: %s" % mimetype)
 
     if mimetype == 'application/vnd.ms-excel':
+        log.debug("Excel file detected")
+
         package_id = get_or_bust(data_dict, 'package_id')
 
         pkg_dict = get_action('package_show')(
@@ -55,6 +58,8 @@ def resource_create(context, data_dict):
             }
 
         if pkg_dict['schema-vocabulary'] in organogram_ids:
+            log.debug("Organogram detected")
+
             file_handle = data_dict['upload'].file
 
             errors, warnings, senior_csv, junior_csv = create_organogram_csvs(file_handle)
@@ -63,11 +68,13 @@ def resource_create(context, data_dict):
                 context['session'].rollback()
                 raise ValidationError(errors)
             else:
+                log.debug("Valid organogram Excel file found")
                 senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context)
                 junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context)
 
                 return senior_resource
 
+    log.debug("Passing args through to the CKAN resource_create")
     return resource_create_core(context, data_dict)
 
 def _create_csv_resource(junior_senior, csv, resource_data, context):
