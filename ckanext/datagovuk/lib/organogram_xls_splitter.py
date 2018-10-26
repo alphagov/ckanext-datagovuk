@@ -1074,8 +1074,7 @@ def calculate_organogram_name(org):
     return name
 
 
-def write_output_files(input_xls_filepath, output_folder, senior_df, junior_df):
-    basename, extension = os.path.splitext(os.path.basename(input_xls_filepath))
+def write_output_files(basename, output_folder, senior_df, junior_df):
     senior_filename = os.path.join(output_folder, basename + '-senior.csv')
     junior_filename = os.path.join(output_folder, basename + '-junior.csv')
     print "Writing", senior_filename, junior_filename
@@ -1117,8 +1116,10 @@ def main(input_xls_filepath, output_folder):
         # fatal error has been printed
         return
 
+    basename, _extension = os.path.splitext(os.path.basename(input_xls_filepath))
+
     senior_filename, junior_filename = \
-        write_output_files(input_xls_filepath, output_folder, senior_df, junior_df)
+        write_output_files(basename, output_folder, senior_df, junior_df)
 
     name = calculate_organogram_name(senior_df['Organisation'])
 

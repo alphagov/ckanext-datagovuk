@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os.path
 from nose.tools import assert_equal, assert_raises, assert_in, assert_not_in
@@ -8,8 +7,8 @@ from pprint import pprint
 import pandas as pd
 from numpy import nan
 
-import etl_to_csv
-from etl_to_csv import (
+import ckanext.datagovuk.lib.organogram_xls_splitter as organogram_xls_splitter
+from ckanext.datagovuk.lib.organogram_xls_splitter import (
     main, load_xls_and_get_errors, in_sheet_validation_senior_columns,
     load_references, load_senior,
     )
@@ -17,7 +16,7 @@ from etl_to_csv import (
 assert_equal.im_class.maxDiff = None
 
 TEST_XLS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                               '../data/test-xls'))
+                               '../data'))
 
 class TestMain():
     def test_sample_senior_valid(self):
@@ -384,8 +383,8 @@ class MockArgs(object):
 
 
 def run_etl_on_file(input_xls_filepath, date='2011-03-31'):
-    etl_to_csv.args = MockArgs()
-    etl_to_csv.args.date = date
+    organogram_xls_splitter.args = MockArgs()
+    organogram_xls_splitter.args.date = date
     ret = main(input_xls_filepath, '/tmp/')
     if ret is None:
         raise EtlError()
