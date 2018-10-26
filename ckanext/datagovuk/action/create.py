@@ -85,7 +85,7 @@ def _create_csv_resource(junior_senior, csv, resource_data, context):
     resource_data['url'] = filename
     resource_data['upload'] = csv_wrapper
 
-    resource_create_core(context, resource_data)
+    return resource_create_core(context, resource_data)
 
 
 def user_create(context, data_dict):
