@@ -1,12 +1,13 @@
 """Tests for plugin.py."""
 from ckanext.datagovuk.plugin import DatagovukPlugin
-import ckanext.datagovuk.action.create as create
-import ckanext.datagovuk.action.get as get
-from nose.tools import assert_equal
+from ckanext.datagovuk.action import create, get
+import unittest
 
-def test_plugin_action_mapping():
-    action_mapping = DatagovukPlugin().get_actions()
 
-    assert_equal(action_mapping['resource_create'], create.resource_create)
-    assert_equal(action_mapping['user_create'], create.user_create)
-    assert_equal(action_mapping['user_auth'], get.user_auth)
+class TestPlugin(unittest.TestCase):
+    def test_plugin_action_mapping(self):
+        action_mapping = DatagovukPlugin().get_actions()
+
+        self.assertEqual(action_mapping['resource_create'], create.resource_create)
+        self.assertEqual(action_mapping['user_create'], create.user_create)
+        self.assertEqual(action_mapping['user_auth'], get.user_auth)

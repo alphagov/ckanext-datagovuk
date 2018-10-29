@@ -1,17 +1,13 @@
 """Tests for user_auth API"""
-from nose.tools import assert_true, assert_false, assert_raises
-
-from ckan import model
-from ckan import logic
+from ckan import model, logic
 from ckan.tests import factories, helpers
+from ckanext.datagovuk.tests.db_test import DBTest
 
 
-class TestUserAuth:
-    @classmethod
-    def setup_class(cls):
-        helpers.reset_db()
+class TestUserAuth(DBTest):
+    def setUp(self):
+        super(self.__class__, self).setUp()
 
-    def setup(self):
         sysadmin = factories.Sysadmin()
         self.context = {'model': model, 'user': sysadmin['name']}
 
@@ -27,10 +23,10 @@ class TestUserAuth:
             email=self.user.email,
             password='hello'
         )
-        assert resp['email'] == self.user.email, resp
+        self.assertEqual(resp['email'], self.user.email)
 
     def test_missing_email(self):
-        assert_raises(
+        self.assertRaises(
             logic.ValidationError,
             helpers.call_action,
             'user_auth',
@@ -40,7 +36,7 @@ class TestUserAuth:
         )
 
     def test_missing_password(self):
-        assert_raises(
+        self.assertRaises(
             logic.ValidationError,
             helpers.call_action,
             'user_auth',
@@ -50,7 +46,7 @@ class TestUserAuth:
         )
 
     def test_bad_email(self):
-        assert_raises(
+        self.assertRaises(
             logic.ValidationError,
             helpers.call_action,
             'user_auth',
@@ -60,7 +56,7 @@ class TestUserAuth:
         )
 
     def test_bad_password(self):
-        assert_raises(
+        self.assertRaises(
             logic.ValidationError,
             helpers.call_action,
             'user_auth',
@@ -70,7 +66,7 @@ class TestUserAuth:
         )
 
     def test_bad_username_and_password(self):
-        assert_raises(
+        self.assertRaises(
             logic.ValidationError,
             helpers.call_action,
             'user_auth',
