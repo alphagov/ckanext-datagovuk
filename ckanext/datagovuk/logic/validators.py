@@ -1,3 +1,4 @@
+import re
 import ckan.lib.navl.dictization_functions as df
 
 from ckan.common import _
@@ -18,4 +19,5 @@ def user_password_validator(key, data, errors, context):
         pass
     elif len(value) < 8:
         errors[('password',)].append(_('Your password must be 8 characters or longer'))
-
+    elif not bool(re.search('[A-Z]', value)) or not bool(re.search('[a-z]', value)):
+        errors[('password',)].append(_('Your password must contain at least one upper and one lower case character'))
