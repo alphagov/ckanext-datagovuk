@@ -40,8 +40,8 @@ class TestUserController(helpers.FunctionalTestBase):
         form['fullname'] = 'user fullname'
         form['email'] = 'test@test.com'
         form['old_password'] = 'pass'
-        form['password1'] = 'abc12345'
-        form['password2'] = 'abc12345'
+        form['password1'] = 'Abc12345'
+        form['password2'] = 'Abc12345'
         response = submit_and_follow(app, form, env, 'save')
 
         user = model.Session.query(model.User).get(user['id'])
@@ -61,11 +61,49 @@ class TestUserController(helpers.FunctionalTestBase):
 
         # Modify the values
         form['old_password'] = 'pass'
-        form['password1'] = 'abc1234'
-        form['password2'] = 'abc1234'
+        form['password1'] = 'Abc1234'
+        form['password2'] = 'Abc1234'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
         assert_true('Your password must be 8 characters or longer' in response)
+
+    def test_edit_user_form_password_no_lower_case(self):
+        user = factories.User(password='pass')
+        app = self._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url=url_for(controller='user', action='edit'),
+            extra_environ=env,
+        )
+
+        form = response.forms['user-edit-form']
+
+        # Modify the values
+        form['old_password'] = 'pass'
+        form['password1'] = 'ABC12345'
+        form['password2'] = 'ABC12345'
+        response = webtest_submit(form, 'save', status=200, extra_environ=env)
+
+        assert_true('Your password must contain at least one upper and one lower case character' in response)
+
+    def test_edit_user_form_password_no_upper_case(self):
+        user = factories.User(password='pass')
+        app = self._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url=url_for(controller='user', action='edit'),
+            extra_environ=env,
+        )
+
+        form = response.forms['user-edit-form']
+
+        # Modify the values
+        form['old_password'] = 'pass'
+        form['password1'] = 'abc12345'
+        form['password2'] = 'abc12345'
+        response = webtest_submit(form, 'save', status=200, extra_environ=env)
+
+        assert_true('Your password must contain at least one upper and one lower case character' in response)
 
     def test_edit_user_form_passwords_not_matching(self):
         user = factories.User(password='pass')
@@ -80,8 +118,8 @@ class TestUserController(helpers.FunctionalTestBase):
 
         # Modify the values
         form['old_password'] = 'pass'
-        form['password1'] = 'abc12345'
-        form['password2'] = 'abc1234'
+        form['password1'] = 'Abc123456'
+        form['password2'] = 'Abc12345'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
         assert_true('The passwords you entered do not match' in response)
