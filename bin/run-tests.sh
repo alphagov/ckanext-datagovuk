@@ -8,4 +8,4 @@ else
   coverage=""
 fi
 
-nosetests -v --nologcapture --with-pylons=test.ini --with-randomly --ckan $coverage $test_name
+nosetests -v --nologcapture --with-pylons=${TEST_CKAN_INI:-test.ini} --with-randomly --ckan $coverage $test_name
