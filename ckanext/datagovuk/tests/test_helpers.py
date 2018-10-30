@@ -1,39 +1,30 @@
 """Tests for user_auth API"""
-from nose.tools import assert_true, assert_false, assert_raises
-
 from ckan import model
 from ckan import logic
 from ckan.tests import factories, helpers
 from ckanext.harvest import model as harvest_model
 
+from ckanext.datagovuk.tests.db_test import DBTest
 import ckanext.datagovuk.helpers as h
 
-class TestHelpers:
-    @classmethod
-    def setup_class(cls):
-        return
+class TestHelpers(DBTest):
+    def setUp(self):
+        super(self.__class__, self).setUp()
 
-    @classmethod
-    def setup(cls):
-        helpers.reset_db()
         harvest_model.setup()
-        sysadmin = factories.Sysadmin()
-        cls.context = {'user': sysadmin['name']}
-        return
-
-    @classmethod
-    def teardown_class(cls):
-        return
+        self.context = {
+            "user": factories.Sysadmin()["name"]
+        }
 
     def test_split_values_multiple(self):
         string_to_test = '{value_a,value_b,value_c}'
         list_output = ['value_a', 'value_b', 'value_c']
-        assert h.split_values(string_to_test) == list_output
+        self.assertEqual(h.split_values(string_to_test), list_output)
 
     def test_split_values_single(self):
         string_to_test = 'value_a'
         list_output = ['value_a']
-        assert h.split_values(string_to_test) == list_output
+        self.assertEqual(h.split_values(string_to_test), list_output)
 
     def test_alphabetise_dict(self):
         some_dict = {
@@ -46,12 +37,12 @@ class TestHelpers:
             ("key_b", "value_b"),
             ("key_c", "value_c"),
         ]
-        assert h.alphabetise_dict(some_dict) == ordered_list
+        self.assertEqual(h.alphabetise_dict(some_dict), ordered_list)
 
     def test_roles(self):
         roles_list = ['Admin', 'Editor']
-        assert h.roles() == roles_list
-        
+        self.assertEqual(h.roles(), roles_list)
+
     def test_themes(self):
         themes_dict = {
             "business-and-economy": "Business and economy",
@@ -67,7 +58,7 @@ class TestHelpers:
             "health": "Health",
             "transport": "Transport",
         }
-        assert h.themes() == themes_dict
+        self.assertEqual(h.themes(), themes_dict)
 
     def test_schemas(self):
         schemas_dict = {
@@ -162,7 +153,7 @@ class TestHelpers:
             "515fd756-1cf9-491c-8223-49cf435b6926": "localities - https://raw.githubusercontent.com/datagovuk/transport-schemas/master/localities.json",
             "fc3043a5-52e7-42fe-be7c-d3e0ef576c1d": "stops - https://raw.githubusercontent.com/datagovuk/transport-schemas/master/stops.json",
         }
-        assert h.schemas() == schemas_dict
+        self.assertEqual(h.schemas(), schemas_dict)
 
     def test_codelist(self):
             codelist_dict = {
@@ -205,23 +196,22 @@ class TestHelpers:
                 "50c6c13f-b1a1-4b78-9c62-5c7eb2097e40": "Record Status (Land Registry) - http://landregistry.data.gov.uk/def/ppi/recordStatus",
                 "3b063793-61ec-47ca-bbd1-784ba4b5960b": "Speciality Function Code: NHS Data Model &amp; Dictionary -",
             }
-            assert h.codelist() == codelist_dict
+            self.assertEqual(h.codelist(), codelist_dict)
 
     def test_activate_upload_government(self):
         dataset = factories.Dataset(name='government-organogram', title='An organogram uploaded by a government department')
         dataset['schema-vocabulary'] = 'd3c0b23f-6979-45e4-88ed-d2ab59b005d0'
         helpers.call_action('package_update', self.context, **dataset)
-        assert_true(h.activate_upload('government-organogram'))
+        self.assertTrue(h.activate_upload('government-organogram'))
 
     def test_activate_upload_local_authority(self):
         dataset = factories.Dataset(name='la-organogram', title='An organogram uploaded by a local authority')
         dataset['schema-vocabulary'] = '538b857a-64ba-490e-8440-0e32094a28a7'
         helpers.call_action('package_update', self.context, **dataset)
-        assert_true(h.activate_upload('la-organogram'))
+        self.assertTrue(h.activate_upload('la-organogram'))
 
     def test_activate_upload_false(self):
         dataset = factories.Dataset(name='not-an-organogram', title='A dataset that is not an organogram')
         dataset['schema-vocabulary'] = 'fc3043a5-52e7-42fe-be7c-d3e0ef576c1d'
         helpers.call_action('package_update', self.context, **dataset)
-        assert_false(h.activate_upload('not-an-organogram'))
-
+        self.assertFalse(h.activate_upload('not-an-organogram'))

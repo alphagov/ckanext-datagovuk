@@ -1,10 +1,7 @@
+import unittest
 from ckanext.datagovuk.controllers.healthcheck import HealthcheckController
 
-class TestHealthcheck:
-
-    def setup(self):
-        return
-
+class TestHealthcheck(unittest.TestCase):
     def test_healthcheck_controller(self):
         healthcheck = HealthcheckController()
-        assert healthcheck.healthcheck() == 'OK'
+        self.assertEqual(healthcheck.healthcheck(), 'OK')

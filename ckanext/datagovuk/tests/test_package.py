@@ -1,29 +1,15 @@
-from nose.tools import assert_true, assert_false, assert_equal, assert_in
 from routes import url_for
 
 import ckan.plugins
 from ckan import model
 from ckan.tests import factories, helpers
-from ckanext.harvest.model import setup as db_setup
+from ckanext.datagovuk.tests.db_test import DBTest
 
 webtest_submit = helpers.webtest_submit
 submit_and_follow = helpers.submit_and_follow
 
-class TestPackageController(helpers.FunctionalTestBase):
-    @classmethod
-    def setup_class(cls):
-        helpers.reset_db()
-        db_setup()
 
-    @classmethod
-    def setup(cls):
-        helpers.reset_db()
-        db_setup()
-
-    @classmethod
-    def teardown_class(cls):
-        return
-
+class TestPackageController(helpers.FunctionalTestBase, DBTest):
     @classmethod
     def _create_org(self):
         user = factories.User()
@@ -50,8 +36,8 @@ class TestPackageController(helpers.FunctionalTestBase):
 
         dataset_out = helpers.call_action('package_show', id=dataset_in['id'])
 
-        assert dataset_out['name'] == dataset_in['name']
-        assert dataset_out['title'] == dataset_in['title']
+        self.assertEqual(dataset_out['name'], dataset_in['name'])
+        self.assertEqual(dataset_out['title'], dataset_in['title'])
 
     def test_resource_create_show(self):
         organization = self._create_org()
@@ -61,17 +47,17 @@ class TestPackageController(helpers.FunctionalTestBase):
         dataset_out = helpers.call_action('package_show', id=dataset_in['id'])
         resource_out = dataset_out['resources'][0]
 
-        assert resource_out['name'] == resource_in['name']
-        assert resource_out['description'] == resource_in['description']
-        assert resource_out['format'] == resource_in['format']
-        assert resource_out['url'] == resource_in['url']
+        self.assertEqual(resource_out['name'], resource_in['name'])
+        self.assertEqual(resource_out['description'], resource_in['description'])
+        self.assertEqual(resource_out['format'], resource_in['format'])
+        self.assertEqual(resource_out['url'], resource_in['url'])
 
     ## Tests for rendering the forms
 
     def test_form_renders(self):
         app = self._get_test_app()
         env, response = self._get_package_new_page(app)
-        assert_true('dataset-edit' in response.forms)
+        self.assertIn('dataset-edit', response.forms)
 
     def test_resource_form_renders(self):
         app = self._get_test_app()
@@ -80,7 +66,7 @@ class TestPackageController(helpers.FunctionalTestBase):
         form['name'] = u'resource-form-renders'
 
         response = submit_and_follow(app, form, env, 'save')
-        assert_true('resource-edit' in response.forms)
+        self.assertIn('resource-edit', response.forms)
 
     def test_previous_button_works(self):
         app = self._get_test_app()
@@ -92,7 +78,7 @@ class TestPackageController(helpers.FunctionalTestBase):
         form = response.forms['resource-edit']
 
         response = submit_and_follow(app, form, env, 'save', 'go-dataset')
-        assert_true('dataset-edit' in response.forms)
+        self.assertIn('dataset-edit', response.forms)
 
     def test_previous_button_populates_form(self):
         app = self._get_test_app()
@@ -105,8 +91,8 @@ class TestPackageController(helpers.FunctionalTestBase):
 
         response = submit_and_follow(app, form, env, 'save', 'go-dataset')
         form = response.forms['dataset-edit']
-        assert_true('title' in form.fields)
-        assert_equal(form['name'].value, u'previous-button-populates-form')
+        self.assertIn('title', form.fields)
+        self.assertEqual(form['name'].value, u'previous-button-populates-form')
 
     ## Test form validation
 
@@ -116,8 +102,8 @@ class TestPackageController(helpers.FunctionalTestBase):
         form = response.forms['dataset-edit']
 
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
-        assert_true('dataset-edit' in response.forms)
-        assert_true('Name: Missing value' in response)
+        self.assertIn('dataset-edit', response.forms)
+        self.assertIn('Name: Missing value', response)
 
     ## Test user authentication
 
@@ -164,7 +150,7 @@ class TestPackageController(helpers.FunctionalTestBase):
         submit_and_follow(app, form, env, 'save')
 
         result = helpers.call_action('package_show', id=dataset['id'])
-        assert_equal(u'edited description', result['notes'])
+        self.assertEqual(u'edited description', result['notes'])
 
     def test_organization_editor_can_edit(self):
         user = factories.User()
@@ -185,5 +171,4 @@ class TestPackageController(helpers.FunctionalTestBase):
         submit_and_follow(app, form, env, 'save')
 
         result = helpers.call_action('package_show', id=dataset['id'])
-        assert_equal(u'edited description', result['notes'])
-
+        self.assertEqual(u'edited description', result['notes'])

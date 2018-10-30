@@ -1,26 +1,21 @@
 """Tests for DGU monkey patches of CKAN."""
-from nose.tools import assert_true, assert_false
-
 from ckan import model
 from ckan.tests import factories, helpers
+from ckanext.datagovuk.tests.db_test import DBTest
 
 
-class TestLogin:
-    @classmethod
-    def setup_class(cls):
-        helpers.reset_db()
-
+class TestLogin(DBTest):
     def test_validate_password__ok(self):
         user_dict = factories.User(password='hello')
         user = model.User.get(user_dict['id'])
 
-        assert_true(user.validate_password('hello'))
+        self.assertTrue(user.validate_password('hello'))
 
     def test_validate_password__wrong_password(self):
         user_dict = factories.User(password='hello')
         user = model.User.get(user_dict['id'])
 
-        assert_false(user.validate_password('wrong'))
+        self.assertFalse(user.validate_password('wrong'))
 
     def test_validate_password__drupal_ok(self):
         # Drupal hash
@@ -35,5 +30,4 @@ class TestLogin:
         model.Session.remove()
 
         user = model.User.get(user_dict['id'])
-        assert_true(user.validate_password('pass'))
-
+        self.assertTrue(user.validate_password('pass'))

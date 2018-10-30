@@ -1,23 +1,16 @@
-from nose.tools import assert_true, assert_false, assert_equal, assert_in
 from routes import url_for
 
 import ckan.plugins
 from ckan import model
 from ckan.tests import factories, helpers
 from ckanext.datagovuk.controllers.user import UserController
+from ckanext.datagovuk.tests.db_test import DBTest
 
 webtest_submit = helpers.webtest_submit
 submit_and_follow = helpers.submit_and_follow
 
-class TestUserController(helpers.FunctionalTestBase):
-    @classmethod
-    def setup_class(cls):
-        return
 
-    @classmethod
-    def teardown_class(cls):
-        return
-
+class TestUserController(helpers.FunctionalTestBase, DBTest):
     def test_edit_user_form(self):
         user = factories.User(password='pass')
         app = self._get_test_app()
@@ -30,11 +23,11 @@ class TestUserController(helpers.FunctionalTestBase):
         form = response.forms['user-edit-form']
 
         # Check the existing values
-        assert_equal(form['name'].value, user['name'])
-        assert_equal(form['fullname'].value, user['fullname'])
-        assert_equal(form['email'].value, user['email'])
-        assert_equal(form['password1'].value, '')
-        assert_equal(form['password2'].value, '')
+        self.assertEqual(form['name'].value, user['name'])
+        self.assertEqual(form['fullname'].value, user['fullname'])
+        self.assertEqual(form['email'].value, user['email'])
+        self.assertEqual(form['password1'].value, '')
+        self.assertEqual(form['password2'].value, '')
 
         # Modify the values
         form['fullname'] = 'user fullname'
@@ -45,8 +38,8 @@ class TestUserController(helpers.FunctionalTestBase):
         response = submit_and_follow(app, form, env, 'save')
 
         user = model.Session.query(model.User).get(user['id'])
-        assert_equal(user.fullname, 'user fullname')
-        assert_equal(user.email, 'test@test.com')
+        self.assertEqual(user.fullname, 'user fullname')
+        self.assertEqual(user.email, 'test@test.com')
 
     def test_edit_user_form_password_too_short(self):
         user = factories.User(password='pass')
@@ -65,7 +58,7 @@ class TestUserController(helpers.FunctionalTestBase):
         form['password2'] = 'Abc1234'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('Your password must be 8 characters or longer' in response)
+        self.assertIn('Your password must be 8 characters or longer', response)
 
     def test_edit_user_form_password_no_lower_case(self):
         user = factories.User(password='pass')
@@ -84,7 +77,7 @@ class TestUserController(helpers.FunctionalTestBase):
         form['password2'] = 'ABC12345'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('Your password must contain at least one upper and one lower case character' in response)
+        self.assertIn('Your password must contain at least one upper and one lower case character', response)
 
     def test_edit_user_form_password_no_upper_case(self):
         user = factories.User(password='pass')
@@ -103,7 +96,7 @@ class TestUserController(helpers.FunctionalTestBase):
         form['password2'] = 'abc12345'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('Your password must contain at least one upper and one lower case character' in response)
+        self.assertIn('Your password must contain at least one upper and one lower case character', response)
 
     def test_edit_user_form_passwords_not_matching(self):
         user = factories.User(password='pass')
@@ -122,7 +115,7 @@ class TestUserController(helpers.FunctionalTestBase):
         form['password2'] = 'Abc12345'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('The passwords you entered do not match' in response)
+        self.assertIn('The passwords you entered do not match', response)
 
     def test_edit_user_form_password_missing(self):
         user = factories.User(password='pass')
@@ -141,5 +134,4 @@ class TestUserController(helpers.FunctionalTestBase):
         form['password2'] = ''
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('Please enter both passwords' in response)
-
+        self.assertIn('Please enter both passwords', response)

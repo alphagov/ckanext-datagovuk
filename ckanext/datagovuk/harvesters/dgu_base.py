@@ -15,6 +15,7 @@ from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.datagovuk.helpers import (munge_tags, remove_duplicates_in_a_list)
 
+log = logging.getLogger(__name__ + '.import')
 
 class DguHarvesterBase(HarvesterBase):
     '''
@@ -64,7 +65,6 @@ class DguHarvesterBase(HarvesterBase):
           package, for extras etc
         '''
 
-        log = logging.getLogger(__name__ + '.import')
         log.debug('Import stage for harvest object: %s', harvest_object.id)
 
         if not harvest_object:
@@ -128,7 +128,7 @@ class DguHarvesterBase(HarvesterBase):
 
         if status == 'delete':
             # Delete package
-            tk.get_action('package_delete')(context, {'id': harvest_object.package_id})
+            tk.get_action('package_delete')(context.copy(), {'id': harvest_object.package_id})
             log.info('Deleted package {0} with guid {1}'.format(harvest_object.package_id, harvest_object.guid))
             previous_object.save()
             self._transfer_current(previous_object, harvest_object)
@@ -142,16 +142,11 @@ class DguHarvesterBase(HarvesterBase):
 
         if existing_dataset:
             package_dict_defaults['name'] = existing_dataset.name
-        if source_config.get('remote_orgs') not in ('only_local', 'create'):
-            # Assign owner_org to the harvest_source's publisher
-            #master would get the harvest_object.source.publisher_id this way:
-            #source_dataset = tk.get_action('package_show')(context, {'id': harvest_object.source.id})
-            #local_org = source_dataset.get('owner_org')
-            package_dict_defaults['owner_org'] = harvest_object.source.publisher_id
-        elif existing_dataset and existing_dataset.owner_org:
+        if existing_dataset and existing_dataset.owner_org:
             package_dict_defaults['owner_org'] = existing_dataset.owner_org
         else:
-            package_dict_defaults['owner_org'] = harvest_object.source.publisher_id
+            source_dataset = tk.get_action('package_show')(context.copy(), {'id': harvest_object.source.id})
+            package_dict_defaults['owner_org'] = source_dataset.get('owner_org')
 
         package_dict_defaults['tags'] = source_config.get('default_tags', [])
         package_dict_defaults['groups'] = source_config.get('default_groups', [])
@@ -267,7 +262,7 @@ class DguHarvesterBase(HarvesterBase):
 
             log.debug('package_create: %r', package_dict)
             try:
-                package_dict_created = tk.get_action('package_create')(context, package_dict)
+                package_dict_created = tk.get_action('package_create')(context.copy(), package_dict)
                 log.info('Created new package name=%s id=%s guid=%s', package_dict.get('name'), package_dict_created['id'], harvest_object.guid)
             except tk.ValidationError, e:
                 self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
@@ -277,7 +272,7 @@ class DguHarvesterBase(HarvesterBase):
             package_dict['id'] = package_id
             log.debug('package_update: %r', package_dict)
             try:
-                package_dict_updated = tk.get_action('package_update')(context, package_dict)
+                package_dict_updated = tk.get_action('package_update')(context.copy(), package_dict)
                 log.info('Updated package name=%s id=%s guid=%s', package_dict.get('name'), package_dict_updated['id'], harvest_object.guid)
             except tk.ValidationError, e:
                 self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
@@ -382,6 +377,48 @@ class DguHarvesterBase(HarvesterBase):
             [cls.get_metadata_provenance_for_just_this_harvest(harvest_object)]
         return json.dumps(metadata_provenance)
 
+    @classmethod
+    def _match_resources_with_existing_ones(cls, res_dicts,
+                                            existing_resources):
+        '''Adds IDs to given resource dicts, based on existing resources, so
+        that when we do package_update the resources are updated rather than
+        deleted and recreated.
+
+        Edits the res_dicts in-place
+
+        :param res_dicts: Resources to have the ID added
+        :param existing_resources: Existing resources - have IDs. dicts or
+                                   Resource objects
+        :returns: None
+        '''
+        unmatched_res_dicts = [res_dict for res_dict in res_dicts]
+        if not unmatched_res_dicts:
+            log.info('Resource IDs exist alread (%s resources)',
+                     len(res_dicts))
+            return
+        if existing_resources and isinstance(existing_resources[0], dict):
+            unmatched_existing_res_dicts = [res_dict
+                                            for res_dict in existing_resources]
+        else:
+            unmatched_existing_res_dicts = [dict(id=res.id, url=res.url,
+                                                 name=res.name,
+                                                 description=res.description)
+                                            for res in existing_resources]
+
+        def find_matches(match_func):
+            for res_dict in unmatched_res_dicts[:]:
+                for existing_res_dict in unmatched_existing_res_dicts:
+                    if match_func(res_dict, existing_res_dict):
+                        res_dict['id'] = existing_res_dict['id']
+                        unmatched_existing_res_dicts.remove(existing_res_dict)
+                        unmatched_res_dicts.remove(res_dict)
+                        break
+        find_matches(lambda res1, res2: res1['url'] == res2['url'] and
+                     res1.get('name') == res2['name'] and
+                     res1.get('description') == res2['description'])
+        find_matches(lambda res1, res2: res1['url'] == res2['url'])
+        log.info('Matched resources to existing ones: %s/%s',
+                 len(res_dicts)-len(unmatched_res_dicts), len(res_dicts))
 
 class PackageDictError(Exception):
     pass
