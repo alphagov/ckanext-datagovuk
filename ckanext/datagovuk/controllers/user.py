@@ -69,7 +69,8 @@ class UserController(UserController):
                 user_obj = context['user_obj']
             except NotFound:
                 # Try getting the user by email
-                user_obj = model.User.by_email(id)[0]
+                user_accounts = model.User.by_email(id)
+                user_obj = user_accounts[0] if len(user_accounts) > 0 else None
 
                 if not user_obj:
                     # Try searching the user
