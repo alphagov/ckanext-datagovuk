@@ -77,7 +77,7 @@ class TestUserController(helpers.FunctionalTestBase, DBTest):
         form['password2'] = 'ABC12345'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('Your password must contain at least one upper and one lower case character' in response)
+        self.assertIn('Your password must contain at least one upper and one lower case character', response)
 
     def test_edit_user_form_password_no_upper_case(self):
         user = factories.User(password='pass')
@@ -96,7 +96,7 @@ class TestUserController(helpers.FunctionalTestBase, DBTest):
         form['password2'] = 'abc12345'
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
-        assert_true('Your password must contain at least one upper and one lower case character' in response)
+        self.assertIn('Your password must contain at least one upper and one lower case character', response)
 
     def test_edit_user_form_passwords_not_matching(self):
         user = factories.User(password='pass')
