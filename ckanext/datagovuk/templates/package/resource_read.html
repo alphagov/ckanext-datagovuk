@@ -1,4 +1,8 @@
 {% ckan_extends %}
 
+{% block resource_read_title %}
+  <h1 class="page-heading">{{ h.resource_display_name(res) }}</h1>
+{% endblock %}
+
 {% block resource_license %}
 {% endblock %}
