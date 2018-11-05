@@ -16,7 +16,7 @@ node {
     stage('Installing Packages') {
       sh("rm -rf ./venv")
       sh("virtualenv --no-site-packages ./venv")
-      sh("./bin/install-dependencies.sh")
+      sh("./bin/install-dependencies.sh ./venv/bin/pip")
     }
 
     stage('Tests') {
