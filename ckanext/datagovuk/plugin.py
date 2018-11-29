@@ -29,6 +29,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         toolkit.add_template_directory(config, 'templates')
         toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('public', 'public')
+        toolkit.add_resource('fanstatic/vendor', 'vendor')
 
     # IAuthFunctions
 
