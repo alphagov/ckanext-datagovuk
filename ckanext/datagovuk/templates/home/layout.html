@@ -2,9 +2,16 @@
   <div class="container">
     <div class="row row1">
       <div class="span6 col1">
-        {% block promoted %}
-          {% snippet 'home/snippets/promoted.html' %}
-        {% endblock %}
+        <div class="module-content box">
+          <header>
+            <h1 class="page-heading">{{ _("Publish and update data for your organisation") }}</h1>
+            <p>
+              {{ _("You must create an account to use this service.") }}
+            </p>
+            <p>
+              {{ _("If you already have an account, sign in to publish a new dataset or update an existing one.") }}
+            </p>
+        </header>
       </div>
     </div>
   </div>
