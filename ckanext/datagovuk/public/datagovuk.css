@@ -5,6 +5,7 @@
 body {
   font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serif;
   font-size: 16px;
+  background: #FFF;
 }
 
 .masthead .navigation .nav-pills li a,
@@ -78,3 +79,34 @@ a.btn .icon-briefcase {
 label:after {
   content: "";
 }
+
+.hero {
+  background: #128400;
+}
+
+.home-content {
+  color: #FFF;
+}
+
+h1.home-heading {
+  font-size: 42px;
+}
+
+p.home-text {
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+.home-footer {
+  color: #000;
+}
+
+h1.home-footer-heading {
+  font-size: 28px;
+}
+
+p.home-footer-text {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
