@@ -39,7 +39,7 @@ DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_ob
 UPDATE "user" SET sysadmin = 'f';
 
 -- Remove the user's Drupal ID from their username and set their actual username
-UPDATE "user" SET name = fullname;
+UPDATE "user" SET name = fullname WHERE fullname IS NOT NULL;
 
 -- Harvest sources
 
