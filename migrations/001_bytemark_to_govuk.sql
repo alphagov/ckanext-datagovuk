@@ -33,7 +33,7 @@ UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
 -- Users
 
 -- Remove non-publishing users
-DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_object_role WHERE role = 'admin' OR role = 'editor');
+DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_object_role WHERE role = 'admin' OR role = 'editor') AND sysadmin <> 't';
 
 -- Demote all sysadmins
 UPDATE "user" SET sysadmin = 'f';
