@@ -26,6 +26,10 @@ UPDATE package_extra SET key = 'schema-vocabulary' WHERE key = 'schema';
 DELETE FROM package_tag CASCADE;
 DELETE FROM tag;
 
+-- Remove the organogram viewer resources (links)
+
+UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
+
 -- Users
 
 -- Remove non-publishing users
