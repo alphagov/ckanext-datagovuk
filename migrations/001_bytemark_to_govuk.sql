@@ -33,13 +33,13 @@ UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
 -- Users
 
 -- Remove non-publishing users
-DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_object_role WHERE role = 'admin' OR role = 'editor');
+DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_object_role WHERE role = 'admin' OR role = 'editor') AND sysadmin <> 't';
 
 -- Demote all sysadmins
 UPDATE "user" SET sysadmin = 'f';
 
 -- Remove the user's Drupal ID from their username and set their actual username
-UPDATE "user" SET name = fullname;
+UPDATE "user" SET name = fullname WHERE fullname IS NOT NULL;
 
 -- Harvest sources
 
