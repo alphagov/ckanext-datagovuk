@@ -2,20 +2,35 @@
 
 pip=${1-'/usr/bin/env pip'}
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-harvest/c21c1627992cbcf0043b7b6873ff899f6f66767f/pip-requirements.txt)
-$pip install -U 'git+https://github.com/ckan/ckanext-harvest.git@c21c1627992cbcf0043b7b6873ff899f6f66767f#egg=ckanext-harvest'
+ckan_harvest_fork='ckan'
+ckan_harvest_sha='c21c1627992cbcf0043b7b6873ff899f6f66767f'
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-dcat/v0.0.8/requirements.txt)
-$pip install -U 'git+https://github.com/ckan/ckanext-dcat.git@v0.0.8#egg=ckanext-dcat'
+ckan_dcat_fork='ckan'
+ckan_dcat_sha='v0.0.8'
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-spatial/2acf66b110ba534750cab754a50566505ba88d83/pip-requirements.txt)
-$pip install -U 'git+https://github.com/ckan/ckanext-spatial.git@2acf66b110ba534750cab754a50566505ba88d83#egg=ckanext-spatial'
+ckan_spatial_fork='alphagov'
+ckan_spatial_sha='d13c18e50644db51ccf2a32f8d01478b60d0f656'
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/alphagov/ckanext-s3-resources/50341b3960a6be3aba5a1558e80dd9a8c7c70c2c/requirements.txt)
-$pip install -U 'git+https://github.com/alphagov/ckanext-s3-resources@50341b3960a6be3aba5a1558e80dd9a8c7c70c2c#egg=ckanext-s3-resources'
+ckan_s3_resources_fork='alphagov'
+ckan_s3_resources_sha='50341b3960a6be3aba5a1558e80dd9a8c7c70c2c'
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckan/ckan-2.7.4/requirement-setuptools.txt)
-$pip install -r https://raw.githubusercontent.com/ckan/ckan/ckan-2.7.4/requirements.txt
-$pip install -Ue 'git+https://github.com/ckan/ckan.git@ckan-2.7.4#egg=ckan'
+ckan_fork='ckan'
+ckan_sha='ckan-2.7.4'
+
+$pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
+$pip install -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
+
+$pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt)
+$pip install -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat"
+
+$pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt)
+$pip install -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
+
+$pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_s3_resources_fork/ckanext-s3-resources/$ckan_s3_resources_sha/requirements.txt)
+$pip install -U "git+https://github.com/$ckan_s3_resources_fork/ckanext-s3-resources@$ckan_s3_resources_sha#egg=ckanext-s3-resources"
+
+$pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt)
+$pip install -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt
+$pip install -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan"
 
 $pip install -r requirements.txt
