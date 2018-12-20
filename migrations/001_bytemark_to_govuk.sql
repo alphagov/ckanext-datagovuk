@@ -22,10 +22,6 @@ UPDATE package_extra SET value = 'transport' WHERE value = 'Transport' AND key =
 -- The key for schema vocabulary has changed
 UPDATE package_extra SET key = 'schema-vocabulary' WHERE key = 'schema';
 
--- Remove the tags and num_tags
-DELETE FROM package_tag CASCADE;
-DELETE FROM tag;
-
 -- Remove the organogram viewer resources (links)
 
 UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
@@ -33,13 +29,45 @@ UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
 -- Users
 
 -- Remove non-publishing users
-DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_object_role WHERE role = 'admin' OR role = 'editor') AND sysadmin <> 't';
+ALTER TABLE user_object_role
+DROP CONSTRAINT "user_object_role_user_id_fkey",
+ADD CONSTRAINT "user_object_role_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE;
 
--- Demote all sysadmins
-UPDATE "user" SET sysadmin = 'f';
+ALTER TABLE package_role
+DROP CONSTRAINT "package_role_user_object_role_id_fkey",
+ADD CONSTRAINT "package_role_user_object_role_id_fkey" FOREIGN KEY (user_object_role_id) REFERENCES "user_object_role"(id) ON DELETE CASCADE;
+
+ALTER TABLE group_role
+DROP CONSTRAINT "group_role_user_object_role_id_fkey",
+ADD CONSTRAINT "group_role_user_object_role_id_fkey" FOREIGN KEY (user_object_role_id) REFERENCES "user_object_role"(id) ON DELETE CASCADE;
+
+ALTER TABLE system_role
+DROP CONSTRAINT "system_role_user_object_role_id_fkey",
+ADD CONSTRAINT "system_role_user_object_role_id_fkey" FOREIGN KEY (user_object_role_id) REFERENCES "user_object_role"(id) ON DELETE CASCADE;
+
+DELETE FROM "user"
+WHERE sysadmin <> 't'
+AND id NOT IN (
+  SELECT DISTINCT table_id FROM member
+  WHERE table_name = 'user'
+  AND capacity IN ('admin', 'editor')
+);
+
+-- Demote all sysadmins except for the 2ndline user
+UPDATE "user" SET sysadmin = 'f' WHERE fullname <> '2ndline';
 
 -- Remove the user's Drupal ID from their username and set their actual username
-UPDATE "user" SET name = fullname WHERE fullname IS NOT NULL;
+UPDATE "user" SET name = fullname
+WHERE fullname IS NOT NULL
+AND (
+  state = 'active'
+  OR fullname IN (
+    SELECT fullname FROM "user"
+    WHERE fullname IS NOT NULL
+    GROUP BY fullname
+    HAVING count(*) = 1
+  )
+);
 
 -- Harvest sources
 
@@ -48,4 +76,3 @@ UPDATE harvest_source SET type = 'single-doc' WHERE type = 'gemini-single';
 UPDATE harvest_source SET type = 'csw' WHERE type = 'gemini-csw';
 UPDATE harvest_source SET type = 'waf' WHERE type = 'gemini-waf';
 UPDATE harvest_source SET type = 'dcat_json' WHERE type = 'data_json';
-
