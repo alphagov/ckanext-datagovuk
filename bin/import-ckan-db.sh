@@ -29,4 +29,5 @@ pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production --schema-
 pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production -L /tmp/restore_list.txt --role=rds_superuser --no-owner $dumpfile
 
 echo "Migrate the data to the new CKAN version"
+psql postgres://aws_db_admin@postgresql-primary/ckan_production -c "reassign owned by rds_superuser to ckan;"
 psql postgres://aws_db_admin@postgresql-primary/ckan_production -f ckanext-datagovuk/migrations/001_bytemark_to_govuk.sql
