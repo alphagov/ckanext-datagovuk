@@ -12,7 +12,7 @@ echo
 export PGPASSWORD=$password
 
 echo "Exporting the bytemark database, this will take approx 35 minutes"
-ssh co@co-prod3.dh.bytemark.co.uk "pg_dump -x -O -Fc ckan > $dumpfile"
+ssh -o ServerAliveInterval=60 co@co-prod3.dh.bytemark.co.uk "pg_dump -x -O -Fc ckan > $dumpfile"
 
 echo "Copying the export from bytemark to AWS, this will take approx 10 minutes"
 scp co@co-prod3.dh.bytemark.co.uk:~/$dumpfile .
