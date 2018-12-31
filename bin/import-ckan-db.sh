@@ -17,8 +17,11 @@ ssh -o ServerAliveInterval=60 co@co-prod3.dh.bytemark.co.uk "pg_dump -x -O -Fc c
 echo "Copying the export from bytemark to AWS, this will take approx 10 minutes"
 scp co@co-prod3.dh.bytemark.co.uk:~/$dumpfile .
 
+echo "Deleting the dump on bytemark"
+ssh -o ServerAliveInterval=60 co@co-prod3.dh.bytemark.co.uk "rm $dumpfile"
+
 echo "Dropping the existing database"
-psql postgres://aws_db_admin@postgresql-primary/postgres -f ckanext-datagovuk/bin/drop_ckan_database.sql
+psql postgres://aws_db_admin@postgresql-primary/postgres -f ckanext-datagovuk/bin/drop-ckan-db.sql
 
 echo "Recreating the database via puppet"
 govuk_puppet --test
@@ -29,5 +32,4 @@ pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production --schema-
 pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production -L /tmp/restore_list.txt --role=rds_superuser --no-owner $dumpfile
 
 echo "Migrate the data to the new CKAN version"
-psql postgres://aws_db_admin@postgresql-primary/ckan_production -c "reassign owned by rds_superuser to ckan;"
 psql postgres://aws_db_admin@postgresql-primary/ckan_production -f ckanext-datagovuk/migrations/001_bytemark_to_govuk.sql

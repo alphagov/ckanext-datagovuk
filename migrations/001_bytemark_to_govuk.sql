@@ -1,3 +1,5 @@
+REASSIGN OWNED BY rds_superuser TO ckan;
+
 -- Packages
 
 -- Remove deprecated extras
@@ -76,3 +78,8 @@ UPDATE harvest_source SET type = 'single-doc' WHERE type = 'gemini-single';
 UPDATE harvest_source SET type = 'csw' WHERE type = 'gemini-csw';
 UPDATE harvest_source SET type = 'waf' WHERE type = 'gemini-waf';
 UPDATE harvest_source SET type = 'dcat_json' WHERE type = 'data_json';
+
+DROP INDEX idx_resource_continuity_id;
+DROP INDEX idx_member_continuity_id;
+DROP INDEX idx_package_continuity_id;
+DROP INDEX idx_package_extra_continuity_id;
