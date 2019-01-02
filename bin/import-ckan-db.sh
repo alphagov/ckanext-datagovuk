@@ -28,8 +28,8 @@ govuk_puppet --test
 
 echo "Importing the database, this will take approx 1 hour"
 pg_restore -l $dumpfile | grep -v tag > /tmp/restore_list.txt
-pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production --schema-only -t package_tag -t tag -t package_tag_revision --role=rds_superuser --no-owner $dumpfile
-pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production -L /tmp/restore_list.txt --role=rds_superuser --no-owner $dumpfile
+! pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production --schema-only -t package_tag -t tag -t package_tag_revision --role=rds_superuser --no-owner $dumpfile
+! pg_restore -v -h postgresql-primary -U aws_db_admin -d ckan_production -L /tmp/restore_list.txt --role=rds_superuser --no-owner $dumpfile
 
 echo "Migrate the data to the new CKAN version"
 psql postgres://aws_db_admin@postgresql-primary/ckan_production -f ckanext-datagovuk/migrations/001_bytemark_to_govuk.sql
