@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+require "net/http"
+require "json"
+
+query = "http://localhost:8983/solr/collection1/select?q=*%3A*&wt=json&fl=index_id&rows=2147483647"
+docs = JSON.parse(Net::HTTP.get_response(URI.parse(query)).body).fetch("response").fetch("docs")
+
+updates = docs.map do |doc|
+  {
+    "site_id" => { "set" => "dgu" },
+    "index_id" => doc["index_id"],
+  }
+end
+
+update_json = JSON.dump(updates)
+
+uri = URI("http://localhost:8983/solr/collection1/update")
+post = Net::HTTP::Post.new(uri.request_uri, "Content-Type" => "application/json")
+post.body = update_json
+
+Net::HTTP.start(uri.hostname, uri.port, nil, nil, nil, nil) { |http| http.request(post) }
