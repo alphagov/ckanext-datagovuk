@@ -69,3 +69,17 @@ ckan $
   ./ckanext-datagovuk/bin/migrate-solr # Wait a few minutes, monitor `htop` until the CPU use dies down
   curl 'http://localhost:8983/solr/collection1/update?stream.body=%3Ccommit/%3E'
   sudo service ckan restart
+
+
+### Copying legacy organograms
+
+local $
+  aws sts assume-role --role-arn <role_arn> --serial-number <mfa_arn> --token-code <mfa_token> --role-session-name "$(whoami)-$(date +%d-%m-%y_%H-%M)" --duration-seconds 28800 --profile gds
+bytemark $
+  export AWS_SECRET_ACCESS_KEY=<from previous output>
+  export AWS_ACCESS_KEY_ID=<from previous output>
+  export AWS_SESSION_TOKEN="<from previous output>"
+  aws s3 sync /var/www/files/drupal/dgud7/organogram s3://datagovuk-production-ckan-organogram/legacy/organogram # 3 mins if full upload, 10 seconds if no-op
+  exit # Clear your environment variables and flush bash history to disk
+bytemark $
+  vi ~/.bash_history # remove your secrets
