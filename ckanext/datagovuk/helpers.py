@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import operator
+from ckan.common import config
 from ckan.model import Package
 from ckan.lib.munge import munge_tag
 
@@ -269,3 +270,6 @@ def activate_upload(pkg_name):
 def roles():
     roles_list = ['Admin', 'Editor']
     return roles_list
+
+def google_analytics_tracking_id():
+    return config.get('ckan.google_analytics_tracking_id')
