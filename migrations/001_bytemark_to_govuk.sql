@@ -49,3 +49,6 @@ UPDATE harvest_source SET type = 'csw' WHERE type = 'gemini-csw';
 UPDATE harvest_source SET type = 'waf' WHERE type = 'gemini-waf';
 UPDATE harvest_source SET type = 'dcat_json' WHERE type = 'data_json';
 
+-- Change the DKAN harvester to use the data.json format
+UPDATE harvest_source SET url = CONCAT(url, '/data.json'), type = 'dcat_json' WHERE type = 'dkan';
+
