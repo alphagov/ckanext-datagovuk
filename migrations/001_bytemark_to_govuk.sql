@@ -1,3 +1,5 @@
+REASSIGN OWNED BY rds_superuser TO ckan;
+
 -- Packages
 
 -- Remove deprecated extras
@@ -22,10 +24,6 @@ UPDATE package_extra SET value = 'transport' WHERE value = 'Transport' AND key =
 -- The key for schema vocabulary has changed
 UPDATE package_extra SET key = 'schema-vocabulary' WHERE key = 'schema';
 
--- Remove the tags and num_tags
-DELETE FROM package_tag CASCADE;
-DELETE FROM tag;
-
 -- Remove the organogram viewer resources (links)
 
 UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
@@ -33,13 +31,61 @@ UPDATE resource SET state = 'deleted' WHERE description = 'Organogram viewer';
 -- Users
 
 -- Remove non-publishing users
-DELETE FROM "user" CASCADE WHERE id NOT IN (SELECT DISTINCT user_id FROM user_object_role WHERE role = 'admin' OR role = 'editor') AND sysadmin <> 't';
+ALTER TABLE user_object_role
+DROP CONSTRAINT "user_object_role_user_id_fkey",
+ADD CONSTRAINT "user_object_role_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE;
 
--- Demote all sysadmins
-UPDATE "user" SET sysadmin = 'f';
+ALTER TABLE package_role
+DROP CONSTRAINT "package_role_user_object_role_id_fkey",
+ADD CONSTRAINT "package_role_user_object_role_id_fkey" FOREIGN KEY (user_object_role_id) REFERENCES "user_object_role"(id) ON DELETE CASCADE;
+
+ALTER TABLE group_role
+DROP CONSTRAINT "group_role_user_object_role_id_fkey",
+ADD CONSTRAINT "group_role_user_object_role_id_fkey" FOREIGN KEY (user_object_role_id) REFERENCES "user_object_role"(id) ON DELETE CASCADE;
+
+ALTER TABLE system_role
+DROP CONSTRAINT "system_role_user_object_role_id_fkey",
+ADD CONSTRAINT "system_role_user_object_role_id_fkey" FOREIGN KEY (user_object_role_id) REFERENCES "user_object_role"(id) ON DELETE CASCADE;
+
+DELETE FROM "user"
+WHERE sysadmin <> 't'
+AND id NOT IN (
+  SELECT DISTINCT table_id FROM member
+  WHERE table_name = 'user'
+  AND capacity IN ('admin', 'editor')
+);
+
+-- Demote all sysadmins except for the 2ndline user
+UPDATE "user" SET sysadmin = 'f' WHERE fullname <> '2ndline';
 
 -- Remove the user's Drupal ID from their username and set their actual username
-UPDATE "user" SET name = fullname WHERE fullname IS NOT NULL;
+UPDATE "user" SET name = fullname
+WHERE fullname IS NOT NULL
+AND (
+  state = 'active'
+  OR fullname IN (
+    SELECT fullname FROM "user"
+    WHERE fullname IS NOT NULL
+    GROUP BY fullname
+    HAVING count(*) = 1
+  )
+);
+
+UPDATE resource r
+SET url = replace(url,
+  'https://data.gov.uk/sites/default/files/',
+  'https://s3-eu-west-1.amazonaws.com/datagovuk-integration-ckan-organogram/legacy/'
+)
+FROM package_extra pe
+WHERE pe.package_id = r.package_id
+AND pe.value in (
+  '["538b857a-64ba-490e-8440-0e32094a28a7"]',
+  '["d3c0b23f-6979-45e4-88ed-d2ab59b005d0"]'
+)
+AND pe.key = 'schema-vocabulary'
+AND r.url LIKE 'https://data.gov.uk/sites/default/files/organogram/%'
+AND r.state = 'active'
+AND r.format = 'CSV';
 
 -- Harvest sources
 
@@ -57,3 +103,10 @@ DELETE FROM harvest_object_extra WHERE harvest_object_id IN (SELECT id FROM harv
 DELETE FROM harvest_object WHERE harvest_source_id = '2c798023-abac-4785-ad19-67bd5c1aed63';
 DELETE FROM harvest_job WHERE source_id = '2c798023-abac-4785-ad19-67bd5c1aed63';
 DELETE FROM harvest_source WHERE id = '2c798023-abac-4785-ad19-67bd5c1aed63';
+
+-- Remove indexes that will be rebuilt during the upgrade
+DROP INDEX idx_resource_continuity_id;
+DROP INDEX idx_member_continuity_id;
+DROP INDEX idx_package_continuity_id;
+DROP INDEX idx_package_extra_continuity_id;
+

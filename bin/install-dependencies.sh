@@ -3,7 +3,7 @@
 pip=${1-'/usr/bin/env pip'}
 
 ckan_harvest_fork='ckan'
-ckan_harvest_sha='c21c1627992cbcf0043b7b6873ff899f6f66767f'
+ckan_harvest_sha='5aad13c2f9aba738a82eeca8bb7a859e584f483b'
 
 ckan_dcat_fork='ckan'
 ckan_dcat_sha='v0.0.8'
@@ -16,6 +16,8 @@ ckan_s3_resources_sha='50341b3960a6be3aba5a1558e80dd9a8c7c70c2c'
 
 ckan_fork='ckan'
 ckan_sha='ckan-2.7.4'
+
+$pip install -U pip
 
 $pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
 $pip install -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
