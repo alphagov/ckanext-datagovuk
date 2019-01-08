@@ -64,10 +64,6 @@ http://localhost:8983/solr/
     if core is showing a red circle on "optimized"
       click "Optimize"
 ckan $
-  cd ~
-  git clone https://github.com/alphagov/ckanext-datagovuk --branch bytemark-migration
-  ./ckanext-datagovuk/bin/migrate-solr # Wait a few minutes, monitor `htop` until the CPU use dies down
-  curl 'http://localhost:8983/solr/collection1/update?stream.body=%3Ccommit/%3E'
   sudo service ckan restart
 
 
