@@ -17,8 +17,11 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
     def form_to_db_schema(self):
         from ckan.logic.schema import group_form_schema
         schema = group_form_schema()
-        for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
-            schema.update({contact_key: [toolkit.get_validator('ignore_missing'),
+        for mandatory_extra in ['category']:
+            schema.update({mandatory_extra: [toolkit.get_converter('convert_to_extras'),
+                                         unicode]})
+        for optional_extra in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+            schema.update({optional_extra: [toolkit.get_validator('ignore_missing'),
                                          toolkit.get_converter('convert_to_extras'),
                                          unicode]})
         return schema
@@ -26,8 +29,11 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
     def db_to_form_schema(self, package_type=None):
         from ckan.logic.schema import default_group_schema
         schema = default_group_schema()
-        for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
-            schema.update({contact_key: [toolkit.get_converter('convert_from_extras'),
+        for mandatory_extra in ['category']:
+            schema.update({mandatory_extra: [toolkit.get_converter('convert_from_extras'),
+                                         unicode]})
+        for optional_extra in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+            schema.update({optional_extra: [toolkit.get_converter('convert_from_extras'),
                                          toolkit.get_validator('ignore_missing'),
                                          unicode]})
         schema['num_followers'] = []

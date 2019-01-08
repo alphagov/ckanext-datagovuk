@@ -262,6 +262,29 @@ def codelist():
     }
     return codelist_dict
 
+def publisher_category():
+    categories = {
+        "": "",
+        "ministerial-department": "Ministerial department",
+        "non-ministerial-department": "Non-ministerial department",
+        "devolved": "Devolved administration",
+        "executive-ndpb": "Executive non-departmental public body",
+        "advisory-ndpb": "Advisory non-departmental public body",
+        "tribunal-ndpb": "Tribunal non-departmental public body",
+        "executive-agency": "Executive agency",
+        "executive-office": "Executive office",
+        "local-council": "Local authority",
+        "nhs": "NHS body",
+        "gov-corporation": "Public corporation",
+        "charity-ngo": "Charity or Non-Governmental Organisation",
+        "private": "Private Sector",
+        "grouping": "A notional grouping of organisations",
+        "sub-organisation": "Sub-organisation",
+        "other": "Other",
+    }
+    return [{'text': value[1], 'value': value[0]}
+            for value in alphabetise_dict(categories)]
+
 def activate_upload(pkg_name):
     pkg_dict = Package.by_name(pkg_name).as_dict()
     pkg_extras = pkg_dict.get('extras')
