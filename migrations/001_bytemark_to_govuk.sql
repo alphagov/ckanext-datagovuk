@@ -71,6 +71,22 @@ AND (
   )
 );
 
+UPDATE resource r
+SET url = replace(url,
+  'https://data.gov.uk/sites/default/files/',
+  'https://s3-eu-west-1.amazonaws.com/datagovuk-integration-ckan-organogram/legacy/'
+)
+FROM package_extra pe
+WHERE pe.package_id = r.package_id
+AND pe.value in (
+  '["538b857a-64ba-490e-8440-0e32094a28a7"]',
+  '["d3c0b23f-6979-45e4-88ed-d2ab59b005d0"]'
+)
+AND pe.key = 'schema-vocabulary'
+AND r.url LIKE 'https://data.gov.uk/sites/default/files/organogram/%'
+AND r.state = 'active'
+AND r.format = 'CSV';
+
 -- Harvest sources
 
 -- Update the source type to match new CKAN
