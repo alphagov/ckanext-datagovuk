@@ -222,6 +222,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'alphabetise_dict': h.alphabetise_dict,
             'roles': h.roles,
             'google_analytics_tracking_id': h.google_analytics_tracking_id,
+            'publisher_category': h.publisher_category,
         }
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
