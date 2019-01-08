@@ -31,7 +31,7 @@ db_admin $
 ckan $
   # sudo remove plugins line (90) from /var/ckan/ckan.ini
   cd /var/apps/ckan/
-  sudo -u deploy govuk_setenv ckan venv/bin/paster --plugin=ckan db upgrade -c /var/ckan/ckan.ini # Approx 8 hours, use a screen
+  sudo -u deploy govuk_setenv ckan venv/bin/paster --plugin=ckan db upgrade -c /var/ckan/ckan.ini # 2 to 8 hours, use a screen
   govuk_puppet --test # Restore correct CKAN config
   sudo service puppet stop
   sudo service ckan stop
