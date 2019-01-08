@@ -79,3 +79,5 @@ bytemark $
   exit # Clear your environment variables and flush bash history to disk
 bytemark $
   vi ~/.bash_history # remove your secrets
+aws console:
+  Check the box next to the `legacy` directory and click Actions -> Make public.  This will take a few minutes.
