@@ -49,3 +49,11 @@ UPDATE harvest_source SET type = 'csw' WHERE type = 'gemini-csw';
 UPDATE harvest_source SET type = 'waf' WHERE type = 'gemini-waf';
 UPDATE harvest_source SET type = 'dcat_json' WHERE type = 'data_json';
 
+-- Change the DKAN harvester to use the data.json format
+UPDATE harvest_source SET url = CONCAT(url, '/data.json'), type = 'dcat_json' WHERE type = 'dkan';
+
+-- Remove a duplicated harvest source to fix a validation error
+DELETE FROM harvest_object_extra WHERE harvest_object_id IN (SELECT id FROM harvest_object WHERE harvest_source_id = '2c798023-abac-4785-ad19-67bd5c1aed63');
+DELETE FROM harvest_object WHERE harvest_source_id = '2c798023-abac-4785-ad19-67bd5c1aed63';
+DELETE FROM harvest_job WHERE source_id = '2c798023-abac-4785-ad19-67bd5c1aed63';
+DELETE FROM harvest_source WHERE id = '2c798023-abac-4785-ad19-67bd5c1aed63';
