@@ -36,34 +36,8 @@ ckan $
   sudo service puppet stop
   sudo service ckan stop
   sudo -u deploy govuk_setenv ckan venv/bin/paster --plugin=ckan db upgrade -c /var/ckan/ckan.ini
-local $
-  ssh -L 8983:localhost:8983 ip-10-1-4-229.eu-west-1.compute.internal.integration # ckan AWS
-  ssh -L 8984:localhost:8983 co@co-prod3.dh.bytemark.co.uk # ckan Bytemark
-  open http://localhost:8983/solr/ # use this to monitor AWS solr
-  open http://localhost:8984/solr/ # use this to monitor Bytemark solr
-co@prod3 $
-  cd /usr/share/solr/solr-4.3.1/example/solr/
-  tar czvf ~/solr-snapshot.tgz collection1 # 2 mins
-local $
-  scp co@co-prod3.dh.bytemark.co.uk:~/solr-snapshot.tgz . # approx 5 minutes
-  ssh co@co-prod3.dh.bytemark.co.uk "rm ~/solr-snapshot.tgz"
-  scp solr-snapshot.tgz ip-10-1-4-229.eu-west-1.compute.internal.integration:~/ # approx 15 minutes, limit speed with `-L` if needed
-ckan $
-  sudo mv solr-snapshot.tgz /var/lib/solr/solr-4.3.1/example/solr/
-  cd /var/lib/solr/solr-4.3.1/example/solr/
-  ll # confirm all looks well
-  sudo rm -rf collection1
-  sudo tar xzvf solr-snapshot.tgz # 30 secs, use screen
-  sudo rm solr-snapshot.tgz
-  sudo chown -R solr:solr collection1
-  govuk_puppet --test # restore correct solr config and enable services
-http://localhost:8983/solr/
-  check on core status
-    if core is missing
-      curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=collection1&instanceDir=collection1"
-    if core is showing a red circle on "optimized"
-      click "Optimize"
-ckan $
+  govuk_puppet --test
+  sudo service puppet restart # may need to edit the puppet config to `yes` if you're told it can't restart
   sudo service ckan restart
 
 
