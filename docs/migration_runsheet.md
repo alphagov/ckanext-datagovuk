@@ -40,6 +40,14 @@ ckan $
   sudo service puppet restart # may need to edit the puppet config to `yes` if you're told it can't restart
   sudo service ckan restart
 
+To reindex Solr, there are three ways to do this:
+1. Full reindex which destroys the existing index and creates a new index, default behaviour if no options are specified (WARNING: removes all existing data and takes several days to complete).
+2. Add only missing datasets using option `-m` (approximately 15 seconds per dataset).
+3. Update all records in the index, but do not delete the old index using option `-r` (this allows the website to continue running whilst the reindex takes place).
+
+ckan $
+  cd /var/apps/ckan
+  sudo -u deploy govuk_setenv ckan venv/bin/paster search-index rebuild [OPTIONS] -c /var/ckan/ckan.ini
 
 ### Copying legacy organograms
 
