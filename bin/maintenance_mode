@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+die() {
+  echo >&2 "Usage: $0 on | off"
+  exit 1
+}
+
+[ "$#" -eq 1 ] || die
+echo $1 | grep -E -q '^on|off$' || die
+
+host='co@co-prod3.dh.bytemark.co.uk'
+source='maintenance.html'
+destination="/var/ckan/$source"
+
+if [ "$1" == "on" ]; then
+  echo "Enabling maintenance mode in Bytemark"
+
+  if [ ! -f $source ]; then
+    echo >&2 "$source not found.  Please run this from the ckanext-datagovuk directory."
+    exit 1
+  fi
+
+  scp -q $source $host:$destination
+else
+  echo "Disabling maintenance mode in Bytemark"
+  ssh $host "rm $destination 2> /dev/null"
+fi
