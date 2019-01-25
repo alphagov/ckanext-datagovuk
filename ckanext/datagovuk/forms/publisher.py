@@ -29,10 +29,7 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
     def db_to_form_schema(self, package_type=None):
         from ckan.logic.schema import default_group_schema
         schema = default_group_schema()
-        for mandatory_extra in ['category']:
-            schema.update({mandatory_extra: [toolkit.get_converter('convert_from_extras'),
-                                         unicode]})
-        for optional_extra in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
+        for optional_extra in ['category', 'contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({optional_extra: [toolkit.get_converter('convert_from_extras'),
                                          toolkit.get_validator('ignore_missing'),
                                          unicode]})
