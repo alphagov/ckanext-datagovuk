@@ -63,10 +63,25 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                 contact_key: [toolkit.get_validator('ignore_missing'),
                               toolkit.get_converter('convert_to_extras')]
             })
+
+        from ckan.logic.schema import default_extras_schema
+        from ckan.lib.navl.validators import not_empty
+        from ckanext.datagovuk.logic.validators import extra_key_not_in_root_schema
+
+        extras_schema = default_extras_schema()
+        extras_schema['key'] = [
+            not_empty,
+            extra_key_not_in_root_schema,
+            unicode,
+        ]
+
+        schema['extras'] = extras_schema
+
         schema['resources'].update({
-                'resource-type' : [toolkit.get_validator('ignore_missing')],
-                'datafile-date' : [toolkit.get_validator('ignore_missing')],
-             })
+            'resource-type': [toolkit.get_validator('ignore_missing')],
+            'datafile-date': [toolkit.get_validator('ignore_missing')],
+        })
+
         return schema
 
     def create_package_schema(self):
