@@ -208,6 +208,7 @@ def schemas():
         "15c283eb-2831-4817-9d64-c5821c8b121e": "ets - https://raw.githubusercontent.com/datagovuk/health-schemas/master/ets.json",
         "515fd756-1cf9-491c-8223-49cf435b6926": "localities - https://raw.githubusercontent.com/datagovuk/transport-schemas/master/localities.json",
         "fc3043a5-52e7-42fe-be7c-d3e0ef576c1d": "stops - https://raw.githubusercontent.com/datagovuk/transport-schemas/master/stops.json",
+        "b22f3320-ab9f-4f48-b1c7-1f4732133d8c": "GC-Data-Catalogue-csv-schema - https://raw.githubusercontent.com/OrdnanceSurvey/discoverability/master/GC-Data-Catalogue-csv-schema.json",
     }
     return schemas_dict
 
