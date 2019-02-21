@@ -1,0 +1,5 @@
+{% ckan_extends %}
+
+{% block all_user_agents -%}
+Disallow: /
+{%- endblock %}
