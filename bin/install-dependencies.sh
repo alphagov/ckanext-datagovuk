@@ -3,7 +3,7 @@
 pip=${1-'/usr/bin/env pip'}
 
 ckan_harvest_fork='ckan'
-ckan_harvest_sha='5aad13c2f9aba738a82eeca8bb7a859e584f483b'
+ckan_harvest_sha='2c8a909c667de4608fd683168dfd397bdc170bc8'
 
 ckan_dcat_fork='ckan'
 ckan_dcat_sha='v0.0.8'
