@@ -2,14 +2,14 @@
 
 pip=${1-'/usr/bin/env pip'}
 
-ckan_harvest_fork='ckan'
-ckan_harvest_sha='2c8a909c667de4608fd683168dfd397bdc170bc8'
+ckan_harvest_fork='alphagov'
+ckan_harvest_sha='fb0cf3254686272ac4a0618fdf554b7913ae3485'
 
 ckan_dcat_fork='alphagov'
 ckan_dcat_sha='6253f296c6d1200465a3223710d076cd24e37834'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='27483d8868694bb78e0a109905607948e37aebd7'
+ckan_spatial_sha='9b326765562bfbff40d11b0b244071b27490326d'
 
 ckan_s3_resources_fork='alphagov'
 ckan_s3_resources_sha='50341b3960a6be3aba5a1558e80dd9a8c7c70c2c'
