@@ -57,7 +57,7 @@ def resource_create(context, data_dict):
             'd3c0b23f-6979-45e4-88ed-d2ab59b005d0', # Departmental
             }
 
-        if pkg_dict['schema-vocabulary'] in organogram_ids:
+        if pkg_dict.get('schema-vocabulary') in organogram_ids:
             log.debug("Organogram detected")
 
             file_handle = data_dict['upload'].file
