@@ -78,7 +78,7 @@ def resource_create(context, data_dict):
     return resource_create_core(context, data_dict)
 
 def _create_csv_resource(junior_senior, csv, resource_data, context):
-    filename = 'organogram-%s-posts.csv' % junior_senior.lower()
+    filename = 'organogram-%s.csv' % junior_senior.lower()
     csv_wrapper = FakeFieldStorage(filename, csv)
 
     resource_data['name'] = 'Organogram (%s posts)' % junior_senior

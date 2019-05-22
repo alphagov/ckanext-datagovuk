@@ -104,14 +104,14 @@ class TestWhenValidOrganogramExcelFile(TestResourceCreate):
         self._assert_resource_created(
             senior_args,
             "Organogram (Senior posts)",
-            "organogram-senior-posts.csv",
+            "organogram-senior.csv",
         )
 
         junior_args, _kwargs = original_function.call_args_list[1]
         self._assert_resource_created(
             junior_args,
             "Organogram (Junior posts)",
-            "organogram-junior-posts.csv",
+            "organogram-junior.csv",
         )
 
     @patch("ckanext.datagovuk.action.create.resource_create_core")
