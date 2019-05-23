@@ -13,6 +13,7 @@ from ckanext.datagovuk.lib.organogram_xls_splitter import create_organogram_csvs
 
 import cgi
 import mimetypes
+from datetime import date, datetime
 
 log = __import__('logging').getLogger(__name__)
 
@@ -69,21 +70,30 @@ def resource_create(context, data_dict):
                 raise ValidationError(errors)
             else:
                 log.debug("Valid organogram Excel file found")
-                senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context)
-                junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context)
+                timestamp = datetime.utcnow()
+                timestamp_str = timestamp.strftime("%Y-%m-%dT%H-%M-%SZ")
+
+                senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context, timestamp_str)
+                junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context, timestamp_str)
 
                 return senior_resource
 
     log.debug("Passing args through to the CKAN resource_create")
     return resource_create_core(context, data_dict)
 
-def _create_csv_resource(junior_senior, csv, resource_data, context):
-    filename = 'organogram-%s-posts.csv' % junior_senior.lower()
+def _create_csv_resource(junior_senior, csv, resource_data, context, timestamp):
+    filename = 'organogram-%s.csv' % junior_senior.lower()
     csv_wrapper = FakeFieldStorage(filename, csv)
+    _date = resource_data.get('datafile-date')
 
-    resource_data['name'] = 'Organogram (%s posts)' % junior_senior
+    if not _date:
+        today = date.today()
+        _date = today.strftime("%Y-%m-%d")
+
+    resource_data['name'] = '{} Organogram ({})'.format(_date, junior_senior)
     resource_data['url'] = filename
     resource_data['upload'] = csv_wrapper
+    resource_data['timestamp'] = timestamp
 
     return resource_create_core(context, resource_data)
 

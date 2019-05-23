@@ -1,9 +1,11 @@
-import unittest
-from mock import (patch, Mock)
-import ckanext.datagovuk.action.create as create
-from ckan.plugins.toolkit import ValidationError
 from io import BytesIO
 import os
+from datetime import date, datetime
+import unittest
+from mock import (patch, Mock)
+
+import ckanext.datagovuk.action.create as create
+from ckan.plugins.toolkit import ValidationError
 
 class TestFakeFieldStorage(unittest.TestCase):
     def setUp(self):
@@ -67,13 +69,13 @@ class TestWhenExcelButNotOrganogram(TestResourceCreate):
 
 
 class TestWhenValidOrganogramExcelFile(TestResourceCreate):
-    def setUp(self):
-        fixture_path = os.path.join(os.path.dirname(__file__), "../data/sample-valid.xls")
+    fixture_path = os.path.join(os.path.dirname(__file__), "../data/sample-valid.xls")
 
+    def setUp(self):
         self.data_dict = {
             "package_id": "1234",
             "url": "valid-organogram.xls",
-            "upload": create.FakeFieldStorage("valid-organogram.xls", open(fixture_path))
+            "upload": create.FakeFieldStorage("valid-organogram.xls", open(self.fixture_path))
         }
 
         self.pkg_dict = {
@@ -103,15 +105,15 @@ class TestWhenValidOrganogramExcelFile(TestResourceCreate):
         senior_args, _kwargs = original_function.call_args_list[0]
         self._assert_resource_created(
             senior_args,
-            "Organogram (Senior posts)",
-            "organogram-senior-posts.csv",
+            "Organogram (Senior)",
+            "organogram-senior.csv",
         )
 
         junior_args, _kwargs = original_function.call_args_list[1]
         self._assert_resource_created(
             junior_args,
-            "Organogram (Junior posts)",
-            "organogram-junior-posts.csv",
+            "Organogram (Junior)",
+            "organogram-junior.csv",
         )
 
     @patch("ckanext.datagovuk.action.create.resource_create_core")
@@ -124,14 +126,51 @@ class TestWhenValidOrganogramExcelFile(TestResourceCreate):
 
         self.assertEqual(created_resource, "First resource")
 
+    @patch("ckanext.datagovuk.action.create.resource_create_core")
+    def test_calls_the_original_function_twice_with_given_date(self, original_function):
+        self.data_dict = {
+            "package_id": "1234",
+            "url": "valid-organogram.xls",
+            "upload": create.FakeFieldStorage("valid-organogram.xls", open(self.fixture_path)),
+            "datafile-date": "2019-05-23"
+        }
 
-    def _assert_resource_created(self, args, name, filename):
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+            create.resource_create(self.context, self.data_dict)
+
+        self.assertEqual(len(original_function.call_args_list), 2)
+
+        senior_args, _kwargs = original_function.call_args_list[0]
+        self._assert_resource_created(
+            senior_args,
+            "Organogram (Senior)",
+            "organogram-senior.csv",
+            "2019-05-23"
+        )
+
+        junior_args, _kwargs = original_function.call_args_list[1]
+        self._assert_resource_created(
+            junior_args,
+            "Organogram (Junior)",
+            "organogram-junior.csv",
+            "2019-05-23"
+        )
+
+    def _assert_resource_created(self, args, name, filename, datafile_date=None):
         self.assertEqual(args[0], self.context)
 
         resource_dict = args[1]
+        if not datafile_date:
+            today = date.today()
+            datafile_date = today.strftime("%Y-%m-%d")
 
-        self.assertEqual(resource_dict["name"], name)
+        timestamp = datetime.utcnow()
+        timestamp_str = timestamp.strftime("%Y-%m-%dT%H-%M-%SZ")
+
+        self.assertEqual(resource_dict["name"], '{} {}'.format(datafile_date, name))
         self.assertEqual(resource_dict["url"], filename)
+        self.assertEqual(resource_dict["timestamp"], timestamp_str)
 
         field_storage = resource_dict["upload"]
         self.assertEqual(field_storage.filename, filename)
