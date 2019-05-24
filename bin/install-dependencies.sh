@@ -12,7 +12,7 @@ ckan_spatial_fork='alphagov'
 ckan_spatial_sha='7bdc8c5ff63c91cd7996cd461505bcba9c39a34d'
 
 ckan_s3_resources_fork='alphagov'
-ckan_s3_resources_sha='8014055db7830e4cdd49a7184ef3a1d56613a3a3'
+ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
 
 ckan_fork='ckan'
 ckan_sha='ckan-2.7.4'
