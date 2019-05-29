@@ -1,13 +1,10 @@
 #
 # To run tests:
+# in the bin directory >
 # pytest --disable-pytest-warnings
 #
 
 import pytest
-
-import boto3
-from moto import mock_s3
-boto3.client('s3')
 
 from bin.fix_organograms_s3_filenames import main
 
@@ -26,23 +23,35 @@ def mock_os_environ(mocker):
     return os_environ
 
 
-@mock_s3
-def test_fix_organograms_s3_filenames(mocker, mock_os_environ):
-    conn = boto3.resource('s3', region_name=mock_os_environ['AWS_REGION'])
-    conn.create_bucket(Bucket=mock_os_environ['AWS_ORG_BUCKET'])
+def test_fix_organograms_s3_filenames_without_moto(mocker, mock_os_environ):
+    class MockObject:
+        def __init__(self, key):
+            self.key = key
 
-    bucket = conn.Bucket(mock_os_environ['AWS_ORG_BUCKET'])
-
-    filenames = [
-        'senior-posts-2019-05-01.csv',
-        'junior-posts-2019-05-02.csv',
-        '2019-05-02.csv',
-        '-posts-2019-05-02.csv'
+    files = [
+        MockObject('-posts-2019-05-02.csv'),
+        MockObject('senior-posts-2019-05-01.csv'),
+        MockObject('junior-posts-2019-05-02.csv'),
+        MockObject('2019-05-02.csv'),
     ]
 
-    for filename in filenames:
-        obj = bucket.Object(filename)
-        obj.put(Body='A,B,C')
+    class MockBoto3Resource:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def Bucket(self, *args):
+
+            class MockBucket:
+                class MockObjects:
+                    def all(self):
+                        return files
+
+                def __init__(self):
+                    self.objects = self.MockObjects()
+
+            return MockBucket()
+
+    mocker.patch('boto3.resource', MockBoto3Resource)
 
     main('dry-run')
     assert False

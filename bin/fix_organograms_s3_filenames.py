@@ -4,7 +4,7 @@
 # Requirements - 
 # boto3
 # pytest
-# moto
+# pytest-mock
 #
 # Set up environment from ckan.ini
 # export AWS_ACCESS_KEY_ID=
@@ -62,9 +62,6 @@ def main(dry_run=False):
 
         if filename[-7:] in ['-senior.csv', '-junior.csv'] or '-posts-' not in filename:
             continue
-
-        # print(directory)
-        # print(filename)
 
         filename_parts = filename.split('-posts-')
 
