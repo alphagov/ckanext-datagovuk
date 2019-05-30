@@ -288,8 +288,8 @@ def publisher_category():
 
 def activate_upload(pkg_name):
     pkg_dict = Package.by_name(pkg_name).as_dict()
-    pkg_extras = pkg_dict.get('extras')
-    return 'schema-vocabulary' in pkg_extras and pkg_extras['schema-vocabulary'] in ('538b857a-64ba-490e-8440-0e32094a28a7', 'd3c0b23f-6979-45e4-88ed-d2ab59b005d0')
+    pkg_extras = pkg_dict.get('extras', {})
+    return pkg_extras.get('schema-vocabulary') in ('538b857a-64ba-490e-8440-0e32094a28a7', 'd3c0b23f-6979-45e4-88ed-d2ab59b005d0')
 
 def roles():
     roles_list = ['Admin', 'Editor']
@@ -297,3 +297,8 @@ def roles():
 
 def google_analytics_tracking_id():
     return config.get('ckan.google_analytics_tracking_id')
+
+def is_central_gov_organogram(pkg_name):
+    pkg_dict = Package.by_name(pkg_name).as_dict()
+    pkg_extras = pkg_dict.get('extras', {})
+    return pkg_extras.get('schema-vocabulary') == 'd3c0b23f-6979-45e4-88ed-d2ab59b005d0'
