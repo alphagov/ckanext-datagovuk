@@ -1,3 +1,8 @@
+import cgi
+from collections import OrderedDict
+from datetime import date, datetime
+import mimetypes
+
 import ckan.logic.schema
 from ckan.plugins.toolkit import (
     check_access,
@@ -11,9 +16,6 @@ from ckan.logic.action.create import resource_create as resource_create_core
 from ckan.logic import get_or_bust
 from ckanext.datagovuk.lib.organogram_xls_splitter import create_organogram_csvs
 
-import cgi
-import mimetypes
-from datetime import date, datetime
 
 log = __import__('logging').getLogger(__name__)
 
@@ -67,7 +69,11 @@ def resource_create(context, data_dict):
 
             if errors:
                 context['session'].rollback()
-                raise ValidationError(errors)
+                error_summary = OrderedDict()
+                for i in range(0, len(errors)):
+                    error_summary[str(i + 1)] = errors[i]
+
+                raise ValidationError(errors, error_summary)
             else:
                 log.debug("Valid organogram Excel file found")
                 timestamp = datetime.utcnow()
