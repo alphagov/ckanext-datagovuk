@@ -6,6 +6,7 @@
 # pytest
 # pytest-mock
 # psycopg2
+# popen
 #
 # Set up environment from ckan.ini
 # export AWS_ACCESS_KEY_ID=
@@ -23,15 +24,13 @@ import boto3
 import os
 import sys
 import psycopg2
+import subprocess
 
 import logging
-
 import pdb
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-# Create handlers
 c_handler = logging.StreamHandler()
 f_handler = logging.FileHandler('app.log')
 
@@ -77,6 +76,7 @@ def main(dry_run=False):
             continue
 
         path_parts = obj.key.split('/')
+        dataset_name = path_parts[0]
         filename = path_parts[-1]
         directory = '/'.join(path_parts[:-1])
 
@@ -151,9 +151,35 @@ def main(dry_run=False):
             else:
                 print('DRY RUN of SQL statement: {}'.format(sql_statement))
                 logger.info('DRY RUN of SQL statement: {}'.format(sql_statement))
+
         else:
             print('Original url not found in table - {}'.format(original_database_url))
             logger.info('Original url not found in table -{}'.format(original_database_url))
+
+        pastor_command = 'paster --plugin=ckan search-index rebuild {} -c /etc/ckan/ckan.ini'.format(dataset_name)
+
+        if not dry_run:
+            print('Update dataset {} in SOLR...'.format(dataset_name))
+            logger.info('Update dataset {} in SOLR...'.format(dataset_name))
+            print('Running pastor command:  {}'.format(pastor_command))
+            logger.info('Running pastor command:  {}'.format(pastor_command))
+
+            try:
+                subprocess.call(pastor_command, shell=True)
+            except:
+                exception = sys.exc_info()[1]
+                print('Exception occured: ' + str(exception))
+                print('Subprocess failed')
+                logging.info('Exception occured: ' + str(exception))
+                logging.info('Subprocess failed')
+            else:
+                print('Subprocess finished')
+                logging.info('Subprocess finished')
+        else:
+            print('Update dataset {} in SOLR...'.format(dataset_name))
+            logger.info('Update dataset {} in SOLR...'.format(dataset_name))
+            print('To run pastor command: {}'.format(pastor_command))
+            logger.info('To run pastor command: {}'.format(pastor_command))
 
         print('===============')
         logger.info('===============')
