@@ -69,9 +69,9 @@ def resource_create(context, data_dict):
 
             if errors:
                 context['session'].rollback()
-                error_summary = OrderedDict()
-                for i in range(0, len(errors)):
-                    error_summary[str(i + 1)] = errors[i]
+
+                error_items = [(str(i + 1), error) for i, error in enumerate(errors)]
+                error_summary = OrderedDict(error_items)
 
                 raise ValidationError(errors, error_summary)
             else:
