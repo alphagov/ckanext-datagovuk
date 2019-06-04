@@ -3,6 +3,20 @@
 {% set res = c.resource %}
 
 {% block basic_fields_url %}
+  {% if h.activate_upload(pkg_name) %}
+  <p>
+      <label class="control-label">&nbsp;</label>
+      <div>
+          Additional help can be found in this <a target="newwin" href='https://guidance.data.gov.uk/publish_and_manage_data/harvest_or_add_data/add_data/#add-an-organogram'>organogram guide</a>
+      </div>
+      {% if h.is_central_gov_organogram(pkg_name) %}
+      <label class="control-label">&nbsp;</label>
+      <div>
+          Ensure that you use this XLS template <a target="newwin" href='https://ckan.publishing.service.gov.uk/publisher-files/Blank_Organogram_Template_latest.xls'>standard template</a>
+      </div>
+      {% endif %}
+  </p>
+  {% endif %}
   {% if 'resource-type' in res and res['resource-type'] == 'supporting-document' %}
     {% set supp = True %}
   {% else %}
@@ -32,13 +46,15 @@
 {% endblock %}
 
 {% block basic_fields_format %}
-    {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
-    {% call form.input('format', id='field-format', label=_('Format'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs) %}
-      <span class="info-block info-block-small">
-        <i class="fa fa-info-circle"></i>
-        {{ _('This will be guessed automatically. Leave blank if you wish') }}
-      </span>
-    {% endcall %}
+    {% if not h.is_central_gov_organogram(pkg_name) %}
+        {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
+        {% call form.input('format', id='field-format', label=_('Format'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs) %}
+        <span class="info-block info-block-small">
+            <i class="fa fa-info-circle"></i>
+            {{ _('This will be guessed automatically. Leave blank if you wish') }}
+        </span>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block save_button %}

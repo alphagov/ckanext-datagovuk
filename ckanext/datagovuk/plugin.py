@@ -239,6 +239,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'roles': h.roles,
             'google_analytics_tracking_id': h.google_analytics_tracking_id,
             'publisher_category': h.publisher_category,
+            'is_central_gov_organogram': h.is_central_gov_organogram,
         }
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
