@@ -68,7 +68,7 @@ class TestWhenExcelButNotOrganogram(TestResourceCreate):
         original_function.assert_called_once_with(self.context, self.data_dict)
 
 
-class TestWhenValidOrganogramExcelFile(TestResourceCreate):
+class TestWhenValidOrganogramXlsFile(TestResourceCreate):
     fixture_path = os.path.join(os.path.dirname(__file__), "../data/sample-valid.xls")
 
     def setUp(self):
@@ -132,6 +132,117 @@ class TestWhenValidOrganogramExcelFile(TestResourceCreate):
             "package_id": "1234",
             "url": "valid-organogram.xls",
             "upload": create.FakeFieldStorage("valid-organogram.xls", open(self.fixture_path)),
+            "datafile-date": "2019-05-23"
+        }
+
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+            create.resource_create(self.context, self.data_dict)
+
+        self.assertEqual(len(original_function.call_args_list), 2)
+
+        senior_args, _kwargs = original_function.call_args_list[0]
+        self._assert_resource_created(
+            senior_args,
+            "Organogram (Senior)",
+            "organogram-senior.csv",
+            "2019-05-23"
+        )
+
+        junior_args, _kwargs = original_function.call_args_list[1]
+        self._assert_resource_created(
+            junior_args,
+            "Organogram (Junior)",
+            "organogram-junior.csv",
+            "2019-05-23"
+        )
+
+    def _assert_resource_created(self, args, name, filename, datafile_date=None):
+        self.assertEqual(args[0], self.context)
+
+        resource_dict = args[1]
+        if not datafile_date:
+            today = date.today()
+            datafile_date = today.strftime("%Y-%m-%d")
+
+        timestamp = datetime.utcnow()
+        timestamp_str = timestamp.strftime("%Y-%m-%dT%H-%M-%SZ")
+
+        self.assertEqual(resource_dict["name"], '{} {}'.format(datafile_date, name))
+        self.assertEqual(resource_dict["url"], filename)
+        self.assertEqual(resource_dict["timestamp"], timestamp_str)
+
+        field_storage = resource_dict["upload"]
+        self.assertEqual(field_storage.filename, filename)
+
+        csv = field_storage.file.readlines()
+        self.assertGreater(len(csv), 1)
+
+
+class TestWhenValidOrganogramXlsxFile(TestResourceCreate):
+    fixture_path = os.path.join(os.path.dirname(__file__), "../data/sample-valid.xlsx")
+
+    def setUp(self):
+        self.data_dict = {
+            "package_id": "1234",
+            "url": "valid-organogram.xlsx",
+            "upload": create.FakeFieldStorage("valid-organogram.xlsx", open(self.fixture_path))
+        }
+
+        self.pkg_dict = {
+            "schema-vocabulary": "538b857a-64ba-490e-8440-0e32094a28a7",
+        }
+
+        super(self.__class__, self).setUp()
+
+
+    @patch("ckanext.datagovuk.action.create.resource_create_core")
+    def test_does_not_call_the_original_function_with_original_args(self, original_function):
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+            create.resource_create(self.context, self.data_dict)
+
+        for args, _kwargs in original_function.call_args_list:
+            self.assertNotEqual(args, (self.context, self.data_dict))
+
+    @patch("ckanext.datagovuk.action.create.resource_create_core")
+    def test_calls_the_original_function_twice_with_new_args(self, original_function):
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+            create.resource_create(self.context, self.data_dict)
+
+        self.assertEqual(len(original_function.call_args_list), 2)
+
+        senior_args, _kwargs = original_function.call_args_list[0]
+        self._assert_resource_created(
+            senior_args,
+            "Organogram (Senior)",
+            "organogram-senior.csv",
+        )
+
+        junior_args, _kwargs = original_function.call_args_list[1]
+        self._assert_resource_created(
+            junior_args,
+            "Organogram (Junior)",
+            "organogram-junior.csv",
+        )
+
+    @patch("ckanext.datagovuk.action.create.resource_create_core")
+    def test_returns_the_first_created_resource(self, original_function):
+        original_function.side_effect = ["First resource", "Second resource"]
+
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+            created_resource = create.resource_create(self.context, self.data_dict)
+
+        self.assertEqual(created_resource, "First resource")
+
+    @patch("ckanext.datagovuk.action.create.resource_create_core")
+    def test_calls_the_original_function_twice_with_given_date(self, original_function):
+        self.data_dict = {
+            "package_id": "1234",
+            "url": "valid-organogram.xlsx",
+            "upload": create.FakeFieldStorage("valid-organogram.xlsx", open(self.fixture_path)),
             "datafile-date": "2019-05-23"
         }
 

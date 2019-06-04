@@ -1,3 +1,8 @@
+import cgi
+from collections import OrderedDict
+from datetime import date, datetime
+import mimetypes
+
 import ckan.logic.schema
 from ckan.plugins.toolkit import (
     check_access,
@@ -11,9 +16,6 @@ from ckan.logic.action.create import resource_create as resource_create_core
 from ckan.logic import get_or_bust
 from ckanext.datagovuk.lib.organogram_xls_splitter import create_organogram_csvs
 
-import cgi
-import mimetypes
-from datetime import date, datetime
 
 log = __import__('logging').getLogger(__name__)
 
@@ -44,7 +46,7 @@ def resource_create(context, data_dict):
     mimetype = mimetypes.guess_type(data_dict['url'])[0]
     log.debug("Mimetype: %s" % mimetype)
 
-    if mimetype == 'application/vnd.ms-excel':
+    if mimetype in ('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
         log.debug("Excel file detected")
 
         package_id = get_or_bust(data_dict, 'package_id')
@@ -67,7 +69,11 @@ def resource_create(context, data_dict):
 
             if errors:
                 context['session'].rollback()
-                raise ValidationError(errors)
+
+                error_items = [(str(i + 1), error) for i, error in enumerate(errors)]
+                error_summary = OrderedDict(error_items)
+
+                raise ValidationError(errors, error_summary)
             else:
                 log.debug("Valid organogram Excel file found")
                 timestamp = datetime.utcnow()
