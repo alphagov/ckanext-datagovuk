@@ -46,7 +46,7 @@ def resource_create(context, data_dict):
     mimetype = mimetypes.guess_type(data_dict['url'])[0]
     log.debug("Mimetype: %s" % mimetype)
 
-    if mimetype == 'application/vnd.ms-excel':
+    if mimetype in ('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
         log.debug("Excel file detected")
 
         package_id = get_or_bust(data_dict, 'package_id')
