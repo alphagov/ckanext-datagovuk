@@ -19,6 +19,8 @@
 # Execute script like this -
 # python fix-organograms-s3-filenames.py dry-run
 #
+# after being run the SOLR search index needs to be refreshed:
+# paster --plugin=ckan search-index rebuild -r --config=/etc/ckan/ckan.ini
 
 import boto3
 import os
@@ -27,7 +29,6 @@ import psycopg2
 import subprocess
 
 import logging
-import pdb
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -38,10 +39,9 @@ connection = psycopg2.connect(os.environ.get('POSTGRES_URL'))
 
 
 def setupLogging():
-    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    c_handler.setFormatter(c_format)
-    f_handler.setFormatter(f_format)
+    _format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    c_handler.setFormatter(_format)
+    f_handler.setFormatter(_format)
     logger.addHandler(c_handler)
     logger.addHandler(f_handler)
 
@@ -59,17 +59,13 @@ def main(dry_run=False):
     )
 
     bucket = s3.Bucket(os.environ.get('AWS_ORG_BUCKET'))
-    logger.info(bucket)
 
     if dry_run:
-        print('Executing DRY RUN on {}'.format(bucket))
         logger.info('Executing DRY RUN on {}'.format(bucket))
         logger.info('====================================================================')
     else:
-        print('Executing permanent changes on {}'.format(bucket))
         logger.info('Executing permanent changes on {}'.format(bucket))
         logger.info('====================================================================')
-
 
     for obj in bucket.objects.all():
         if not obj.key.endswith('.csv'):
@@ -92,12 +88,9 @@ def main(dry_run=False):
         new_path = '{}/{}'.format(directory, new_filename)
 
         if not new_filename.endswith('-senior.csv') and not new_filename.endswith('-junior.csv'):
-            print('invalid new filename {} for {}'.format(new_filename, filename))
             logger.info('invalid new filename {} for {}'.format(new_filename, filename))
             continue
 
-        print('{}renamed in S3 from {} to {}'.format(
-            'TO BE ' if dry_run else '', obj.key, new_path))
         logger.info('{}renamed in S3 from {} to {}'.format(
             'TO BE ' if dry_run else '', obj.key, new_path))
 
@@ -107,14 +100,11 @@ def main(dry_run=False):
 
             objs = list(bucket.objects.filter(Prefix=new_path))
             if objs and objs[0].key == new_path:
-                print('Found', len(objs))
                 logger.info('Found', len(objs))
                 s3.Object(bucket.name, obj.key).delete()
             else:
-                print('Not found')
                 logger.info('Not found')
 
-        print('Update database record to match url renamed in S3...')
         logger.info('Update database record to match url renamed in S3...')
 
         s3_url_prefix = os.environ.get('S3_URL_PREFIX')
@@ -127,13 +117,11 @@ def main(dry_run=False):
         cursor.execute("SELECT url FROM resource WHERE url='{}';".format(original_database_url))
 
         if cursor.fetchone():
-            print('Original url found - {}'.format(original_database_url))
             logger.info('Original url found - {}'.format(original_database_url))
 
             sql_statement = "UPDATE resource SET url = REPLACE(url, url, '{}') WHERE URL = '{}';".format(new_database_url,original_database_url)
 
             if not dry_run:
-                print('Not a dry run - executing statement...')
                 logger.info('Not a dry run - executing statement...')
 
                 cursor.execute('BEGIN TRANSACTION;')
@@ -143,47 +131,35 @@ def main(dry_run=False):
                 cursor.execute("SELECT url FROM resource WHERE url='{}';".format(new_database_url))
 
                 if new_database_url in cursor.fetchone():
-                    print('SUCCESS')
                     logger.info('SUCCESS')
                 else:
-                    print('FAILED')
                     logger.info('FAILED')
             else:
-                print('DRY RUN of SQL statement: {}'.format(sql_statement))
                 logger.info('DRY RUN of SQL statement: {}'.format(sql_statement))
 
         else:
-            print('Original url not found in table - {}'.format(original_database_url))
             logger.info('Original url not found in table -{}'.format(original_database_url))
 
         pastor_command = 'paster --plugin=ckan search-index rebuild {} -c /etc/ckan/ckan.ini'.format(dataset_name)
 
         if not dry_run:
-            print('Update dataset {} in SOLR...'.format(dataset_name))
             logger.info('Update dataset {} in SOLR...'.format(dataset_name))
-            print('Running pastor command:  {}'.format(pastor_command))
             logger.info('Running pastor command:  {}'.format(pastor_command))
 
             try:
                 subprocess.call(pastor_command, shell=True)
             except:
                 exception = sys.exc_info()[1]
-                print('Exception occured: ' + str(exception))
-                print('Subprocess failed')
-                logging.info('Exception occured: ' + str(exception))
-                logging.info('Subprocess failed')
+                logging.error('Exception occured: ' + str(exception))
+                logging.error('Subprocess failed')
             else:
-                print('Subprocess finished')
                 logging.info('Subprocess finished')
         else:
-            print('Update dataset {} in SOLR...'.format(dataset_name))
             logger.info('Update dataset {} in SOLR...'.format(dataset_name))
-            print('To run pastor command: {}'.format(pastor_command))
             logger.info('To run pastor command: {}'.format(pastor_command))
 
-        print('===============')
         logger.info('===============')
-        # pdb.set_trace()
+        # import pdb; pdb.set_trace()
 
 
 if __name__ == "__main__":
