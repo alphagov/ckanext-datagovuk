@@ -1,12 +1,12 @@
 #
 # To run tests:
-# in the bin directory >
+# in the ./bin/python_scripts directory >
 # pytest --disable-pytest-warnings
 #
 
 import pytest
 
-from bin.fix_organograms_s3_filenames import main
+from python_scripts.fix_organograms_s3_filenames import main
 
 
 @pytest.fixture
@@ -54,4 +54,3 @@ def test_fix_organograms_s3_filenames_without_moto(mocker, mock_os_environ):
     mocker.patch('boto3.resource', MockBoto3Resource)
 
     main('dry-run')
-    assert False

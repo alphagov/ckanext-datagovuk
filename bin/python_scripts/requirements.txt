@@ -1,0 +1,5 @@
+boto3==1.4.3
+pytest==4.6.2
+pytest-mock==1.10.4
+psycopg2==2.4.5
+popen==0.1.20
