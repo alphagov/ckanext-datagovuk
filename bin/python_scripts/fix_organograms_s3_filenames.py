@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 connection = psycopg2.connect(os.environ.get('POSTGRES_URL'))
 
 
-def setupLogging():
+def setup_logging():
     logger.setLevel(logging.INFO)
     c_handler = logging.StreamHandler()
     f_handler = logging.FileHandler('app.log')
@@ -75,7 +75,7 @@ def get_path_parts(obj, s3_ls, i):
     return False, dataset_name, new_path, i
 
 
-def exists_on_s3(s3, bucket, path):
+def exists_on_s3(bucket, path):
     objs = list(bucket.objects.filter(Prefix=path))
     return objs and objs[0].key == path
 
@@ -87,17 +87,21 @@ def delete_s3_file(s3, bucket, path):
 
 def process_s3(s3, bucket, path, new_path, dry_run, purge):
     if purge:
-        if exists_on_s3(s3, bucket, new_path):
+        cursor, _, _ = get_db_cursor(new_path)
+        if exists_on_s3(bucket, new_path) and cursor.fetchone():
             delete_s3_file(s3, bucket, path)
+            return True, True
         else:
-            logger.info('Missing %s', new_path)
+            cursor, _, _ = get_db_cursor(path)
+            if cursor.fetchone():
+                logger.info('Missing %s', new_path)
 
         # deletion is run after s3 objs have already been copied and SOLR reindexed
         # so skip other operations
         return True, False
 
     if not dry_run:
-        if not exists_on_s3(s3, bucket, new_path):
+        if not exists_on_s3(bucket, new_path):
             s3.Object(bucket.name, new_path).copy_from(ACL='public-read',
                 CopySource='{}/{}'.format(bucket.name, path))
             logger.info('S3 - copied in S3 from %s to %s', path, new_path)
@@ -108,15 +112,21 @@ def process_s3(s3, bucket, path, new_path, dry_run, purge):
     return False, True
 
 
-def update_database(obj, new_path, dry_run):
+def find_in_db(obj_key):
     s3_url_prefix = os.environ.get('S3_URL_PREFIX')
-    original_path = obj.key
+    original_path = obj_key
 
     original_database_url = '{}{}'.format(s3_url_prefix, original_path)
-    new_database_url = '{}{}'.format(s3_url_prefix, new_path)
 
     cursor = connection.cursor()
     cursor.execute("SELECT url FROM resource WHERE url='{}';".format(original_database_url))
+
+    return cursor, original_database_url, s3_url_prefix
+
+
+def update_database(obj, new_path, dry_run):
+    cursor, original_database_url, s3_url_prefix = find_in_db(obj.key)
+    new_database_url = '{}{}'.format(s3_url_prefix, new_path)
 
     if cursor.fetchone():
         sql_statement = "UPDATE resource SET url = '{}' WHERE url = '{}';".format(new_database_url,original_database_url)
@@ -137,7 +147,7 @@ def update_database(obj, new_path, dry_run):
             logger.info('DB - DRY RUN: %s', sql_statement)
             return True
 
-    else:
+    elif exists_on_s3(obj.Bucket(), original_database_url):
         logger.info('DB - ERROR Original url not found in table - %s', original_database_url)
 
 
@@ -157,20 +167,22 @@ def reindex_solr(dataset_name, dry_run):
 
 
 def main(command=None):
-    while command not in ['live', 'dry-run', 'ls', 'purge']:
+    while command not in ['live', 'dry-run', 'ls', 'purge', 'db']:
         command = raw_input(
-            'Live run (Other options: dry-run, ls <list s3 organograms>), purge <remove broken s3 files>: Y? ')
+            'Live run (Other options: dry-run, ls <list s3 organograms>), '
+            'purge <remove broken s3 files>: Y? ')
         if not command:
             command = 'live'
 
+    dry_run = command == 'dry-run'
     live = command == 'live'
     purge = command == 'purge'
-    dry_run = command == 'dry-run'
     s3_ls = command == 'ls'
 
     solr_reindex_list = []
+    files_purged = False
 
-    setupLogging()
+    setup_logging()
 
     s3 = boto3.resource(
         's3',
@@ -201,18 +213,20 @@ def main(command=None):
         if skip:
             continue
 
-        skip, file_copied = process_s3(s3, bucket, obj.key, new_path, dry_run, purge)
+        skip, file_copied_purged = process_s3(s3, bucket, obj.key, new_path, dry_run, purge)
         if skip:
+            if purge and file_copied_purged:
+                files_purged = True
             continue
 
         if (
-            file_copied and
+            file_copied_purged and
             update_database(obj, new_path, dry_run) and
             dataset_name not in solr_reindex_list
         ):
             solr_reindex_list.append(dataset_name)
 
-        if file_copied:
+        if file_copied_purged:
             logger.info('===============')
         # import pdb; pdb.set_trace()
 
@@ -221,6 +235,8 @@ def main(command=None):
             reindex_solr(dataset_name, dry_run)
     elif live or dry_run:
         logger.info('No datasets to reindex')
+    elif purge and not files_purged:
+        logger.info('No files purged')
 
 
 if __name__ == "__main__":
