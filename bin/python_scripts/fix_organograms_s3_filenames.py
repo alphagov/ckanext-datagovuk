@@ -22,7 +22,9 @@
 import boto3
 import os
 import sys
+from pathlib import Path
 import psycopg2
+import re
 import subprocess
 
 import logging
@@ -48,11 +50,14 @@ def setup_logging():
     logger.info('====================================================================')
 
 
-def get_path_parts(obj, s3_ls, i):
-    path_parts = obj.key.split('/')
-    dataset_name = path_parts[0]
-    filename = path_parts[-1]
-    directory = '/'.join(path_parts[:-1])
+def get_path_parts(obj, s3_ls=False, i=0):
+    if not obj.key.endswith('.csv'):
+        return SKIP, None, None, i
+
+    path = Path(obj.key)
+    dataset_name = path.parts[0]
+    filename = path.parts[-1]
+    directory = Path(*path.parts[:-1])
 
     if s3_ls:
         if 'legacy/' not in obj.key and 'organogram-' in filename:
@@ -78,6 +83,57 @@ def get_path_parts(obj, s3_ls, i):
     return DONT_SKIP, dataset_name, new_path, i
 
 
+def show_s3_ls(bucket):
+    i = 0
+    for obj in bucket.objects.all():
+        _, _, _, i = get_path_parts(obj, True, i)
+
+
+def get_url_mapping(bucket):
+    mappings = []
+    new_mappings = []
+    dataset_names = []
+
+    for obj in bucket.objects.all():
+        skip, dataset_name, new_path, _ = get_path_parts(obj)
+        if skip:
+            continue
+
+        dataset_names.append(dataset_name)
+        mappings.append((dataset_name, obj.key, new_path))
+
+    for dataset_name in dataset_names:
+        senior_urls = [
+            (path, new_path) for _dataset_name, path, new_path in mappings
+            if new_path[-10:] == 'senior.csv' and dataset_name == _dataset_name
+        ]
+        junior_urls = [
+            (path, new_path) for _dataset_name, path, new_path in mappings
+            if new_path[-10:] == 'junior.csv' and dataset_name == _dataset_name
+        ]
+
+        if len(senior_urls) == 1 and len(junior_urls) == 1:
+            if [url for _, url, _ in new_mappings if url == junior_urls[0][0]]:
+                continue
+
+            datetime_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}Z"
+
+            senior_datetime = re.search(datetime_pattern, senior_urls[0][1]).group()
+
+            new_junior_url = re.sub(datetime_pattern, senior_datetime, junior_urls[0][1])
+
+            new_mappings.append((dataset_name, senior_urls[0][0], senior_urls[0][1]))
+            new_mappings.append((dataset_name, junior_urls[0][0], new_junior_url))
+        else:
+            logger.error(
+                'Did not find exactly 1 senior and 1 junior matching file: %s, found %s senior, %s junior',
+                dataset_name, len(senior_urls), len(junior_urls)
+            )
+            break
+
+    return new_mappings
+
+
 def exists_on_s3(bucket, path):
     objs = list(bucket.objects.filter(Prefix=path))
     return objs and objs[0].key == path
@@ -99,7 +155,7 @@ def process_s3(s3, bucket, path, new_path, dry_run, purge):
             if cursor.fetchone():
                 logger.info('Missing %s', new_path)
 
-        # deletion is run after s3 objs have already been copied and SOLR reindexed
+        # purge should be run after s3 objs have already been copied and SOLR reindexed
         # so skip other operations
         return SKIP, NOT_PURGED
 
@@ -131,8 +187,8 @@ def get_db_cursor(obj_key):
     return cursor, original_database_url, s3_url_prefix
 
 
-def update_database(obj, new_path, dry_run):
-    cursor, original_database_url, s3_url_prefix = get_db_cursor(obj.key)
+def update_database(bucket, path, new_path, dry_run):
+    cursor, original_database_url, s3_url_prefix = get_db_cursor(path)
     new_database_url = '{}{}'.format(s3_url_prefix, new_path)
 
     if cursor.fetchone():
@@ -154,7 +210,7 @@ def update_database(obj, new_path, dry_run):
             logger.info('DB - DRY RUN: %s', sql_statement)
             return (original_database_url, new_database_url)
 
-    elif exists_on_s3(obj.Bucket(), original_database_url):
+    elif exists_on_s3(bucket, original_database_url):
         logger.info('DB - ERROR Original url not found in table - %s', original_database_url)
 
 
@@ -193,6 +249,7 @@ def main(command=None):
     purge = command == 'purge'
     s3_ls = command == 'ls'
 
+    mappings = []
     solr_reindex_list = []
     old_new_urls = []
     files_purged = False
@@ -219,22 +276,21 @@ def main(command=None):
 
     logger.info('====================================================================')
 
+    if s3_ls:
+        show_s3_ls(bucket)
+        return
+
+    mappings = get_url_mapping(bucket)
+
     i = 0
-    for obj in bucket.objects.all():
-        if not obj.key.endswith('.csv'):
-            continue
-
-        skip, dataset_name, new_path, i = get_path_parts(obj, s3_ls, i)
-        if skip:
-            continue
-
-        skip, file_copied_purged = process_s3(s3, bucket, obj.key, new_path, dry_run, purge)
+    for dataset_name, path, new_path in mappings:
+        skip, file_copied_purged = process_s3(s3, bucket, path, new_path, dry_run, purge)
         if skip:
             if purge and file_copied_purged:
                 files_purged = True
             continue
 
-        old_new_url = update_database(obj, new_path, dry_run)
+        old_new_url = update_database(bucket, path, new_path, dry_run)
 
         if (
             file_copied_purged and
