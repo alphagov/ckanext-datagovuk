@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 
 connection = psycopg2.connect(os.environ.get('POSTGRES_URL'))
 
+SKIP = COPIED = PURGED = True
+DONT_SKIP = NOT_COPIED = NOT_PURGED = False
+
 
 def setup_logging():
     logger.setLevel(logging.INFO)
@@ -55,10 +58,10 @@ def get_path_parts(obj, s3_ls, i):
         if 'legacy/' not in obj.key and 'organogram-' in filename:
             i += 1
             print('{}: {}'.format(i, obj.key))
-        return True, None, None, i
+        return SKIP, None, None, i
 
     if filename[-7:] in ['-senior.csv', '-junior.csv'] or '-posts-' not in filename:
-        return True, None, None, i
+        return SKIP, None, None, i
 
     filename_parts = filename.split('-posts-')
 
@@ -70,9 +73,9 @@ def get_path_parts(obj, s3_ls, i):
 
     if not new_filename.endswith('-senior.csv') and not new_filename.endswith('-junior.csv'):
         logger.info('invalid new filename %s for %s', new_filename, filename)
-        return True, dataset_name, new_path, i
+        return SKIP, dataset_name, new_path, i
 
-    return False, dataset_name, new_path, i
+    return DONT_SKIP, dataset_name, new_path, i
 
 
 def exists_on_s3(bucket, path):
@@ -90,7 +93,7 @@ def process_s3(s3, bucket, path, new_path, dry_run, purge):
         cursor, _, _ = get_db_cursor(new_path)
         if exists_on_s3(bucket, new_path) and cursor.fetchone():
             delete_s3_file(s3, bucket, path)
-            return True, True
+            return SKIP, PURGED
         else:
             cursor, _, _ = get_db_cursor(path)
             if cursor.fetchone():
@@ -98,21 +101,25 @@ def process_s3(s3, bucket, path, new_path, dry_run, purge):
 
         # deletion is run after s3 objs have already been copied and SOLR reindexed
         # so skip other operations
-        return True, False
+        return SKIP, NOT_PURGED
 
-    if not dry_run:
-        if not exists_on_s3(bucket, new_path):
-            s3.Object(bucket.name, new_path).copy_from(ACL='public-read',
-                CopySource='{}/{}'.format(bucket.name, path))
-            logger.info('S3 - copied in S3 from %s to %s', path, new_path)
+    cursor, _, _ = get_db_cursor(path)
+    if cursor.fetchone():
+        if not dry_run:
+            if not exists_on_s3(bucket, new_path):
+                s3.Object(bucket.name, new_path).copy_from(ACL='public-read',
+                    CopySource='{}/{}'.format(bucket.name, path))
+                logger.info('S3 - copied in S3 from %s to %s', path, new_path)
+            else:
+                return DONT_SKIP, NOT_COPIED
         else:
-            return False, False
+            logger.info('S3 - to be copied in S3 from %s to %s', path, new_path)
+        return DONT_SKIP, COPIED
     else:
-        logger.info('S3 - to be copied in S3 from %s to %s', path, new_path)
-    return False, True
+        return DONT_SKIP, NOT_COPIED
 
 
-def find_in_db(obj_key):
+def get_db_cursor(obj_key):
     s3_url_prefix = os.environ.get('S3_URL_PREFIX')
     original_path = obj_key
 
@@ -125,7 +132,7 @@ def find_in_db(obj_key):
 
 
 def update_database(obj, new_path, dry_run):
-    cursor, original_database_url, s3_url_prefix = find_in_db(obj.key)
+    cursor, original_database_url, s3_url_prefix = get_db_cursor(obj.key)
     new_database_url = '{}{}'.format(s3_url_prefix, new_path)
 
     if cursor.fetchone():
@@ -140,12 +147,12 @@ def update_database(obj, new_path, dry_run):
 
             if new_database_url in cursor.fetchone():
                 logger.info('DB - SUCCESS executing %s', sql_statement)
-                return True
+                return (original_database_url, new_database_url)
             else:
                 logger.info('DB - FAILED executing %s', sql_statement)
         else:
             logger.info('DB - DRY RUN: %s', sql_statement)
-            return True
+            return (original_database_url, new_database_url)
 
     elif exists_on_s3(obj.Bucket(), original_database_url):
         logger.info('DB - ERROR Original url not found in table - %s', original_database_url)
@@ -166,13 +173,20 @@ def reindex_solr(dataset_name, dry_run):
             logger.info('Subprocess finished')
 
 
+def create_csv(old_new_urls):
+    with open("old_new_urls.csv", "w+") as f:
+        for old_url, new_url in old_new_urls:
+            f.write("{}, {}\n".format(old_url, new_url))
+    logger.info('CSV - Written %s lines to old_new_urls.csv', len(old_new_urls))
+
+
 def main(command=None):
     while command not in ['live', 'dry-run', 'ls', 'purge', 'db']:
         command = raw_input(
-            'Live run (Other options: dry-run, ls <list s3 organograms>), '
-            'purge <remove broken s3 files>: Y? ')
+            '(Options: dry-run, live, ls <list s3 organograms>, '
+            'purge <remove broken s3 files>): dry-run? ')
         if not command:
-            command = 'live'
+            command = 'dry-run'
 
     dry_run = command == 'dry-run'
     live = command == 'live'
@@ -180,6 +194,7 @@ def main(command=None):
     s3_ls = command == 'ls'
 
     solr_reindex_list = []
+    old_new_urls = []
     files_purged = False
 
     setup_logging()
@@ -219,16 +234,22 @@ def main(command=None):
                 files_purged = True
             continue
 
+        old_new_url = update_database(obj, new_path, dry_run)
+
         if (
             file_copied_purged and
-            update_database(obj, new_path, dry_run) and
+            old_new_url and
             dataset_name not in solr_reindex_list
         ):
             solr_reindex_list.append(dataset_name)
 
         if file_copied_purged:
+            if live:
+                old_new_urls.append(old_new_url)
             logger.info('===============')
-        # import pdb; pdb.set_trace()
+
+    if live:
+        create_csv(old_new_urls)
 
     if solr_reindex_list:
         for dataset_name in solr_reindex_list:
