@@ -40,3 +40,9 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+#  local files
+
+*.log
+environment.sh
+.DS_Store
