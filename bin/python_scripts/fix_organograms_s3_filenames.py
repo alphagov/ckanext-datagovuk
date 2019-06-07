@@ -29,12 +29,12 @@ import subprocess
 
 import logging
 
-logger = logging.getLogger(__name__)
-
-connection = psycopg2.connect(os.environ.get('POSTGRES_URL'))
-
 SKIP = COPIED = PURGED = True
 DONT_SKIP = NOT_COPIED = NOT_PURGED = False
+POSTGRES_URL = os.environ.get('POSTGRES_URL')
+
+logger = logging.getLogger(__name__)
+connection = psycopg2.connect(POSTGRES_URL)
 
 
 def setup_logging():
@@ -129,7 +129,6 @@ def get_url_mapping(bucket):
                 'Did not find exactly 1 senior and 1 junior matching file: %s, found %s senior, %s junior',
                 dataset_name, len(senior_urls), len(junior_urls)
             )
-            break
 
     return new_mappings
 
@@ -215,7 +214,8 @@ def update_database(bucket, path, new_path, dry_run):
 
 
 def reindex_solr(dataset_name, dry_run):
-    paster_command = 'paster --plugin=ckan search-index rebuild {} -c /etc/ckan/ckan.ini'.format(dataset_name)
+    paster_command = 'paster --plugin=ckan search-index rebuild {} -c /{}/ckan/ckan.ini'.format(
+        dataset_name, 'etc' if '@localhost' in POSTGRES_URL else 'var')
 
     logger.info('SOLR reindex - %s command: %s', 'Will run' if dry_run else 'Running', paster_command)
 
