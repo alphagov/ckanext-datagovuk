@@ -222,9 +222,8 @@ def reindex_solr(dataset_name, dry_run):
     if not dry_run:
         try:
             subprocess.call(paster_command, shell=True)
-        except:
-            exception = sys.exc_info()[1]
-            logger.error('Subprocess Failed, exception occured: %s', str(exception))
+        except Exception as exception:
+            logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
         else:
             logger.info('Subprocess finished')
 
