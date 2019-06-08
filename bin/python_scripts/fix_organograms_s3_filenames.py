@@ -20,6 +20,7 @@
 # paster --plugin=ckan search-index rebuild -r --config=/etc/ckan/ckan.ini
 
 import boto3
+from datetime import datetime, timedelta
 import os
 import sys
 from pathlib import Path
@@ -90,6 +91,9 @@ def show_s3_ls(bucket):
 
 
 def get_url_mapping(bucket):
+    datetime_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}Z"
+    dt_pattern = '%Y-%m-%dT%H-%M-%SZ'
+
     mappings = []
     new_mappings = []
     dataset_names = []
@@ -116,8 +120,6 @@ def get_url_mapping(bucket):
             if [url for _, url, _ in new_mappings if url == junior_urls[0][0]]:
                 continue
 
-            datetime_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}Z"
-
             senior_datetime = re.search(datetime_pattern, senior_urls[0][1]).group()
 
             new_junior_url = re.sub(datetime_pattern, senior_datetime, junior_urls[0][1])
@@ -125,10 +127,35 @@ def get_url_mapping(bucket):
             new_mappings.append((dataset_name, senior_urls[0][0], senior_urls[0][1]))
             new_mappings.append((dataset_name, junior_urls[0][0], new_junior_url))
         else:
-            logger.error(
-                'Did not find exactly 1 senior and 1 junior matching file: %s, found %s senior, %s junior',
-                dataset_name, len(senior_urls), len(junior_urls)
-            )
+            if [url for _, url, _ in new_mappings if url in [u for u, _ in junior_urls] ]:
+                continue
+
+            for senior_url, new_senior_url in senior_urls:
+                senior_datetime = re.search(datetime_pattern, senior_url).group()
+
+                senior_dt = datetime.strptime(senior_datetime, dt_pattern)
+
+                junior_url = None
+                new_junior_url = None
+                for _junior_url, _ in junior_urls:
+                    junior_datetime = re.search(datetime_pattern, _junior_url).group()
+                    
+                    junior_dt = datetime.strptime(junior_datetime, dt_pattern)
+
+                    if junior_dt > senior_dt and junior_dt < senior_dt + timedelta(seconds=30):
+                        junior_url = _junior_url
+                        new_junior_url = re.sub(datetime_pattern, senior_datetime, junior_urls[0][1])
+                        break
+
+                if new_junior_url:
+                    new_mappings.append((dataset_name, senior_url, new_senior_url))
+                    new_mappings.append((dataset_name, junior_url, new_junior_url))
+
+            unpaired_juniors = [url for url, _ in junior_urls if url not in [u for _, u, _ in new_mappings] ]
+            unpaired_seniors = [url for url, _ in senior_urls if url not in [u for _, u, _ in new_mappings] ]
+
+            if unpaired_juniors or unpaired_seniors:
+                logger.error('No pairing for junior: %s, senior: %s', unpaired_juniors, unpaired_seniors)
 
     return new_mappings
 
