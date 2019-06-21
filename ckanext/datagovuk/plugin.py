@@ -12,6 +12,13 @@ import ckanext.datagovuk.action.get
 from ckanext.datagovuk.logic.theme_validator import valid_theme
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
+from pylons.wsgiapp import PylonsApp
+
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+
+
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.ITranslation)
     plugins.implements(plugins.IConfigurer)
@@ -22,6 +29,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IMiddleware, inherit=True)
 
     # IConfigurer
 
@@ -241,6 +249,16 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'publisher_category': h.publisher_category,
             'is_central_gov_organogram': h.is_central_gov_organogram,
         }
+
+    # IMiddleware
+
+    def make_middleware(self, app, config):
+        # we get this called twice, once for Flask and once for Pylons
+        if isinstance(app, PylonsApp):
+            return SentryWsgiMiddleware(app)
+        else:
+            sentry_sdk.init(integrations=[FlaskIntegration()])
+            return app
 
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
 
