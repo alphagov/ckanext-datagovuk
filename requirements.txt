@@ -1,6 +1,6 @@
 gunicorn
 lxml>=2.3
-numpy==1.15.4
+numpy==1.16.4
 pandas==0.24.2
 Shapely>=1.2.13
 xlrd==1.1.0
