@@ -7,8 +7,11 @@ ckanext-datagovuk
    What does it do? What features does it have?
    Consider including some screenshots or embedding a video!
 
+--------
+Features
+--------
 
-
+- Configures Sentry automatically using a `SENTRY_DSN` environment variable.
 
 ------------
 Installation
@@ -69,4 +72,3 @@ To run the tests and produce a coverage report, first make sure you have
 coverage installed in your virtualenv (``pip install coverage``) then run::
 
     nosetests -v --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.datagovuk --cover-inclusive --cover-erase --cover-tests --ckan ckanext.datagovuk
-
