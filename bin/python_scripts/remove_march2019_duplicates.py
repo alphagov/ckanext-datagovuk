@@ -63,11 +63,9 @@ def get_duplicate_datasets():
     AND package.name ~ '.+\D(\d{5,}|\d{1,3})$' 
     %s 
     ORDER BY publisher, package.title, pkg_created
-    """
+    """ % ("AND package.metadata_created BETWEEN '2019-03-01' AND '2019-04-01'" if not is_local() else '')
 
-    cursor.execute(sql, (
-        "AND package.metadata_created BETWEEN '2019-03-01' AND '2019-04-01'" if not is_local() else '',)
-    )
+    cursor.execute(sql)
 
     return cursor
 
