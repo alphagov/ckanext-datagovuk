@@ -44,24 +44,33 @@ def get_duplicate_datasets():
     cursor = connection.cursor()
     sql = """
     WITH duplicates AS 
-    (SELECT COUNT(*) AS duplicate_count, owner_org, title, notes
+    (SELECT COUNT(*) AS duplicate_count, owner_org, title, notes, 
+    package_extra.value AS metadata_date, package.state AS package_state
     FROM package 
-    WHERE state='active'
-    GROUP BY owner_org, title, notes
+    JOIN package_extra ON package.id = package_extra.package_id
+    AND package_extra.key = 'metadata-date'
+    AND package.state='active'
+    GROUP BY owner_org, title, notes, package_extra.value, package.state
     HAVING COUNT(*) > 1) 
     SELECT DISTINCT 
     package.id AS package_id, 
     package.name AS dataset, 
     package.title AS dataset_title, 
     "group".name AS publisher, 
-    COALESCE(to_char(package.metadata_created, 'MM-DD-YYYY HH24:MI:SS'), '') as pkg_created
+    COALESCE(to_char(package.metadata_created, 'MM-DD-YYYY HH24:MI:SS'), '') as pkg_created,
+    package.state,
+    duplicates.metadata_date
     FROM package
     JOIN duplicates ON package.owner_org = duplicates.owner_org 
     JOIN "group" ON package.owner_org = "group".id 
-    AND package.notes = duplicates.notes 
+    JOIN package_extra ON package.id = package_extra.package_id
     AND package.title = duplicates.title 
+    AND package.notes = duplicates.notes 
+    AND package.state = duplicates.package_state 
     AND package.name ~ '.+\D(\d{5,}|\d{1,3})$' 
-    %s 
+    AND package_extra.value = duplicates.metadata_date
+    AND package_extra.key = 'metadata-date'
+    %s
     ORDER BY publisher, package.title, pkg_created
     """ % ("AND package.metadata_created BETWEEN '2019-03-01' AND '2019-04-01'" if not is_local() else '')
 
@@ -89,34 +98,63 @@ def create_csv(rows):
     logger.info('CSV - Written %s lines to deleted_datasets.csv', len(rows.split('\n')) - 1)
 
 
+def reindex_solr():
+    # this is used when restoring datasets from a 'delete' state
+    # generate the csv file on the db before running the update to set package.state to 'active'
+    #
+    # \copy (
+    # <your query which should look like the query in get_duplicate_datasets>
+    # ) TO '/home/<name>/reindex_datasets.csv' WITH (FORMAT CSV, HEADER)
+
+    with open("reindex_datasets.csv", "r+") as f:
+        for line in f.readlines():
+            fields = line.split(',')
+
+            paster_command = 'paster --plugin=ckan search-index rebuild {} -c /{}/ckan/ckan.ini'.format(
+                fields[0], 'etc' if is_local() else 'var')
+
+            logger.info('CKAN reindex - Running command: %s', paster_command)
+
+            try:
+                subprocess.call(paster_command, shell=True)
+            except Exception as exception:
+                logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
+
+
 def main(command=None):
-    while command not in ['show', 'run']:
-        command = raw_input('(Options: show, run) show? ')
+    while command not in ['show', 'run', 'reindex']:
+        command = raw_input('(Options: show, run, reindex) show? ')
         if not command:
             command = 'show'
 
     run = command == 'run'
+    reindex = command == 'reindex'
 
     setup_logging(log_to_file=run)
 
     if run:
         logger.info('Executing RUN')
+    elif reindex:
+        logger.info('Executing REINDEX')
     else:
         logger.info('Executing SHOW')
 
     logger.info('====================================================================')
 
-    logger.info('Delete duplicate datasets')
+    if reindex:
+        reindex_solr()
+    else:
+        csv_rows = ''
 
-    csv_rows = ''
-    for dataset in get_duplicate_datasets():
-        logger.info(dataset)
+        logger.info('Delete duplicate datasets')
+        for i, dataset in enumerate(get_duplicate_datasets()):
+            logger.info('%d - %r', i, dataset)
+            if run:
+                csv_rows += ','.join(dataset) + '\n'
+                delete_dataset(dataset)
+
         if run:
-            csv_rows += ','.join(dataset) + '\n'
-            delete_dataset(dataset)
-
-    if run:
-        create_csv(csv_rows)
+            create_csv(csv_rows)
 
     logger.info('Processing complete')
 
