@@ -3,13 +3,13 @@
 pip=${1-'/usr/bin/env pip'}
 
 ckan_harvest_fork='alphagov'
-ckan_harvest_sha='5671bdf93269c9b80369a0b40a166bce76ea40ee'
+ckan_harvest_sha='0ba5e11cc89c1560ab724bac42f84180bcfab019'
 
 ckan_dcat_fork='alphagov'
 ckan_dcat_sha='6253f296c6d1200465a3223710d076cd24e37834'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='6cfd3037de27032f07d6ab74a3e1a63ce970385d'
+ckan_spatial_sha='0e5289c3886cd04bb1ad2fe6576ee96953e9d1bf'
 
 ckan_s3_resources_fork='alphagov'
 ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
