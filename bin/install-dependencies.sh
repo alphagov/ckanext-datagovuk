@@ -9,7 +9,7 @@ ckan_dcat_fork='alphagov'
 ckan_dcat_sha='6253f296c6d1200465a3223710d076cd24e37834'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='0e5289c3886cd04bb1ad2fe6576ee96953e9d1bf'
+ckan_spatial_sha='fdae140d4bd84665062c461ce3d4fba5c75ad526'
 
 ckan_s3_resources_fork='alphagov'
 ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
