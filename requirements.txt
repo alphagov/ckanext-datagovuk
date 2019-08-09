@@ -1,8 +1,8 @@
+blinker==1.4
 gunicorn
 lxml>=2.3
 numpy==1.16.4
 pandas==0.24.2
 Shapely>=1.2.13
-xlrd==1.2.0
 sentry-sdk==0.10.2
-blinker==1.4
+xlrd==1.2.0
