@@ -17,6 +17,8 @@ ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
 ckan_fork='ckan'
 ckan_sha='ckan-2.7.4'
 
+pycsw_tag='1.8.3'
+
 $pip install -U pip
 
 $pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
@@ -36,3 +38,9 @@ $pip install -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requ
 $pip install -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan"
 
 $pip install -r requirements.txt
+
+$pip install -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw.git/$pycsw_tag/requirements.txt)
+$pip install -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_tag#egg=pycsw"
+
+pycsw_src="$(python -m site | grep pycsw | sed "s:[ |,|']::g")"
+(cd $pycsw_src && /usr/bin/env python setup.py build && $pip install -e .)
