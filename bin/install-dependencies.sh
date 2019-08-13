@@ -42,5 +42,6 @@ $pip install -r requirements.txt
 $pip install -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw.git/$pycsw_tag/requirements.txt)
 $pip install -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_tag#egg=pycsw"
 
-pycsw_src="$(python -m site | grep pycsw | sed "s:[ |,|']::g")"
-(cd $pycsw_src && /usr/bin/env python setup.py build && $pip install -e .)
+pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")"
+(cd $pycsw_src && /usr/bin/env python setup.py build)
+$pip install -e .
