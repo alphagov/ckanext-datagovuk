@@ -11,8 +11,8 @@ class TestUserAuth(DBTest):
         sysadmin = factories.Sysadmin()
         self.context = {'model': model, 'user': sysadmin['name']}
 
-        user_dict = factories.User(email='hello@localhost')
-        self.user = model.User.get(user_dict['id'])
+        self.user_dict = factories.User(email='hello@localhost')
+        self.user = model.User.get(self.user_dict['id'])
         self.user.password = 'hello'
         self.user.save()
 
@@ -73,4 +73,12 @@ class TestUserAuth(DBTest):
             self.context,
             email='wrong',
             password='password'
+        )
+
+    def test_user_list_authentication(self):
+        self.assertRaises(
+            logic.ValidationError,
+            helpers.call_action,
+            'user_list',
+            self.context
         )

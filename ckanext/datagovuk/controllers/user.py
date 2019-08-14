@@ -102,3 +102,13 @@ class UserController(UserController):
                                   unicode(e))
         return render('user/request_reset.html')
 
+    def index(self):
+        import ckan.controllers.user.index as ckan_index
+        context = {'model': model, 'session': model.Session, 'user': c.user,
+                   'auth_user_obj': c.userobj}
+        try:
+            check_access('sysadmin', context)
+        except NotAuthorized:
+            abort(403, _('Not a sysadmin'))
+        ckan_index()
+
