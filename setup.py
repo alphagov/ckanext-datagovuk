@@ -83,6 +83,9 @@ setup(
         datagovuk_publisher_form=ckanext.datagovuk.forms.publisher:PublisherForm
         inventory_harvester=ckanext.datagovuk.harvesters.inventory_harvester:InventoryHarvester
 
+        [nose.plugins]
+        pylons = pylons.test:PylonsPlugin
+
         [ckan.test_plugins]
         test_harvester=ckanext.harvest.tests.test_queue:MockHarvester
 
