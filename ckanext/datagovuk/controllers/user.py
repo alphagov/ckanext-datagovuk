@@ -103,7 +103,8 @@ class UserController(UserController):
                                   unicode(e))
         return render('user/request_reset.html')
 
-    def user_list(self):
+    def index(self):
+        print("index")
         log.debug('got index')
         import ckan.controllers.user.index as ckan_index
         context = {'model': model, 'session': model.Session, 'user': c.user,
