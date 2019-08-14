@@ -9,7 +9,7 @@ class TestUserAuth(DBTest):
         super(self.__class__, self).setUp()
 
         sysadmin = factories.Sysadmin()
-        self.context = {'model': model, 'user': nil}
+        self.context = {'model': model}
 
         self.user_dict = factories.User(email='hello@localhost')
         self.user = model.User.get(self.user_dict['id'])
