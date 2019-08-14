@@ -5,11 +5,12 @@ import ckan.logic as logic
 import ckan.logic.schema as schema
 import ckan.lib.mailer as mailer
 import ckan.lib.helpers as h
-
+import logging
 from ckan.common import _, c, request, response
 
 abort = base.abort
 render = base.render
+log = logging.getLogger(__name__)
 
 check_access = logic.check_access
 get_action = logic.get_action
@@ -103,10 +104,12 @@ class UserController(UserController):
         return render('user/request_reset.html')
 
     def index(self):
+        log.debug('got index')
         import ckan.controllers.user.index as ckan_index
         context = {'model': model, 'session': model.Session, 'user': c.user,
                    'auth_user_obj': c.userobj}
         try:
+            log.debug('check access')
             check_access('sysadmin', context)
         except NotAuthorized:
             abort(403, _('Not a sysadmin'))
