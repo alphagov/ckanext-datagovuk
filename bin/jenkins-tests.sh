@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+
+set -ex
+
 venv/bin/pip install -r venv/src/ckan/dev-requirements.txt
 venv/bin/pip install -r dev-requirements.txt
 dropdb ckan_test; createdb ckan_test
