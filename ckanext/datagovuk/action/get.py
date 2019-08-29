@@ -13,22 +13,14 @@ import ckan.lib.dictization.model_dictize as model_dictize
 
 from ckan.model import User
 
+from ckanext.datagovuk.pii_helpers import remove_pii, remove_pii_from_list
+
 log = __import__('logging').getLogger(__name__)
 
 
 # defined as they are in ckan/action/get.py to save further hacks to the
 # function copied from there
 _check_access = check_access
-
-PII_LIST = [
-    'author',
-    'author_email',
-    'contact-name',
-    'contact-phone',
-    'contact-email',
-    'maintainer',
-    'maintainer_email'
-]
 
 
 def user_auth(context, data_dict):
@@ -81,6 +73,5 @@ def dgu_package_search(context, data_dict):
 
 
 @side_effect_free
-
 def dgu_package_show(context, data_dict):
     return remove_pii(package_show(context, data_dict))

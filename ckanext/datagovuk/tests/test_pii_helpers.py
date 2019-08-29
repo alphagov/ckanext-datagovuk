@@ -1,6 +1,6 @@
 import unittest
 
-from ckanext.datagovuk.action.get import remove_pii_from_list, remove_pii, PII_LIST
+from ckanext.datagovuk.pii_helpers import remove_pii_from_list, remove_pii, PII_LIST
 
 
 sample_package_search_result = {
