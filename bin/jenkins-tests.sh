@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -ex
 
 venv/bin/pip install -r venv/src/ckan/dev-requirements.txt
 venv/bin/pip install -r dev-requirements.txt
