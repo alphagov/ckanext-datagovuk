@@ -1,8 +1,10 @@
 import ckan.logic.schema
+from ckan.logic.action.get import package_search, package_show
 from ckan.plugins.toolkit import (
     abort,
     check_access,
     navl_validate,
+    side_effect_free,
     ValidationError,
     get_action,
 )
@@ -11,14 +13,14 @@ import ckan.lib.dictization.model_dictize as model_dictize
 
 from ckan.model import User
 
+from ckanext.datagovuk.pii_helpers import remove_pii, remove_pii_from_list
 
 log = __import__('logging').getLogger(__name__)
 
 
-# defined as they are in ckan/action/create.py to save further hacks to the
+# defined as they are in ckan/action/get.py to save further hacks to the
 # function copied from there
 _check_access = check_access
-_validate = navl_validate
 
 
 def user_auth(context, data_dict):
@@ -63,3 +65,13 @@ def user_auth(context, data_dict):
     # DGU Hack: added encoding so we don't barf on unicode user names
     log.debug('Authenticated user {name}'.format(name=user.name.encode('utf8')))
     return user_dict
+
+
+@side_effect_free
+def dgu_package_search(context, data_dict):
+    return remove_pii_from_list(package_search(context, data_dict))
+
+
+@side_effect_free
+def dgu_package_show(context, data_dict):
+    return remove_pii(package_show(context, data_dict))
