@@ -166,6 +166,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             user_auth=ckanext.datagovuk.action.get.user_auth,
             package_search=ckanext.datagovuk.action.get.dgu_package_search,
             package_show=ckanext.datagovuk.action.get.dgu_package_show,
+            organization_show=ckanext.datagovuk.action.get.dgu_organization_show,
         )
 
     # IValidators

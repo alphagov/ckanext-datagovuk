@@ -1,5 +1,5 @@
 import ckan.logic.schema
-from ckan.logic.action.get import package_search, package_show
+from ckan.logic.action.get import organization_show, package_search, package_show
 from ckan.plugins.toolkit import (
     abort,
     check_access,
@@ -77,3 +77,9 @@ def dgu_package_search(context, data_dict):
 @side_effect_free
 def dgu_package_show(context, data_dict):
     return remove_pii(package_show(context, data_dict))
+
+
+@side_effect_free
+def dgu_organization_show(context, data_dict):
+    data_dict['include_users'] = False
+    return remove_pii(organization_show(context, data_dict))
