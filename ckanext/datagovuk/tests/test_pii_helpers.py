@@ -1,6 +1,10 @@
+import json
 import unittest
 
-from ckanext.datagovuk.pii_helpers import remove_pii_from_list, remove_pii, PII_LIST
+from ckanext.datagovuk.pii_helpers import (
+    remove_pii_from_api_search_dataset, remove_pii_from_list, remove_pii,
+    PII_LIST
+)
 
 
 sample_package_search_result = {
@@ -171,6 +175,42 @@ sample_package_show_result = {
     "theme-primary": ""
 }
 
+sample_api_search_dataset = '''
+{
+    "count": 1,
+    "results": [
+        {
+            "data_dict": "{\\"license_title\\": \\"Creative Commons Attribution\\", \\"maintainer\\": null, \\"relationships_as_object\\": [], \\"private\\": false, \\"maintainer_email\\": null, \\"num_tags\\": 0, \\"id\\": \\"dataset_id\\", \\"metadata_created\\": \\"2019-08-28T11:00:00\\", \\"metadata_modified\\": \\"2019-08-28T11:00:00\\", \\"author\\": null, \\"author_email\\": null, \\"state\\": \\"active\\", \\"version\\": null, \\"creator_user_id\\": \\"user_id\\", \\"type\\": \\"dataset\\", \\"resources\\": [{\\"hash\\": \\"\\", \\"description\\": \\"\\", \\"format\\": \\"\\", \\"resource-type\\": \\"data-link\\", \\"package_id\\": \\"dataset_id\\", \\"mimetype_inner\\": null, \\"url_type\\": null, \\"id\\": \\"id\\", \\"size\\": null, \\"mimetype\\": null, \\"cache_url\\": null, \\"name\\": \\"Example dataset\\", \\"created\\": \\"2019-08-28T11:00:00\\", \\"url\\": \\"https: //example.com/datasets/dataset_id\\", \\"datafile-date\\": \\"\\", \\"cache_last_updated\\": null, \\"state\\": \\"active\\", \\"last_modified\\": null, \\"position\\": 0, \\"revision_id\\": \\"revision_id\\", \\"resource_type\\": null}], \\"num_resources\\": 1, \\"tags\\": [], \\"groups\\": [], \\"license_id\\": \\"cc-by\\", \\"relationships_as_subject\\": [], \\"organization\\": {\\"description\\": \\"\\", \\"title\\": \\"test\\", \\"created\\": \\"2019-08-28T12:00:00\\", \\"approval_status\\": \\"approved\\", \\"is_organization\\": true, \\"state\\": \\"active\\", \\"image_url\\": \\"\\", \\"revision_id\\": \\"revision_id\\", \\"type\\": \\"organization\\", \\"id\\": \\"org_id\\", \\"name\\": \\"test\\"}, \\"name\\": \\"test\\", \\"isopen\\": true, \\"url\\": null, \\"notes\\": \\"\\", \\"owner_org\\": \\"org_id\\", \\"extras\\": [{\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"codelist\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"test@example.com\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"contact-email\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"Test User\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"contact-name\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"contact-phone\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"test-foi@example.com\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"foi-email\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"foi-name\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"foi-phone\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"foi-web\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"licence-custom\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"schema-vocabulary\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}, {\\"state\\": \\"active\\", \\"value\\": \\"\\", \\"package_id\\": \\"dataset_id\\", \\"key\\": \\"theme-primary\\", \\"revision_id\\": \\"revision_id\\", \\"id\\": \\"id\\"}], \\"license_url\\": \\"http://www.opendefinition.org/licenses/cc-by\\", \\"title\\": \\"test\\", \\"revision_id\\": \\"revision_id\\"}",
+            "site_id": "dgu",
+            "res_name": [
+                "Example dataset"
+            ],
+            "id": "dataset_id",
+            "metadata_created": "2019-08-28T11:00:00Z",
+            "capacity": "public",
+            "metadata_modified": "2019-08-28T11:00:00Z",
+            "entity_type": "package",
+            "state": "active",
+            "license_id": "cc-by",
+            "indexed_ts": "2019-08-28T11:00:00Z",
+            "dataset_type": "dataset",
+            "validated_data_dict": "{\\"owner_org\\": \\"org_id\\", \\"maintainer\\": null, \\"groups\\": [], \\"relationships_as_object\\": [], \\"private\\": false, \\"maintainer_email\\": null, \\"num_tags\\": 0, \\"foi-email\\": \\"test-foi@example.com\\", \\"id\\": \\"dataset_id\\", \\"metadata_created\\": \\"2019-08-28T11:00:00\\", \\"licence-custom\\": \\"\\", \\"metadata_modified\\": \\"2019-08-28T11:00:00\\", \\"author\\": null, \\"author_email\\": null, \\"state\\": \\"active\\", \\"version\\": null, \\"license_id\\": \\"cc-by\\", \\"foi-web\\": \\"\\", \\"resources\\": [{\\"cache_last_updated\\": null, \\"cache_url\\": null, \\"mimetype_inner\\": null, \\"hash\\": \\"\\", \\"description\\": \\"\\", \\"format\\": \\"\\", \\"url\\": \\"https: //example.com/datasets/dataset_id\\", \\"datafile-date\\": \\"\\", \\"created\\": \\"2019-08-28T11:00:00\\", \\"resource-type\\": \\"data-link\\", \\"state\\": \\"active\\", \\"package_id\\": \\"dataset_id\\", \\"last_modified\\": null, \\"mimetype\\": null, \\"url_type\\": null, \\"position\\": 0, \\"revision_id\\": \\"revision_id\\", \\"size\\": null, \\"id\\": \\"id\\", \\"resource_type\\": null, \\"name\\": \\"Example dataset\\"}], \\"num_resources\\": 1, \\"contact-email\\": \\"test@example.com\\", \\"tags\\": [], \\"title\\": \\"test\\", \\"foi-name\\": \\"\\", \\"contact-phone\\": \\"\\", \\"creator_user_id\\": \\"user_id\\", \\"relationships_as_subject\\": [], \\"codelist\\": \\"\\", \\"contact-name\\": \\"Test User\\", \\"name\\": \\"test\\", \\"isopen\\": true, \\"schema-vocabulary\\": \\"\\", \\"url\\": null, \\"type\\": \\"dataset\\", \\"notes\\": \\"\\", \\"license_title\\": \\"Creative Commons Attribution\\", \\"license_url\\": \\"http://www.opendefinition.org/licenses/cc-by\\", \\"organization\\": {\\"description\\": \\"\\", \\"title\\": \\"test\\", \\"created\\": \\"2019-08-28T12:00:00\\", \\"approval_status\\": \\"approved\\", \\"is_organization\\": true, \\"state\\": \\"active\\", \\"image_url\\": \\"\\", \\"revision_id\\": \\"revision_id\\", \\"type\\": \\"organization\\", \\"id\\": \\"org_id\\", \\"name\\": \\"test\\"}, \\"revision_id\\": \\"revision_id\\", \\"foi-phone\\": \\"\\", \\"theme-primary\\": \\"\\"}", 
+            "res_url": [
+                "https://example.com/datasets/dataset_id"
+            ],
+            "name": "test",
+            "title": "test",
+            "extras": {
+                "foi-email": "test-foi@example.com",
+                "contact-name": "Test User",
+                "contact-email": "test@example.com"
+            },
+            "organization": "test",
+            "revision_id": "revision_id",
+            "index_id": "index_id"
+        }
+    ]
+}'''
 
 class TestRemovePII(unittest.TestCase):
     def test_removes_pii_from_package_search(self):
@@ -180,6 +220,17 @@ class TestRemovePII(unittest.TestCase):
     def test_removes_pii_from_package_show(self):
         res = remove_pii(sample_package_show_result.copy())
         assert not any(elem in PII_LIST for elem in res)
+
+    def test_removes_pii_from_api_search_dataset(self):
+        res = remove_pii_from_api_search_dataset(sample_api_search_dataset)
+        json_res = json.loads(res)
+        assert not any(elem in PII_LIST for elem in json_res)
+
+        json_data_dict = json.loads(json_res['results'][0]['data_dict'])
+        assert not any(elem in PII_LIST for elem in json_data_dict)
+
+        json_validated_data_dict = json.loads(json_res['results'][0]['validated_data_dict'])
+        assert not any(elem in PII_LIST for elem in json_validated_data_dict)
 
     def test_removes_pii_works_even_if_pii_element_doesnt_exist(self):
         modified_sample_package_show_result = sample_package_show_result.copy()
