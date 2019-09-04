@@ -15,9 +15,12 @@ def remove_pii_from_api_search_dataset(data):
         json_data = json.loads(data)
 
         for element in json_data['results']:
-            element['data_dict'] = remove_pii_block(element['data_dict'])
-            element['validated_data_dict'] = remove_pii_block(element['validated_data_dict'])
-            element['extras'] = remove_pii(element['extras'])
+            if 'data_dict' in element:
+                element['data_dict'] = remove_pii_block(element['data_dict'])
+            if 'validated_data_dict' in element:
+                element['validated_data_dict'] = remove_pii_block(element['validated_data_dict'])
+            if 'extras' in element:
+                element['extras'] = remove_pii(element['extras'])
 
         return json.dumps(json_data)
 

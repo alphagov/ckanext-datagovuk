@@ -212,6 +212,37 @@ sample_api_search_dataset = '''
     ]
 }'''
 
+sample_api_search_dataset_without_fields = '''
+{
+    "count": 1,
+    "results": [
+        {
+            "site_id": "dgu",
+            "res_name": [
+                "Example dataset"
+            ],
+            "id": "dataset_id",
+            "metadata_created": "2019-08-28T11:00:00Z",
+            "capacity": "public",
+            "metadata_modified": "2019-08-28T11:00:00Z",
+            "entity_type": "package",
+            "state": "active",
+            "license_id": "cc-by",
+            "indexed_ts": "2019-08-28T11:00:00Z",
+            "dataset_type": "dataset",
+            "res_url": [
+                "https://example.com/datasets/dataset_id"
+            ],
+            "name": "test",
+            "title": "test",
+            "organization": "test",
+            "revision_id": "revision_id",
+            "index_id": "index_id"
+        }
+    ]
+}'''
+
+
 class TestRemovePII(unittest.TestCase):
     def test_removes_pii_from_package_search(self):
         res = remove_pii_from_list(sample_package_search_result)
@@ -231,6 +262,12 @@ class TestRemovePII(unittest.TestCase):
 
         json_validated_data_dict = json.loads(json_res['results'][0]['validated_data_dict'])
         assert not any(elem in PII_LIST for elem in json_validated_data_dict)
+
+    def test_removes_pii_from_api_search_dataset_without_fields_and_does_not_add_fields(self):
+        res = remove_pii_from_api_search_dataset(sample_api_search_dataset_without_fields)
+        json_res = json.loads(res)
+        assert not any(elem in PII_LIST for elem in json_res)
+        assert not any(elem in ['data_dict', 'validated_data_dict', 'extras'] for elem in json_res.keys())
 
     def test_removes_pii_works_even_if_pii_element_doesnt_exist(self):
         modified_sample_package_show_result = sample_package_show_result.copy()
