@@ -73,7 +73,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             })
 
         from ckan.logic.schema import default_extras_schema
-        from ckan.lib.navl.validators import not_empty
+        from ckan.lib.navl.validators import ignore, not_empty
         from ckanext.datagovuk.logic.validators import extra_key_not_in_root_schema
 
         extras_schema = default_extras_schema()
@@ -89,6 +89,14 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'resource-type': [toolkit.get_validator('ignore_missing')],
             'datafile-date': [toolkit.get_validator('ignore_missing')],
         })
+
+        # was expecting:
+        #   schema['harvest'] = [ignore]
+        # to work but it doesn't prevent `harvest` from being added to
+        # `__junk` which will cause updates on datasets to fail
+        # See the issue on CKAN - https://github.com/ckan/ckan/issues/4989
+        # as there may be better ways to resolve this issue
+        schema['harvest'] = {'_': ignore}
 
         return schema
 
