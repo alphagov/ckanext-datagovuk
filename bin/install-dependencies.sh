@@ -9,7 +9,7 @@ ckan_dcat_fork='alphagov'
 ckan_dcat_sha='6253f296c6d1200465a3223710d076cd24e37834'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='cd16387bede6268493fed076aa816b43155185fd'
+ckan_spatial_sha='43f27a61b856b7d5ffaf88eb65452e2d6ada8f74'
 
 ckan_s3_resources_fork='alphagov'
 ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
@@ -17,7 +17,7 @@ ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
 ckan_fork='ckan'
 ckan_sha='ckan-2.7.4'
 
-pycsw_tag='1.8.3'
+pycsw_tag='2.4.0'
 
 $pip install -U pip
 
