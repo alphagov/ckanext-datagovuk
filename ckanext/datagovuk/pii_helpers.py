@@ -3,9 +3,6 @@ import json
 PII_LIST = [
     'author',
     'author_email',
-    'contact-name',
-    'contact-phone',
-    'contact-email',
     'maintainer',
     'maintainer_email'
 ]
