@@ -5,8 +5,8 @@ pip=${1-'/usr/bin/env pip'}
 ckan_harvest_fork='alphagov'
 ckan_harvest_sha='5507adc82585a273c51eaebdf7e1d3bbe7d0f9dc'
 
-ckan_dcat_fork='alphagov'
-ckan_dcat_sha='6253f296c6d1200465a3223710d076cd24e37834'
+ckan_dcat_fork='ckan'
+ckan_dcat_sha='8c55890e7bf9644460ae71470f37abbd9295c9fa'
 
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='0ba6e7951e55fbdbdbf7e31d0d78113d3d780d43'
