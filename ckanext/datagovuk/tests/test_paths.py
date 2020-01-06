@@ -28,3 +28,7 @@ class TestPaths(unittest.TestCase):
 
         assert resp.status_int == 302
         assert resp.location == 'http://localhost/'
+
+    def test_resource_download(self):
+        path = toolkit.url_for('resource_download', id='cabinet-office')
+        self.assertEqual(path, '/dataset/cabinet-office/download')
