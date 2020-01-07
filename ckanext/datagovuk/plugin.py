@@ -1,3 +1,5 @@
+import logging
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import model
@@ -8,7 +10,7 @@ import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
 import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
-import ckanext.datagovuk_s3_resources.upload as upload
+import ckanext.datagovuk.upload as upload
 
 from ckanext.datagovuk.logic.theme_validator import valid_theme
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
@@ -299,32 +301,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                 return
             elif "upload" in resource and resource["upload"] == "":
                 return
-            # Only upload to S3 if not blacklisted
-            elif not upload.is_blacklisted(resource):
-                upload.upload_resource_to_s3(context, resource)
             else:
-                # If blacklisted, the resource file is uploaded to CKAN.
-                #
-                # However, in the CKAN source resource_create/resource_update, package_update is
-                # called before the file is uploaded.
-                #
-                # This causes a problem as our package after_update attempts to upload
-                # the package zipfile and it cannot locate the resource file.
-                #
-                # To solve this, we add the field 'resource_create_or_update' into the context object,
-                # and look for it in the package after_update.
-                #
-                # We remove this field from the context object in resource after_create and after_update.
-                #
-                # We don't actually use the value context['resource_create_or_update'], we just check
-                # the existence of 'resource_create_or_update' in context.
-                context["resource_create_or_update"] = True
-
-                logger = logging.getLogger(__name__)
-                logger.info(
-                    "Resource %s from package %s is blacklisted and not uploaded to S3."
-                    % (resource["name"], resource["package_id"])
-                )
+                upload.upload_resource_to_s3(context, resource)
 
     def before_create(self, context, resource):
         """Runs before resource_create. Modifies resource destructively to put in the S3 URL"""
