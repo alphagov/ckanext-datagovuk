@@ -1,5 +1,6 @@
 awesome-slugify==1.6.5
 blinker==1.4
+boto3==1.4.3
 gunicorn
 lxml>=2.3
 numpy==1.16.4
