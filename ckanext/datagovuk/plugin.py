@@ -283,24 +283,21 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         creating or updating.
         """
 
-        # Check if required config options exist
-        logger = logging.getLogger(__name__)
-        if not upload.config_exists():
-            # Log an error
+        # If resource is an API, don't do anything special
+        if resource.get("format") == "API":
+            return
+        elif "upload" not in resource:
+            return
+        elif "upload" in resource and resource["upload"] == "":
+            return
+        elif not upload.config_exists():
+            logger = logging.getLogger(__name__)
             logger.error(
                 "Required S3 config options missing. Please check if required config options exist."
             )
             raise Exception("Required S3 config options missing")
         else:
-            # If resource is an API, don't do anything special
-            if resource.get("format") == "API":
-                return
-            elif "upload" not in resource:
-                return
-            elif "upload" in resource and resource["upload"] == "":
-                return
-            else:
-                upload.upload_resource_to_s3(context, resource)
+            upload.upload_resource_to_s3(context, resource)
 
     def before_create(self, context, resource):
         """Runs before resource_create. Modifies resource destructively to put in the S3 URL"""

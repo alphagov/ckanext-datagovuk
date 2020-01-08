@@ -45,7 +45,7 @@ class TestS3ResourcesPlugin:
     def test_s3_config_exception(self):
         plugin = DatagovukPlugin()
         with assert_raises_regexp(Exception, "Required S3 config options missing"):
-            plugin.before_create_or_update({}, {})
+            plugin.before_create_or_update({}, {"upload": "dummy value"})
 
     @patch("boto3.resource")
     @patch("ckanext.datagovuk.upload.toolkit.abort")
