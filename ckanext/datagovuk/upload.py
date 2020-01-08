@@ -3,7 +3,6 @@ upload.py
 
 Contains functions that upload the resources/zipfiles to S3.
 
-Also contains the MetadataYAMLDumper class to generate the metadata for zipfiles.
 '''
 import cgi
 import os
@@ -18,7 +17,6 @@ from dateutil import parser
 from slugify import slugify
 from pylons import config
 import boto3
-import yaml
 import requests
 
 import paste.fileapp
