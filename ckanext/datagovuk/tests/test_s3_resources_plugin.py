@@ -6,7 +6,7 @@ import pylons.config as config
 from botocore.exceptions import ClientError
 from ckanext.datagovuk.plugin import DatagovukPlugin
 from mock import Mock, patch
-from nose.tools import assert_raises, assert_raises_regexp
+from nose.tools import assert_raises
 
 
 class MockAction:
@@ -44,8 +44,10 @@ class TestS3ResourcesPlugin:
     @patch.dict("pylons.config", {}, clear=True)
     def test_s3_config_exception(self):
         plugin = DatagovukPlugin()
-        with assert_raises_regexp(Exception, "Required S3 config options missing"):
+        with assert_raises(KeyError) as context:
             plugin.before_create_or_update({}, {"upload": "dummy value"})
+
+        assert context.exception.message == "Required S3 config options missing"
 
     @patch("boto3.resource")
     @patch("ckanext.datagovuk.upload.toolkit.abort")
