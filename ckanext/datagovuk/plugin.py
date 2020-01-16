@@ -1,3 +1,5 @@
+import logging
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import model
@@ -8,6 +10,7 @@ import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
 import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
+import ckanext.datagovuk.upload as upload
 
 from ckanext.datagovuk.logic.theme_validator import valid_theme
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
@@ -30,6 +33,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IMiddleware, inherit=True)
+    plugins.implements(plugins.IResourceController, inherit=True)
 
     # IConfigurer
 
@@ -273,7 +277,36 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             sentry_sdk.init(integrations=[FlaskIntegration()])
             return app
 
+    def before_create_or_update(self, context, resource):
+        """before_create_or_update - our own function. NOT a CKAN hook.
+        Contains shared code performed regardless of whether we are
+        creating or updating.
+        """
+
+        # If resource is an API, don't do anything special
+        if resource.get("format") == "API":
+            return
+        elif resource.get("upload") is None:
+            return
+        elif not upload.config_exists():
+            logger = logging.getLogger(__name__)
+            logger.error(
+                "Required S3 config options missing. Please check if required config options exist."
+            )
+            raise KeyError("Required S3 config options missing")
+        else:
+            upload.upload_resource_to_s3(context, resource)
+
+    def before_create(self, context, resource):
+        """Runs before resource_create. Modifies resource destructively to put in the S3 URL"""
+        self.before_create_or_update(context, resource)
+
+    def before_update(self, context, _, resource):
+        """Runs before resource_update. Modifies resource destructively to put in the S3 URL"""
+        self.before_create_or_update(context, resource)
+
     import ckanext.datagovuk.ckan_patches  # import does the monkey patching
+
 
 def delete_routes_by_path_startswith(map, path_startswith):
     """
