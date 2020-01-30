@@ -43,7 +43,7 @@ def is_dev():
 def get_datasets_with_target_date(target_date):
     cursor = connection.cursor()
     sql = """
-    SELECT name FROM package WHERE metadata_modified = '%s';
+    SELECT name FROM package WHERE metadata_modified = '%s' and state='active';
     """ % (target_date)
 
     cursor.execute(sql)
@@ -60,13 +60,14 @@ def create_dataset_list(target_date, rows):
 
 def reindex_solr(target_date):
     with open("reindex_datasets-%s.txt" % target_date, "r+") as f:
-        for line in f.readlines():
+        lines = f.readlines()
+        for i, line in enumerate(lines):
             fields = line.split(',')
 
-            paster_command = 'paster --plugin=ckan search-index rebuild {} -c {}'.format(
+            paster_command = 'paster --plugin=ckan search-index rebuild {} --config {}'.format(
                 fields[0], '/srv/app/production.ini' if is_dev() else '/var/ckan/ckan.ini')
 
-            logger.info('CKAN reindex - Running command: %s', paster_command)
+            logger.info('CKAN reindex %d/%d - Running command: %s', i+1, len(lines), paster_command)
 
             try:
                 subprocess.call(paster_command, shell=True)
