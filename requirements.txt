@@ -1,4 +1,5 @@
 awesome-slugify==1.6.5
+beautifulsoup4==4.8.1
 blinker==1.4
 boto3==1.4.3
 gunicorn
