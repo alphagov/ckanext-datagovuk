@@ -216,6 +216,13 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         harvest_org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
         route_map.connect('harvest_org_list', '/publisher/harvest/' + '{id}', controller=harvest_org_controller, action='source_list')
 
+        # add this function in OrganizationController as CKAN doesn't have 'publisher' group type
+        def _guess_group_type(self, expecting_name=False):
+            return 'organization'
+        
+        from ckan.controllers.organization import OrganizationController
+        OrganizationController._guess_group_type = _guess_group_type
+
         # Recreates the organization routes with /publisher instead.
         with SubMapper(route_map, controller='organization') as m:
             m.connect('organizations_index', '/publisher', action='index')

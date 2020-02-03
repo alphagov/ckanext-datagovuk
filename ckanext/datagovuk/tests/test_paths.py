@@ -1,7 +1,8 @@
+from bs4 import BeautifulSoup
+import unittest
 import ckan.plugins.toolkit as toolkit
 import ckan.tests.helpers as helpers
 import ckanext.datagovuk.plugin as plugin
-import unittest
 
 
 class TestPaths(unittest.TestCase):
@@ -28,3 +29,23 @@ class TestPaths(unittest.TestCase):
 
         assert resp.status_int == 302
         assert resp.location == 'http://localhost/'
+
+
+    def test_publisher_path(self):
+        ''' The test client from core CKAN is not picking up the internationalization
+            strings locally which is why it's showing `Organizations` and not
+            'Publishers'
+        '''
+        app = helpers._get_test_app()
+        resp = app.get('/publisher')
+        assert resp.status_int == 200
+
+        page = BeautifulSoup(resp.html.decode('utf-8'), 'html.parser')
+
+        assert page.h1.text.strip() == (
+            'Organizations'
+        )
+
+        assert page.ol.li.find_next("li").a.text.strip() == (
+            'Organizations'
+        )
