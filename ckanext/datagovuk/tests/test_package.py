@@ -84,6 +84,34 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
         assert 'format' in form.fields
 
 
+    ## Test standard dataset file upload
+    def test_resource_create_standard_file_upload(self):
+        user = factories.User()
+        organization = factories.Organization(
+            users=[{'name': user['id'], 'capacity': 'admin'}]
+        )
+        dataset = factories.Dataset(owner_org=organization['id'])
+
+        app = helpers._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url_for(controller='package',
+                    action='new_resource',
+                    id=dataset['name']),
+            extra_environ=env,
+        )
+
+        page = BeautifulSoup(response.html.decode('utf-8'), 'html.parser')
+
+        form = response.forms['resource-edit']
+        assert 'resource-type' in form.fields
+        assert 'url' in form.fields
+        assert not 'upload' in form.fields
+        assert 'name' in form.fields
+        assert 'datafile-date' in form.fields
+        assert 'format' in form.fields
+
+
     ## Tests for rendering the forms
 
     def test_form_renders(self):
