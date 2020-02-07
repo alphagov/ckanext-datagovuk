@@ -15,6 +15,7 @@ import ckan.lib.dictization.model_dictize as model_dictize
 from ckan.logic.action.create import resource_create as resource_create_core
 from ckan.logic import get_or_bust
 from ckanext.datagovuk.lib.organogram_xls_splitter import create_organogram_csvs
+from ckanext.datagovuk.upload import upload_resource_to_s3
 
 
 log = __import__('logging').getLogger(__name__)
@@ -80,7 +81,10 @@ def resource_create(context, data_dict):
                 timestamp_str = timestamp.strftime("%Y-%m-%dT%H-%M-%SZ")
 
                 senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context, timestamp_str)
+                upload_resource_to_s3(context, senior_resource)
+
                 junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context, timestamp_str)
+                upload_resource_to_s3(context, junior_resource)
 
                 return senior_resource
 

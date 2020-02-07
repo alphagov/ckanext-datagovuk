@@ -1,9 +1,11 @@
 from io import BytesIO
 import os
 from datetime import date, datetime
+from mock import (call, patch, Mock)
 import unittest
-from mock import (patch, Mock)
 
+import ckan.tests.factories as factories
+import ckan.tests.helpers as helpers
 import ckanext.datagovuk.action.create as create
 from ckan.plugins.toolkit import ValidationError
 
@@ -70,6 +72,7 @@ class TestWhenExcelButNotOrganogram(TestResourceCreate):
 
 class TestWhenValidOrganogramXlsFile(TestResourceCreate):
     fixture_path = os.path.join(os.path.dirname(__file__), "../data/sample-valid.xls")
+    fake_resource_create_list = []
 
     def setUp(self):
         self.data_dict = {
@@ -85,8 +88,49 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
         super(self.__class__, self).setUp()
 
 
+    @classmethod
+    def teardown_class(self):
+        helpers.reset_db()
+
+    def fake_resource_create(self, *args):
+        TestWhenValidOrganogramXlsFile.fake_resource_create_list.append(args[0])
+
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
+    @patch("ckanext.datagovuk.action.create.get_action")
+    @patch("ckanext.datagovuk.action.create.mimetypes.guess_type")
+    @patch("ckanext.datagovuk.action.create.resource_create_core", side_effect=fake_resource_create)
+    def test_create_resource_uploads_resource_with_same_timestamp(
+        self, mock_resource_create, mock_guess_type, mock_get_action, mock_upload
+    ):
+        mock_resource_create.mock_resource_create_list = []
+        mock_guess_type.return_value = ['application/vnd.ms-excel']
+
+        class MockAction:
+            def __init__(self, *args):
+                pass
+
+            def get(self, _):
+                return '538b857a-64ba-490e-8440-0e32094a28a7'
+
+        mock_get_action.return_value = MockAction
+
+        params = {
+            'package_id': factories.Dataset()['id'],
+            'url': 'http://data',
+            'name': 'A nice resource',
+            'upload': self.data_dict
+        }
+
+        helpers.call_action('resource_create', self.context, **self.data_dict)
+
+        assert mock_resource_create.call_args_list[0][0][1]['timestamp'] == \
+            mock_resource_create.call_args_list[1][0][1]['timestamp']
+        assert TestWhenValidOrganogramXlsFile.fake_resource_create_list[0]['timestamp'] == \
+            TestWhenValidOrganogramXlsFile.fake_resource_create_list[1]['timestamp']
+
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_does_not_call_the_original_function_with_original_args(self, original_function):
+    def test_does_not_call_the_original_function_with_original_args(self, original_function, mock_upload):
         with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
             mock_get_action.return_value = lambda *_args: self.pkg_dict
             create.resource_create(self.context, self.data_dict)
@@ -94,8 +138,9 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
         for args, _kwargs in original_function.call_args_list:
             self.assertNotEqual(args, (self.context, self.data_dict))
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_calls_the_original_function_twice_with_new_args(self, original_function):
+    def test_calls_the_original_function_twice_with_new_args(self, original_function, mock_upload):
         with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
             mock_get_action.return_value = lambda *_args: self.pkg_dict
             create.resource_create(self.context, self.data_dict)
@@ -116,8 +161,9 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
             "organogram-junior.csv",
         )
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_returns_the_first_created_resource(self, original_function):
+    def test_returns_the_first_created_resource(self, original_function, mock_upload):
         original_function.side_effect = ["First resource", "Second resource"]
 
         with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
@@ -126,8 +172,9 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
 
         self.assertEqual(created_resource, "First resource")
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_calls_the_original_function_twice_with_given_date(self, original_function):
+    def test_calls_the_original_function_twice_with_given_date(self, original_function, mock_upload):
         self.data_dict = {
             "package_id": "1234",
             "url": "valid-organogram.xls",
@@ -196,8 +243,9 @@ class TestWhenValidOrganogramXlsxFile(TestResourceCreate):
         super(self.__class__, self).setUp()
 
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_does_not_call_the_original_function_with_original_args(self, original_function):
+    def test_does_not_call_the_original_function_with_original_args(self, original_function, mock_upload):
         with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
             mock_get_action.return_value = lambda *_args: self.pkg_dict
             create.resource_create(self.context, self.data_dict)
@@ -205,8 +253,9 @@ class TestWhenValidOrganogramXlsxFile(TestResourceCreate):
         for args, _kwargs in original_function.call_args_list:
             self.assertNotEqual(args, (self.context, self.data_dict))
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_calls_the_original_function_twice_with_new_args(self, original_function):
+    def test_calls_the_original_function_twice_with_new_args(self, original_function, mock_upload):
         with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
             mock_get_action.return_value = lambda *_args: self.pkg_dict
             create.resource_create(self.context, self.data_dict)
@@ -227,8 +276,9 @@ class TestWhenValidOrganogramXlsxFile(TestResourceCreate):
             "organogram-junior.csv",
         )
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_returns_the_first_created_resource(self, original_function):
+    def test_returns_the_first_created_resource(self, original_function, mock_upload):
         original_function.side_effect = ["First resource", "Second resource"]
 
         with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
@@ -237,8 +287,9 @@ class TestWhenValidOrganogramXlsxFile(TestResourceCreate):
 
         self.assertEqual(created_resource, "First resource")
 
+    @patch("ckanext.datagovuk.action.create.upload_resource_to_s3")
     @patch("ckanext.datagovuk.action.create.resource_create_core")
-    def test_calls_the_original_function_twice_with_given_date(self, original_function):
+    def test_calls_the_original_function_twice_with_given_date(self, original_function, mock_upload):
         self.data_dict = {
             "package_id": "1234",
             "url": "valid-organogram.xlsx",
