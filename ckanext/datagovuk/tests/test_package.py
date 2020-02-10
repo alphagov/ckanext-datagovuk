@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from mock import patch
 from routes import url_for
 
 import ckan.plugins
@@ -55,7 +56,8 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
 
 
     ## Test organogram file upload
-    def test_resource_create_organogram_file_upload(self):
+    @patch("ckan.lib.helpers.uploader.get_storage_path", return_value='./')
+    def test_resource_create_organogram_file_upload(self, mock_uploads_enabled):
         user = factories.User()
         organization = factories.Organization(
             users=[{'name': user['id'], 'capacity': 'admin'}]
@@ -74,7 +76,6 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
         )
 
         page = BeautifulSoup(response.html.decode('utf-8'), 'html.parser')
-
         form = response.forms['resource-edit']
         assert not 'resource-type' in form.fields
         assert 'url' in form.fields
