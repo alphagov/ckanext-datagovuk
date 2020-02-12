@@ -284,6 +284,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             sentry_sdk.init(integrations=[FlaskIntegration()])
             return app
 
+    # IResourceController
+
     def before_create_or_update(self, context, resource):
         """before_create_or_update - our own function. NOT a CKAN hook.
         Contains shared code performed regardless of whether we are
@@ -301,8 +303,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                 "Required S3 config options missing. Please check if required config options exist."
             )
             raise KeyError("Required S3 config options missing")
-        else:
-            upload.upload_resource_to_s3(context, resource)
 
     def before_create(self, context, resource):
         """Runs before resource_create. Modifies resource destructively to put in the S3 URL"""
