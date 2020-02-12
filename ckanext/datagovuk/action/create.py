@@ -81,11 +81,7 @@ def resource_create(context, data_dict):
                 timestamp_str = timestamp.strftime("%Y-%m-%dT%H-%M-%SZ")
 
                 senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context, timestamp_str)
-                upload_resource_to_s3(context, senior_resource)
-
                 junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context, timestamp_str)
-                upload_resource_to_s3(context, junior_resource)
-
                 return senior_resource
 
     log.debug("Passing args through to the CKAN resource_create")
@@ -105,6 +101,7 @@ def _create_csv_resource(junior_senior, csv, resource_data, context, timestamp):
     resource_data['upload'] = csv_wrapper
     resource_data['timestamp'] = timestamp
 
+    upload_resource_to_s3(context, resource_data)
     return resource_create_core(context, resource_data)
 
 
