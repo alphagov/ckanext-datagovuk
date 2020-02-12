@@ -121,7 +121,7 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
             'upload': self.data_dict
         }
 
-        helpers.call_action('resource_create', self.context, **self.data_dict)
+        create.resource_create(self.context, self.data_dict)
 
         assert mock_resource_create.call_args_list[0][0][1]['timestamp'] == \
             mock_resource_create.call_args_list[1][0][1]['timestamp']

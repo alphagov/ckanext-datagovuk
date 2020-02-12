@@ -83,7 +83,7 @@ def upload_resource_to_s3(context, resource):
         + extension
     )
 
-    s3_filepath = "/".join([pkg.get("name"), "resources", filename]) + extension
+    s3_filepath = "/".join([pkg.get("name"), "resources", filename])
 
     # If file is currently being uploaded, the file is in resource['upload']
     if isinstance(resource.get('upload'), cgi.FieldStorage):

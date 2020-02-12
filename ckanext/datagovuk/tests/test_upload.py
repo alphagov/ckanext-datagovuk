@@ -55,6 +55,7 @@ class TestUpload(unittest.TestCase):
         upload_resource_to_s3({}, resource)
         assert not mock_abort.called
         assert config.get("ckan.datagovuk.s3_url_prefix") in resource["url"]
+        assert resource["url"].endswith("organogram-senior.csv")
         assert mock_update_timestamp.called
 
     @patch("ckanext.datagovuk.upload.update_timestamp")
