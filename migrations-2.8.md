@@ -1,5 +1,13 @@
 # Known issues migrating to 2.8
 
+## beautifulsoup4
+
+When running the tests there might be an error such as
+`AttributeError: 'module' object has no attribute '_base'`
+
+Running `pip install --upgrade beautifulsoup4` in the Docker container should
+fix this.
+
 ## Style/layout
 
 - breadcrumb font size smaller by 2px
