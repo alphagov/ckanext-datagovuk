@@ -58,6 +58,11 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
     ## Test organogram file upload
     @patch("ckan.lib.helpers.uploader.get_storage_path", return_value='./')
     def test_resource_create_organogram_file_upload(self, mock_uploads_enabled):
+        '''
+        This should fail in 2.8 as the `upload` button isn't showing due to a
+        javascript issue. Setting up Jasmine might help us test the forms more
+        thoroughly.
+        '''
         user = factories.User()
         organization = factories.Organization(
             users=[{'name': user['id'], 'capacity': 'admin'}]
