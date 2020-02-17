@@ -1,3 +1,5 @@
+from bs4 import BeautifulSoup
+from mock import patch
 from routes import url_for
 
 import ckan.plugins
@@ -51,6 +53,70 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
         self.assertEqual(resource_out['description'], resource_in['description'])
         self.assertEqual(resource_out['format'], resource_in['format'])
         self.assertEqual(resource_out['url'], resource_in['url'])
+
+
+    ## Test organogram file upload
+    @patch("ckan.lib.helpers.uploader.get_storage_path", return_value='./')
+    def test_resource_create_organogram_file_upload(self, mock_uploads_enabled):
+        '''
+        This should fail in 2.8 as the `upload` button isn't showing due to a
+        javascript issue. Setting up Jasmine might help us test the forms more
+        thoroughly.
+        '''
+        user = factories.User()
+        organization = factories.Organization(
+            users=[{'name': user['id'], 'capacity': 'admin'}]
+        )
+        dataset = factories.Dataset(owner_org=organization['id'])
+        dataset['schema-vocabulary'] = '538b857a-64ba-490e-8440-0e32094a28a7'
+        helpers.call_action('package_update', **dataset)
+
+        app = helpers._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url_for(controller='package',
+                    action='new_resource',
+                    id=dataset['name']),
+            extra_environ=env,
+        )
+
+        page = BeautifulSoup(response.html.decode('utf-8'), 'html.parser')
+        form = response.forms['resource-edit']
+        assert not 'resource-type' in form.fields
+        assert 'url' in form.fields
+        assert 'upload' in form.fields
+        assert 'name' in form.fields
+        assert 'datafile-date' in form.fields
+        assert 'format' in form.fields
+
+
+    ## Test standard dataset file upload
+    def test_resource_create_standard_file_upload(self):
+        user = factories.User()
+        organization = factories.Organization(
+            users=[{'name': user['id'], 'capacity': 'admin'}]
+        )
+        dataset = factories.Dataset(owner_org=organization['id'])
+
+        app = helpers._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url_for(controller='package',
+                    action='new_resource',
+                    id=dataset['name']),
+            extra_environ=env,
+        )
+
+        page = BeautifulSoup(response.html.decode('utf-8'), 'html.parser')
+
+        form = response.forms['resource-edit']
+        assert 'resource-type' in form.fields
+        assert 'url' in form.fields
+        assert not 'upload' in form.fields
+        assert 'name' in form.fields
+        assert 'datafile-date' in form.fields
+        assert 'format' in form.fields
+
 
     ## Tests for rendering the forms
 

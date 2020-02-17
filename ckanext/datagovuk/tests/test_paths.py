@@ -32,10 +32,6 @@ class TestPaths(unittest.TestCase):
 
 
     def test_publisher_path(self):
-        ''' The test client from core CKAN is not picking up the internationalization
-            strings locally which is why it's showing `Organizations` and not
-            'Publishers'
-        '''
         app = helpers._get_test_app()
         resp = app.get('/publisher')
         assert resp.status_int == 200
@@ -43,9 +39,21 @@ class TestPaths(unittest.TestCase):
         page = BeautifulSoup(resp.html.decode('utf-8'), 'html.parser')
 
         assert page.h1.text.strip() == (
-            'Organizations'
+            'Publishers'
         )
 
         assert page.ol.li.find_next("li").a.text.strip() == (
-            'Organizations'
+            'Publishers'
+        )
+
+    def test_publisher_navigation_tab(self):
+        app = helpers._get_test_app()
+        resp = app.get('/')
+        page = BeautifulSoup(resp.html.decode('utf-8'), 'html.parser')
+
+        text = page.find_all(href="/publisher")[0].text.strip()
+
+
+        assert text == (
+            'Publishers'
         )
