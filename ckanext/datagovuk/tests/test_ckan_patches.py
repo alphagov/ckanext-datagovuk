@@ -55,5 +55,5 @@ class TestSetPass(DBTest):
         args, kwargs = mock_mailer.call_args
         assert args[0].id == user_dict['id']
         assert args[0].email == user_dict['email']
-        assert args[1] == 'Your CKAN password has changed'
+        assert args[1] == 'Your data.gov.uk publisher password has changed'
         assert args[2] == "Your password has been changed, if you haven't done it yourself, let us know"

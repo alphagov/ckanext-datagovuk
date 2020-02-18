@@ -24,7 +24,7 @@ class TestWhenUpdatingUser:
         assert mock_mailer.called
         args, kwargs = mock_mailer.call_args
         assert args[0].email == user_dict['email']
-        assert args[1] == 'Your CKAN password has changed'
+        assert args[1] == 'Your data.gov.uk publisher password has changed'
         assert args[2] == "Your password has been changed, if you haven't done it yourself, let us know"
 
     @patch('ckanext.datagovuk.action.update.user_update')
@@ -41,5 +41,5 @@ class TestWhenUpdatingUser:
         assert mock_mailer.called
         args, kwargs = mock_mailer.call_args
         assert args[0].email == user_dict['email']
-        assert args[1] == 'Your CKAN password has changed'
+        assert args[1] == 'Your data.gov.uk publisher password has changed'
         assert args[2] == "Your password has been changed, if you haven't done it yourself, let us know"
