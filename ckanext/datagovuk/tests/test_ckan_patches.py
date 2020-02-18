@@ -41,7 +41,6 @@ class TestSetPass(DBTest):
     def setup(self):
         helpers.reset_db()
 
-
     @patch('ckan.lib.cli.UserCmd.password_prompt', return_value='newpassword')
     @patch('ckanext.datagovuk.lib.mailer.mailer.mail_user')
     def test_setpass_sends_email_alert_to_user(self, mock_mailer, mock_password_prompt):
