@@ -6,7 +6,7 @@ ckan_harvest_fork='ckan'
 ckan_harvest_sha='7b251f0e3b26e9567025b833228676b8801979d0'
 
 ckan_dcat_fork='ckan'
-ckan_dcat_sha='8c55890e7bf9644460ae71470f37abbd9295c9fa'
+ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='c35e1249cfb3c7b2f1286f433fd51c6fe8f05b72'
