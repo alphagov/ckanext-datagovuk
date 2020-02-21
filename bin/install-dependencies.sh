@@ -11,9 +11,6 @@ ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='c35e1249cfb3c7b2f1286f433fd51c6fe8f05b72'
 
-ckan_s3_resources_fork='alphagov'
-ckan_s3_resources_sha='81eb36fb51da5e216e9405a7ad64c4096881ca85'
-
 ckan_fork='ckan'
 ckan_sha='ckan-2.7.4'
 
@@ -29,9 +26,6 @@ $pip install -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_d
 
 $pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt)
 $pip install -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
-
-$pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_s3_resources_fork/ckanext-s3-resources/$ckan_s3_resources_sha/requirements.txt)
-$pip install -U "git+https://github.com/$ckan_s3_resources_fork/ckanext-s3-resources@$ckan_s3_resources_sha#egg=ckanext-s3-resources"
 
 $pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt)
 $pip install -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt
