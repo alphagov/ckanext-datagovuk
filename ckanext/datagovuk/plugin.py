@@ -10,6 +10,7 @@ import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
 import ckanext.datagovuk.action.create
 import ckanext.datagovuk.action.get
+import ckanext.datagovuk.action.update
 import ckanext.datagovuk.upload as upload
 
 from ckanext.datagovuk.logic.theme_validator import valid_theme
@@ -173,12 +174,13 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def get_actions(self):
         return dict(
-            resource_create=ckanext.datagovuk.action.create.resource_create,
-            user_create=ckanext.datagovuk.action.create.user_create,
-            user_auth=ckanext.datagovuk.action.get.user_auth,
+            organization_show=ckanext.datagovuk.action.get.dgu_organization_show,
             package_search=ckanext.datagovuk.action.get.dgu_package_search,
             package_show=ckanext.datagovuk.action.get.dgu_package_show,
-            organization_show=ckanext.datagovuk.action.get.dgu_organization_show,
+            resource_create=ckanext.datagovuk.action.create.resource_create,
+            user_auth=ckanext.datagovuk.action.get.user_auth,
+            user_create=ckanext.datagovuk.action.create.user_create,
+            user_update=ckanext.datagovuk.action.update.dgu_user_update,
         )
 
     # IValidators
