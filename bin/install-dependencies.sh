@@ -2,7 +2,7 @@
 
 pip=${1-'/usr/bin/env pip'}
 
-ckan_harvest_sha='7b251f0e3b26e9567025b833228676b8801979d0'
+ckan_harvest_sha='1ee4a58e33ef37d67796666de4c8e51f6758d1a1'
 
 ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 
@@ -15,8 +15,8 @@ pycsw_tag='2.4.0'
 
 $pip install -U pip
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
-$pip install -U "git+https://github.com/ckan/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
+$pip install -U $(curl -s https://raw.githubusercontent.com/alphagov/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
+$pip install -U "git+https://github.com/alphagov/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
 
 $pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-dcat/$ckan_dcat_sha/requirements.txt)
 $pip install -U "git+https://github.com/ckan/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat"
