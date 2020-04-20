@@ -190,6 +190,8 @@ sample_api_search_dataset = '''
             "capacity": "public",
             "metadata_modified": "2019-08-28T11:00:00Z",
             "entity_type": "package",
+            "author": null,
+            "author_email": null,
             "state": "active",
             "license_id": "cc-by",
             "indexed_ts": "2019-08-28T11:00:00Z",
@@ -254,24 +256,24 @@ class TestRemovePII(unittest.TestCase):
 
     def test_removes_pii_from_api_search_dataset(self):
         res = remove_pii_from_api_search_dataset(sample_api_search_dataset)
-        json_res = json.loads(res)
+        json_res = json.loads(res)['results'][0]
         assert not any(elem in PII_LIST for elem in json_res)
 
-        json_data_dict = json.loads(json_res['results'][0]['data_dict'])
+        json_data_dict = json.loads(json_res['data_dict'])
         assert not any(elem in PII_LIST for elem in json_data_dict)
 
-        json_validated_data_dict = json.loads(json_res['results'][0]['validated_data_dict'])
+        json_validated_data_dict = json.loads(json_res['validated_data_dict'])
         assert not any(elem in PII_LIST for elem in json_validated_data_dict)
 
     def test_removes_pii_from_api_search_dataset_without_fields_and_does_not_add_fields(self):
         res = remove_pii_from_api_search_dataset(sample_api_search_dataset_without_fields)
-        json_res = json.loads(res)
+        json_res = json.loads(res)['results'][0]
         assert not any(elem in PII_LIST for elem in json_res)
         assert not any(elem in ['data_dict', 'validated_data_dict', 'extras'] for elem in json_res.keys())
 
     def test_removes_pii_works_even_if_pii_element_doesnt_exist(self):
         modified_sample_package_show_result = sample_package_show_result.copy()
-        del modified_sample_package_show_result['contact-name']
+        del modified_sample_package_show_result['author']
 
         res = remove_pii(modified_sample_package_show_result)
         assert not any(elem in PII_LIST for elem in res)
