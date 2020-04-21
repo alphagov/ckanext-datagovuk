@@ -18,7 +18,8 @@ def remove_pii_from_api_search_dataset(data):
                 element['validated_data_dict'] = remove_pii_block(element['validated_data_dict'])
             if 'extras' in element:
                 element['extras'] = remove_pii(element['extras'])
-            element = remove_pii(element)
+            if hasattr(element, 'keys'):
+                element = remove_pii(element)
 
         return json.dumps(json_data)
 
