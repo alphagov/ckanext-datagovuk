@@ -244,6 +244,15 @@ sample_api_search_dataset_without_fields = '''
     ]
 }'''
 
+sample_api_search_dataset_strings = '''
+{
+    "count": 2,
+    "results": [
+        "test-1",
+        "test-2"
+    ]
+}'''
+
 
 class TestRemovePII(unittest.TestCase):
     def test_removes_pii_from_package_search(self):
@@ -264,6 +273,9 @@ class TestRemovePII(unittest.TestCase):
 
         json_validated_data_dict = json.loads(json_res['validated_data_dict'])
         assert not any(elem in PII_LIST for elem in json_validated_data_dict)
+
+    def test_does_not_error_with_strings_in_response(self):
+        remove_pii_from_api_search_dataset(sample_api_search_dataset_strings)
 
     def test_removes_pii_from_api_search_dataset_without_fields_and_does_not_add_fields(self):
         res = remove_pii_from_api_search_dataset(sample_api_search_dataset_without_fields)
