@@ -24,9 +24,19 @@ node {
       sh("bash -c 'source venv/bin/activate ; ./bin/jenkins-tests.sh'")
     }
 
+    if (govuk.hasDockerfile()) {
+      govuk.dockerBuildTasks([:], "ckan")
+    }
+
     if (env.BRANCH_NAME == 'master') {
       stage('Push release tag') {
         govuk.pushTag(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER)
+      }
+
+      if (govuk.hasDockerfile()) {
+        stage("Tag Docker image") {
+          govuk.dockerTagMasterBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
+        }
       }
 
       stage('Deploy to Integration') {
