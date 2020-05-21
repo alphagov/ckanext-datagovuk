@@ -195,3 +195,7 @@ p.home-footer-text {
 .u-overflow-hidden {
   overflow: hidden;
 }
+
+label.checkbox[for=field-remember] {
+  margin-left: 20px;
+}
