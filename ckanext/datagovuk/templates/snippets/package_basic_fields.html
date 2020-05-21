@@ -1,56 +1,58 @@
 {% ckan_extends %}
 {% import 'macros/form.html' as form %}
 
-{% block package_basic_fields_custom %}
-{# This block is located between the Title and Description in the default CKAN templates #}
-{% endblock %}
-
 {% block package_basic_fields_title %}
-  {{ form.input('title', id='field-title', label=_('Title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target'}) }}
+{{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target', 'class': 'form-control'}) }}
 {% endblock %}
 
 {% block package_basic_fields_url %}
-  {% set prefix = h.url_for(controller='package', action='read', id='') %}
-  {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': '/', 'data-module-placeholder': '<dataset>'} %}
+{% set prefix = h.url_for(controller='package', action='read', id='') %}
+{% set domain = h.url_for(controller='package', action='read', id='', qualified=true) %}
+{% set domain = domain|replace("http://", "")|replace("https://", "") %}
+{% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<dataset>', 'class': 'form-control input-sm'} %}
+
   {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
-{% endblock %}
+  {% endblock %}
 
-{% block package_basic_fields_description %}
+  {% block package_basic_fields_custom %}{% endblock %}
+
+  {% block package_basic_fields_description %}
   {{ form.markdown('notes', id='field-notes', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes) }}
-{% endblock %}
+  {% endblock %}
 
-{% block package_basic_fields_license %}
-<div class="form-group">
-  {% set error = errors.license_id %}
-  <div class="controls">
-    <label class="control-label col-md-3" for="field-license">{{ _("License") }}</label>
-    <div class="col-md-4">
-      <select id="field-license" name="license_id" data-module="autocomplete">
-        {% set existing_license_id = data.get('license_id') %}
-        {% for license_id, license_desc in h.license_options(existing_license_id) %}
-        <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
-        {% endfor %}
-      </select>
-      {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
-    </div>
-    <div class="col-md-5">
-      <span class="info-block info-inline">
-        <i class="fa fa-info-circle"></i>
-        {% trans %}
-        License definitions and additional information can be found
-        at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
-        {% endtrans %}
-      </span>
+  {% block package_basic_fields_tags %}
+  {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+  {{ form.input('tag_string', id='field-tags', label=_('Tags'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
+  {% endblock %}
+
+  {% block package_basic_fields_license %}
+  <div class="form-group">
+    {% set error = errors.license_id %}
+    <label class="control-label" for="field-license">{{ _("License") }}</label>
+    <div class="controls">
+      <div class="row">
+        <div class="col-md-6">
+          <select id="field-license" name="license_id" data-module="autocomplete">
+            {% set existing_license_id = data.get('license_id') %}
+            {% for license_id, license_desc in h.license_options(existing_license_id) %}
+            <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+            {% endfor %}
+          </select>
+          {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <span class="info-block info-inline">
+            <i class="fa fa-info-circle"></i>
+            {% trans %}
+            License definitions and additional information can be found
+            at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
+            {% endtrans %}
+          </span>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-<div class="control-group form-group">
-  <label class="control-label col-md-3" for="licence-custom">{{ _("Licence Information") }}</label>
-  <div class="controls col-md-4">
-    <input type="text" class="form-control" id="field-licence-custom" name="licence-custom" value="{{ data.get('licence-custom','') }}">
-  </div>
-</div>
-{% endblock %}
+  {% endblock %}
 
   {% block package_basic_fields_org %}
   {# if we have a default group then this wants remembering #}
@@ -72,9 +74,9 @@
     {% if show_organizations_selector %}
     {% set existing_org = data.owner_org or data.group_id %}
     <div class="form-group control-medium">
-      <label for="field-organizations" class="control-label col-md-3">{{ _('Organization') }}</label>
-      <div class="controls col-md-4">
-        <select id="field-organizations"name="owner_org" data-module="autocomplete">
+      <label for="field-organizations" class="control-label">{{ _('Organization') }}</label>
+      <div class="controls">
+        <select id="field-organizations" name="owner_org" data-module="autocomplete">
           {% if h.check_config_permission('create_unowned_dataset') %}
           <option value="" {% if not selected_org and data.id %} selected="selected" {% endif %}>{{ _('No organization') }}</option>
           {% endif %}
@@ -90,7 +92,16 @@
 
     {% if show_visibility_selector %}
     {% block package_metadata_fields_visibility %}
-      <input type="hidden" name="private" value="False">
+    <div class="form-group control-medium">
+      <label for="field-private" class="control-label">{{ _('Visibility') }}</label>
+      <div class="controls">
+        <select id="field-private" name="private" class="form-control">
+          {% for option in [('True', _('Private')), ('False', _('Public'))] %}
+          <option value="{{ option[0] }}" {% if option[0] == data.private|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
     {% endblock %}
     {% endif %}
 
@@ -112,10 +123,3 @@
   {% endif %}
 
   {% endblock %}
-
-
-
-{% block package_basic_fields_tags %}
-{% endblock %}
-
-
