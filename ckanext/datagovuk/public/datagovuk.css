@@ -110,3 +110,8 @@ p.home-footer-text {
   line-height: 1.5;
 }
 
+@media (max-width: 767px) {
+  .toolbar .breadcrumb a {
+    color: #505050;
+  }
+}
