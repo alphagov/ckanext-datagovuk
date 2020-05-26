@@ -10,7 +10,10 @@
 
   {{ form.input('password', label=_("Password"), id='field-password', type="password", value="", error=password_error, classes=["control-medium"]) }}
 
-  {{ form.checkbox('remember', label=_("Remember me"), id='field-remember', checked=true, value="63072000") }}
+  <div class="form-group">
+    <div class="col-md-3">&nbsp;</div>
+    {{ form.checkbox('remember', label=_("Remember me"), id='field-remember', checked=true, value="63072000",  classes=["col-md-9"]) }}
+  </div>
 
   <div class="form-actions">
     {% block login_button %}
