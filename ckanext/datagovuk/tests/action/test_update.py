@@ -5,7 +5,7 @@ from ckan.tests import factories, helpers
 from ckanext.datagovuk.action.update import dgu_user_update
 
 
-class TestWhenUpdatingUser:
+class TestWhenUpdatingUser(object):
 
     def setup(self):
         helpers.reset_db()
