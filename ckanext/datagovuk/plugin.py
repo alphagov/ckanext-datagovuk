@@ -201,9 +201,16 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def get_blueprint(self):
         from ckanext.datagovuk.views.healthcheck import healthcheck
+        from ckanext.datagovuk.views.user import (
+            DGUUserEditView,
+        )
         bp = Blueprint("datagovuk", self.__module__)
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
+
+        _user_edit_view = DGUUserEditView.as_view(str(u'edit'))
+        bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
+        bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
 
         return bp
 
@@ -216,8 +223,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         with SubMapper(route_map, controller=user_controller) as m:
             m.connect('register', '/user/register', action='register')
             m.connect('/user/logged_in', action='logged_in')
-            m.connect('/user/edit', action='edit')
-            m.connect('/user/edit/{id:.*}', action='edit')
             m.connect('/user/reset', action='request_reset')
         route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
