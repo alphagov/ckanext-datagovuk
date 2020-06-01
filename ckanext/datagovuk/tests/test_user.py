@@ -1,3 +1,7 @@
+import unittest
+
+import mock
+
 from six.moves.urllib.parse import urljoin
 
 import ckan.plugins
@@ -6,6 +10,8 @@ from ckan.common import config
 from ckan.tests import factories, helpers
 from ckan.plugins.toolkit import url_for
 from ckanext.datagovuk.tests.db_test import DBTest
+from ckan.lib.mailer import MailerException, create_reset_key
+
 
 webtest_submit = helpers.webtest_submit
 submit_and_follow = helpers.submit_and_follow
@@ -180,6 +186,124 @@ class TestUserMe(helpers.FunctionalTestBase, DBTest):
             response.location,
             urljoin(config.get('ckan.site_url'), url_for("dashboard.datasets")),
         )
+
+
+class TestRequestPasswordReset(helpers.FunctionalTestBase, DBTest):
+    @mock.patch('ckanext.datagovuk.lib.mailer.mailer.mail_user', autospec=True)
+    def _test_request_reset_inner(self, user, user_arg, mock_mail_user):
+        app = self._get_test_app()
+        response = app.post(
+            url=url_for("user.request_reset"),
+            params={u"user": user_arg},
+            status=302,
+        )
+
+        self.assertEqual(
+            mock_mail_user.mock_calls,
+            [mock.call(
+                mock.ANY,
+                u"Reset your password",
+                (
+                    u"You're receiving this email because you requested a new "
+                    u"password for your Data publisher account for data.gov.uk."
+                    u"\n\nPlease go to {} to create a new password. \n\nIf you "
+                    u"didn't send us a request, you can safely ignore this email "
+                    u"and use your existing sign in details.\n\nThe data.gov.uk "
+                    u"team"
+                ).format(urljoin(
+                    config.get('ckan.site_url'),
+                    url_for(
+                        "user.perform_reset",
+                        id=user["id"],
+                        key=model.Session.query(model.User).get(user['id']).reset_key,
+                    ),
+                )),
+            )],
+        )
+        self.assertEqual(mock_mail_user.mock_calls[0][1][0].id, user["id"])
+        self.assertEqual(mock_mail_user.mock_calls[0][1][0].email, user["email"])
+
+    def test_request_reset_by_email(self):
+        user = factories.User(email="foo@example.com")
+        self._test_request_reset_inner(user, u"foo@example.com")
+
+    def test_request_reset_by_name(self):
+        user = factories.User(name="fooman")
+        self._test_request_reset_inner(user, u"fooman")
+
+    @unittest.skip(
+        "can't test because in test mode the view ends up throwing an auth audit "
+        "failure that doesn't happen when served for real."
+    )
+    @mock.patch('ckanext.datagovuk.lib.mailer.mailer.mail_user', autospec=True)
+    def test_request_reset_unknown_email(self, mock_mail_user):
+        user = factories.User(email="foo@example.com")
+        app = self._get_test_app()
+        response = app.post(
+            url=url_for("user.request_reset"),
+            params={u"user": u"bar@example.com"},
+            status=200,
+        )
+
+        self.assertIn("No such user", response.body)
+        self.assertEqual(mock_mail_user.mock_calls, [])
+
+
+    @mock.patch('ckanext.datagovuk.lib.mailer.mailer.mail_user', autospec=True)
+    def test_request_reset_mailer_exception(self, mock_mail_user):
+        mock_mail_user.side_effect = MailerException("bad things happened")
+
+        user = factories.User(email="foo@example.com")
+        app = self._get_test_app()
+        response = app.post(
+            url=url_for("user.request_reset"),
+            params={u"user": u"foo@example.com"},
+            status=200,
+        )
+
+        self.assertIn("Could not send reset link", response.body)
+        self.assertTrue(mock_mail_user.called)
+
+
+class TestPerformPasswordReset(helpers.FunctionalTestBase, DBTest):
+    def _test_perform_reset_password_error_inner(self, new_password):
+        params = {'password1': new_password, 'password2': new_password}
+        user = factories.User()
+        user_obj = model.User.by_name(user['name'])
+        create_reset_key(user_obj)
+        key = user_obj.reset_key
+        pw_hash = user_obj.password
+
+        app = self._get_test_app()
+        response = app.post(
+            url_for(
+                "user.perform_reset",
+                id=user_obj.id,
+                key=user_obj.reset_key,
+            ),
+            params=params,
+            status=200,
+        )
+
+        user_obj = model.User.by_name(user['name'])  # Update user_obj
+        # reset_key shouldn't have been changed
+        self.assertEqual(key, user_obj.reset_key)
+        # password shouldn't have been changed
+        self.assertEqual(pw_hash, user_obj.password)
+
+        return response
+
+    def test_perform_reset_password_too_short(self):
+        response = self._test_perform_reset_password_error_inner("FooBar")
+        self.assertIn("8 characters", response.body)
+
+    @unittest.skip(
+        "password reset view doesn't currently enforce this restriction, but "
+        "it probably should for consistency with user.edit"
+    )
+    def test_perform_reset_password_no_caps(self):
+        response = self._test_perform_reset_password_error_inner("foobarbaz1")
+        self.assertIn("8 characters", response.body)
 
 
 class TestRegisterUser(helpers.FunctionalTestBase, DBTest):

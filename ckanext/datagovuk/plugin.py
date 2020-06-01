@@ -204,6 +204,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
             DGUUserRegisterView,
+            DGUUserRequestResetView,
             me,
         )
         bp = Blueprint("datagovuk", self.__module__)
@@ -225,16 +226,17 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         import ckan.views.user as ckan_user_views
         ckan_user_views.me = me
 
+        bp.add_url_rule(
+            u'/user/reset',
+            view_func=DGUUserRequestResetView.as_view(str(u'request_reset')),
+        )
+
         return bp
 
     # IRoutes
 
     def before_map(self, route_map):
-        user_controller = 'ckanext.datagovuk.controllers.user:UserController'
-        healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
         api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
-        with SubMapper(route_map, controller=user_controller) as m:
-            m.connect('/user/reset', action='request_reset')
         route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.redirect('/home', '/')
