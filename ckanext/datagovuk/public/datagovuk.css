@@ -120,6 +120,7 @@ p.home-footer-text {
 
 .control-full input[type=radio]{
   width: auto;
+  margin-left: 0;
 }
 
 .harvest-types label.radio {
