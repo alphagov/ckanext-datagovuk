@@ -1,6 +1,8 @@
+from six.moves.urllib.parse import urljoin
 
 import ckan.plugins
 from ckan import model
+from ckan.common import config
 from ckan.tests import factories, helpers
 from ckan.plugins.toolkit import url_for
 from ckanext.datagovuk.tests.db_test import DBTest
@@ -134,3 +136,47 @@ class TestEditUser(helpers.FunctionalTestBase, DBTest):
         response = webtest_submit(form, 'save', status=200, extra_environ=env)
 
         self.assertIn('Please enter both passwords', response)
+
+
+class TestUserMe(helpers.FunctionalTestBase, DBTest):
+    def test_user_me_logged_in(self):
+        user = factories.User()
+        app = self._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url=url_for("user.me"),
+            extra_environ=env,
+            status=302,
+        )
+
+        self.assertEqual(
+            response.location,
+            urljoin(config.get('ckan.site_url'), url_for("dashboard.datasets")),
+        )
+
+    def test_user_me_not_logged_in(self):
+        app = self._get_test_app()
+        response = app.get(
+            url=url_for("user.me"),
+            status=302,
+        )
+
+        self.assertEqual(
+            response.location,
+            urljoin(config.get('ckan.site_url'), url_for("user.login")),
+        )
+
+    def test_use_from_logged_in(self):
+        user = factories.User()
+        app = self._get_test_app()
+        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        response = app.get(
+            url=url_for("user.logged_in"),
+            extra_environ=env,
+            status=302,
+        )
+
+        self.assertEqual(
+            response.location,
+            urljoin(config.get('ckan.site_url'), url_for("dashboard.datasets")),
+        )

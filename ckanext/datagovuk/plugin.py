@@ -203,6 +203,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
+            me,
         )
         bp = Blueprint("datagovuk", self.__module__)
 
@@ -211,6 +212,12 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         _user_edit_view = DGUUserEditView.as_view(str(u'edit'))
         bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
         bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
+
+        bp.add_url_rule(u'/user/me', view_func=me)
+        # also monkeypatch occurrence in original module as some views
+        # call it directly instead of redirecting externally
+        import ckan.views.user as ckan_user_views
+        ckan_user_views.me = me
 
         return bp
 
@@ -222,7 +229,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
         with SubMapper(route_map, controller=user_controller) as m:
             m.connect('register', '/user/register', action='register')
-            m.connect('/user/logged_in', action='logged_in')
             m.connect('/user/reset', action='request_reset')
         route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')

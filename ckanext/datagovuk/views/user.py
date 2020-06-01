@@ -1,3 +1,5 @@
+from ckan.common import g
+from ckan.plugins.toolkit import _, redirect_to, abort
 from ckan.views.user import (
     before_request,
     EditView,
@@ -25,3 +27,12 @@ class DGUUserEditView(_UserBeforeRequestMixin, EditView):
         context, id_ = super(DGUUserEditView, self)._prepare(*args, **kwargs)
         context[u"schema"] = user_edit_form_schema()
         return context, id_
+
+
+def me():
+    """
+    A slight variation on the default me() which prefers `dashboard.datasets`
+    over `dashboard.index`
+    """
+    route = u'dashboard.datasets' if g.user else u'user.login'
+    return redirect_to(route)
