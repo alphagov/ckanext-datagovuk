@@ -203,11 +203,17 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
+            DGUUserRegisterView,
             me,
         )
         bp = Blueprint("datagovuk", self.__module__)
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
+
+        bp.add_url_rule(
+            u"/user/register",
+            view_func=DGUUserRegisterView.as_view(str(u'register')),
+        )
 
         _user_edit_view = DGUUserEditView.as_view(str(u'edit'))
         bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
@@ -228,7 +234,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
         api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
         with SubMapper(route_map, controller=user_controller) as m:
-            m.connect('register', '/user/register', action='register')
             m.connect('/user/reset', action='request_reset')
         route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')

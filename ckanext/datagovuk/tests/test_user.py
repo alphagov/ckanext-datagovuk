@@ -180,3 +180,29 @@ class TestUserMe(helpers.FunctionalTestBase, DBTest):
             response.location,
             urljoin(config.get('ckan.site_url'), url_for("dashboard.datasets")),
         )
+
+
+class TestRegisterUser(helpers.FunctionalTestBase, DBTest):
+    def test_register_a_user_blocked(self):
+        app = helpers._get_test_app()
+        response = app.post(
+            url_for("user.register"),
+            params={
+                "name": 'newuser',
+                'fullname': 'New User',
+                'email': 'test@gov.uk',
+                'password1': 'TestPassword1',
+                'password2': 'TestPassword1',
+                "save": "1",
+            },
+            status=403,
+        )
+        self.assertFalse(model.User.by_email("test@gov.uk"))
+
+    def test_get_still_works(self):
+        app = helpers._get_test_app()
+        response = app.get(
+            url_for("user.register"),
+            status=200,
+        )
+        self.assertIn("contact us", response.body.lower())
