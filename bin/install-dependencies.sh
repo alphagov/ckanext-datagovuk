@@ -9,7 +9,7 @@ ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='c35e1249cfb3c7b2f1286f433fd51c6fe8f05b72'
 
-ckan_sha='ckan-2.7.4'
+ckan_sha='ckan-2.8.3-dgu'
 
 pycsw_tag='2.4.0'
 
