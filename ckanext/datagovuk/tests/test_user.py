@@ -41,6 +41,30 @@ class TestUserController(helpers.FunctionalTestBase, DBTest):
         self.assertEqual(user.fullname, 'user fullname')
         self.assertEqual(user.email, 'test@test.com')
 
+    def test_create_user_via_post_responds_403(self):
+        app = self._get_test_app()
+        app.post(
+            url=url_for(controller='user', action='register'),
+            params={
+                "name": 'newuser',
+                'fullname': 'New User',
+                'email': 'test@gov.uk',
+                'password1': 'TestPassword1',
+                'password2': 'TestPassword1',
+                "save": "1",
+            },
+            status=403
+        )
+        self.assertFalse(model.User.by_email("test@gov.uk"))
+
+    def test_create_user_via_get_shows_dgu_register_page(self):
+        app = self._get_test_app()
+        response = app.get(
+            url=url_for(controller='user', action='register'),
+            status=200
+        )
+        assert 'https://data.gov.uk/support' in response
+
     def test_edit_user_form_password_too_short(self):
         user = factories.User(password='pass')
         app = self._get_test_app()
