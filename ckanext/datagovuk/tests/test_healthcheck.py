@@ -1,7 +1,12 @@
 import unittest
-from ckanext.datagovuk.controllers.healthcheck import HealthcheckController
+
+import ckan.tests.helpers as helpers
+
 
 class TestHealthcheck(unittest.TestCase):
-    def test_healthcheck_controller(self):
-        healthcheck = HealthcheckController()
-        self.assertEqual(healthcheck.healthcheck(), 'OK')
+    def test_healthcheck(self):
+        app = helpers._get_test_app()
+        with app.flask_app.test_client() as client:
+            resp = client.get("/healthcheck")
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.get_data(as_text=True), "OK")

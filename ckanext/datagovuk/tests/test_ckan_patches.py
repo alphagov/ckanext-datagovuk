@@ -10,16 +10,16 @@ from ckanext.datagovuk.tests.db_test import DBTest
 
 class TestLogin(DBTest):
     def test_validate_password__ok(self):
-        user_dict = factories.User(password='hello')
+        user_dict = factories.User(password='helloworld')
         user = model.User.get(user_dict['id'])
 
-        self.assertTrue(user.validate_password('hello'))
+        self.assertTrue(user.validate_password('helloworld'))
 
     def test_validate_password__wrong_password(self):
-        user_dict = factories.User(password='hello')
+        user_dict = factories.User(password='helloworld')
         user = model.User.get(user_dict['id'])
 
-        self.assertFalse(user.validate_password('wrong'))
+        self.assertFalse(user.validate_password('goodbyeworld'))
 
     def test_validate_password__drupal_ok(self):
         # Drupal hash

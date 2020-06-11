@@ -18,6 +18,8 @@ from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 from pylons.wsgiapp import PylonsApp
 
+from flask import Blueprint
+
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
@@ -28,6 +30,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IDatasetForm, inherit=True)
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.IRoutes, inherit=True)
@@ -194,19 +197,46 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'user_password_validator_dgu': user_password_validator,
         }
 
+    # IBlueprint
+
+    def get_blueprint(self):
+        from ckanext.datagovuk.views.healthcheck import healthcheck
+        from ckanext.datagovuk.views.user import (
+            DGUUserEditView,
+            DGUUserRegisterView,
+            DGUUserRequestResetView,
+            me,
+        )
+        bp = Blueprint("datagovuk", self.__module__)
+
+        bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
+
+        bp.add_url_rule(
+            u"/user/register",
+            view_func=DGUUserRegisterView.as_view(str(u'register')),
+        )
+
+        _user_edit_view = DGUUserEditView.as_view(str(u'edit'))
+        bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
+        bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
+
+        bp.add_url_rule(u'/user/me', view_func=me)
+        # also monkeypatch occurrence in original module as some views
+        # call it directly instead of redirecting externally
+        import ckan.views.user as ckan_user_views
+        ckan_user_views.me = me
+
+        bp.add_url_rule(
+            u'/user/reset',
+            view_func=DGUUserRequestResetView.as_view(str(u'request_reset')),
+        )
+
+        return bp
+
     # IRoutes
 
     def before_map(self, route_map):
-        user_controller = 'ckanext.datagovuk.controllers.user:UserController'
-        healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
         api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
-        with SubMapper(route_map, controller=user_controller) as m:
-            m.connect('register', '/user/register', action='register')
-            m.connect('/user/logged_in', action='logged_in')
-            m.connect('/user/edit', action='edit')
-            m.connect('/user/edit/{id:.*}', action='edit')
-            m.connect('/user/reset', action='request_reset')
-        route_map.connect('healthcheck', '/healthcheck', controller=healthcheck_controller, action='healthcheck')
         route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.redirect('/home', '/')
