@@ -7,7 +7,7 @@ ckan_harvest_sha='07083fe323d28e312612d2a0d6a13e2549a6db1b'
 ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='f797b5d4a025d40613df966442b7acdfead3e96d'
+ckan_spatial_sha='46b706549aaf13a4ef2451d6185d7a90a75aeb0f'
 
 ckan_sha='ckan-2.7.7'
 
