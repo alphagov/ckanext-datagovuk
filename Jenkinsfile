@@ -4,7 +4,7 @@ library("govuk")
 
 REPOSITORY = 'ckanext-datagovuk'
 
-node {
+node ('!(ci-agent-7 || ci-agent-8)') {
 
   try {
     stage('Checkout') {
