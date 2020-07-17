@@ -24,9 +24,9 @@ $pip install -U "git+https://github.com/ckan/ckanext-dcat.git@$ckan_dcat_sha#egg
 $pip install -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt)
 $pip install -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
-$pip install -U $(curl -s https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirement-setuptools.txt)
-$pip install -r https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirements.txt
-$pip install -Ue "git+https://github.com/ckan/ckan.git@$ckan_sha#egg=ckan"
+$pip install -U $(curl -s https://raw.githubusercontent.com/alphagov/ckan/$ckan_sha/requirement-setuptools.txt)
+$pip install -r https://raw.githubusercontent.com/alphagov/ckan/$ckan_sha/requirements.txt
+$pip install -Ue "git+https://github.com/alphagov/ckan.git@$ckan_sha#egg=ckan"
 
 $pip install -r requirements.txt
 
