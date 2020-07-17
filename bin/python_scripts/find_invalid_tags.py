@@ -8,13 +8,7 @@
 # python find_invalid_tags.py
 #
 
-import io
-import os
-import sys
-import psycopg2
-import subprocess
-
-import logging
+import csv, io, logging, os, psycopg2, subprocess, sys
 
 from ckan.logic.schema import default_tags_schema
 from ckan.lib.navl.dictization_functions import validate, Invalid
@@ -44,8 +38,23 @@ def get_all_tags():
     cursor = connection.cursor()
     sql = """
     SELECT tag.name, count(tag.name) FROM tag, package, package_tag
-    WHERE tag.id = package_tag.tag_id AND package.id = package_tag.package_id AND package.state = 'active'
+    WHERE tag.id = package_tag.tag_id AND package.id = package_tag.package_id 
+    AND package.state = 'active' AND package_tag.state = 'active'
     GROUP BY tag.name ORDER BY count(tag.name) DESC;
+    """
+
+    cursor.execute(sql)
+    return cursor
+
+
+def get_tag_data():
+    cursor = connection.cursor()
+    sql = """
+    SELECT tag.name, package_tag.package_id, package_tag.tag_id, tag.vocabulary_id 
+    FROM tag, package, package_tag
+    WHERE tag.id = package_tag.tag_id AND package.id = package_tag.package_id 
+    AND package.state = 'active' AND package_tag.state = 'active'
+    ORDER BY tag.name;
     """
 
     cursor.execute(sql)
@@ -56,6 +65,29 @@ def create_tag_list(rows):
     with io.open("invalid_tags.txt", "w+", encoding="utf-8") as f:
         f.writelines(rows)
     logger.info('TXT - Written %s lines to invalid_tags.txt', len(rows) - 1)
+
+
+def create_invalid_tag_data(invalid_tags):
+    counter = 0
+    with io.open("invalid_tags_data.csv", "wb") as f:
+        fieldnames = ['index', 'tag_name', "package_id", "tag_id", "vocabulary_id"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for i, tag in enumerate(get_tag_data()):
+            tag_name, package_id, tag_id, vocabulary_id = tag
+            if tag_name in invalid_tags:
+                counter += 1
+                writer.writerow(
+                    {
+                        "index": str(i + 1),
+                        "tag_name": tag_name,
+                        "package_id": package_id,
+                        "tag_id": tag_id,
+                        "vocabulary_id": vocabulary_id
+                    }
+                )
+
+    logger.info('CSV - Written %s lines to invalid_tags_data.csv', counter)
 
 
 def patch_translator():
@@ -85,6 +117,7 @@ def main():
     logger.info('====================================================================')
 
     rows = []
+    invalid_tags = []
     total_count = 0
 
     for i, tag in enumerate(get_all_tags()):
@@ -95,11 +128,17 @@ def main():
         if errors:
             total_count += count
             logger.info('Errors: %s', errors)
-            rows.append(u">>> {} - {}, {}, {}".format(len(rows) + 1, tag_name_utf8, count, ','.join(errors['name'] if errors else [])) + '\n')
+            invalid_tags.append(tag_name)
+            rows.append(
+                u">>> {} - {}, {}, {}".format(
+                    len(rows) + 1, tag_name_utf8, count, ','.join(errors['name'] if errors else []
+                )) + '\n')
 
     rows.append(u'======\nTotal affected datasets: {}'.format(total_count))
     create_tag_list(rows)
- 
+
+    create_invalid_tag_data(invalid_tags)
+
     logger.info('Processing complete')
 
 if __name__ == "__main__":
