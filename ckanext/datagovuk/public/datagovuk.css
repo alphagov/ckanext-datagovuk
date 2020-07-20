@@ -204,3 +204,7 @@ p.home-footer-text {
 label.checkbox[for=field-remember] {
   margin-left: 20px;
 }
+
+input {
+  height: 1.75em;
+}
