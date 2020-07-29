@@ -13,7 +13,7 @@ ckan_sha='ckan-2.8.3-dgu'
 
 pycsw_tag='2.4.0'
 
-pipopt='--exists-action=s'
+pipopt='--exists-action=b'
 
 $pip install $pipopt -U pip
 
