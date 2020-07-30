@@ -8,6 +8,10 @@ body {
   background: #FFF;
 }
 
+.masthead {
+  margin-bottom: 0;
+}
+
 .masthead .navigation .nav-pills li a,
 .masthead .navigation .nav-pills li.active a {
 
