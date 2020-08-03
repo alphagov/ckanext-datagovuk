@@ -156,6 +156,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # IPackageController
 
+    def before_index(self, data_dict):
+        return schema_defs.trim_strings_for_index(data_dict)
+
     def after_show(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] != 'harvest':
             harvest_object = model.Session.query(HarvestObject) \

@@ -46,6 +46,13 @@ Config Settings
 
 Document any optional config settings here.
 
+ - ``ckan.datagovuk.trim_strings_for_index_limit``: when indexing packages, string
+   fields will be truncated to this length unless they are known to be under a
+   text-indexed key. Solr 6 has a field limit of 32k for string fields, but note
+   that our truncation is applied per-json-value, and a Solr value can contain
+   multiple json values which then get squashed together to a single field value,
+   so using a number under half Solr's limit is wise.
+
 
 ------------------------
 Development Installation
