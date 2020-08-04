@@ -70,12 +70,14 @@ def create_tag_list(rows):
 def create_invalid_tag_data(invalid_tags):
     counter = 0
     with io.open("invalid_tags_data.csv", "wb") as f:
-        fieldnames = ['index', 'tag_name', "package_id", "tag_id", "vocabulary_id"]
+        fieldnames = ['index', 'tag_name', "package_id", "tag_id", "vocabulary_id", "errors"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for i, tag in enumerate(get_tag_data()):
             tag_name, package_id, tag_id, vocabulary_id = tag
-            if tag_name in invalid_tags:
+            if tag_name in [tag for tag, _ in invalid_tags]:
+                invalid_tags_dict = dict(invalid_tags)
+                errors = invalid_tags_dict[tag_name]
                 counter += 1
                 writer.writerow(
                     {
@@ -83,7 +85,8 @@ def create_invalid_tag_data(invalid_tags):
                         "tag_name": tag_name,
                         "package_id": package_id,
                         "tag_id": tag_id,
-                        "vocabulary_id": vocabulary_id
+                        "vocabulary_id": vocabulary_id,
+                        "errors": errors
                     }
                 )
 
@@ -128,7 +131,7 @@ def main():
         if errors:
             total_count += count
             logger.info('Errors: %s', errors)
-            invalid_tags.append(tag_name)
+            invalid_tags.append((tag_name, errors['name']))
             rows.append(
                 u">>> {} - {}, {}, {}".format(
                     len(rows) + 1, tag_name_utf8, count, ','.join(errors['name'] if errors else []
