@@ -1,4 +1,5 @@
 import logging
+from pylons import config
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -309,12 +310,16 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # IMiddleware
 
+    def before_send(self, event, hint):
+        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] \
+            else event
+
     def make_middleware(self, app, config):
         # we get this called twice, once for Flask and once for Pylons
         if isinstance(app, PylonsApp):
             return SentryWsgiMiddleware(app)
         else:
-            sentry_sdk.init(integrations=[FlaskIntegration()])
+            sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
             return app
 
     # IResourceController
