@@ -91,6 +91,8 @@ setup(
 
         [paste.paster_command]
         passwords_reset = ckanext.datagovuk.lib.cli:PasswordResetsCommand
+        create_dgu_test_data = ckanext.datagovuk.lib.cli:CreateDGUTestDataCommand
+        remove_dgu_test_data = ckanext.datagovuk.lib.cli:RemoveDGUTestDataCommand
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
