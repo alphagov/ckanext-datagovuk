@@ -57,7 +57,7 @@ def remove_invalid_tags(live=False):
 
     try:
         cursor = connection.cursor()
-        with io.open("invalid_tags_data.csv", "r", encoding="utf-8") as f:
+        with io.open("invalid_tags_data.csv", "rb") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if row['tag_id'] in invalid_tags:
@@ -128,6 +128,12 @@ def remove_invalid_tags(live=False):
                     logger.info("SOLR - reindexing %s", row['package_id'])
                     paster_command = 'paster --plugin=ckan search-index rebuild {} --config {}'.format(
                         row['package_id'], '/srv/app/production.ini' if is_dev() else '/var/ckan/ckan.ini')
+
+                    try:
+                        subprocess.check_call(paster_command, shell=True)
+                    except Exception as exception:
+                        logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
+
     finally:
         cursor.close()
 
