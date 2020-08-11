@@ -122,10 +122,17 @@ class CreateDGUTestDataCommand(CkanCommand):
         if not model.Package.by_name(u"example-harvest-1"):
             print('=== Creating harvest source')
 
+            version = ''
+            if "ckan@db" in config.get('sqlalchemy.url'):
+                if '5001' in config.get('ckan.site_url'):
+                    version = '-2.8'
+                elif '5002' in config.get('ckan.site_url'):
+                    verions = '-2.9'
+
             source_dict = {
                 'title': 'Example Harvest #1',
                 'name': 'example-harvest-1',
-                'url': "http://static-mock-harvest-source:11088/"\
+                'url': "http://static-mock-harvest-source{}:11088/".format(version)\
                     if "ckan@db" in config.get('sqlalchemy.url') else \
                     "https://ckan-static-mock-harvest-source.cloudapps.digital/",
                 'source_type': 'ckan',
