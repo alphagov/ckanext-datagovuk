@@ -254,9 +254,11 @@ class RemoveDGUTestDataCommand(CkanCommand):
 
         sql = '''
         DELETE FROM package_extra_revision WHERE package_id in (SELECT id FROM package WHERE name='example-harvest-1'); 
-        DELETE FROM package_extra WHERE package_id IN (SELECT id FROM package WHERE name='example-harvest-1'); 
-        DELETE FROM package_revision WHERE name = 'example-harvest-1'; 
-        DELETE FROM package WHERE name = 'example-harvest-1'; 
+        DELETE FROM package_extra WHERE package_id IN (SELECT id FROM package WHERE name='example-harvest-1');
+        DELETE FROM package_revision WHERE name = 'example-harvest-1';
+        DELETE FROM package WHERE name = 'example-harvest-1';
+        DELETE FROM harvest_object WHERE harvest_source_id IN (SELECT id FROM harvest_source WHERE title = 'Example Harvest #1');
+        DELETE FROM harvest_job WHERE source_id IN (SELECT id FROM harvest_source WHERE title = 'Example Harvest #1');
         DELETE FROM harvest_source WHERE title = 'Example Harvest #1';
         DELETE FROM member_revision WHERE group_id IN (SELECT id FROM "group" WHERE name = 'example-publisher-1');
         DELETE FROM member WHERE group_id IN (SELECT id FROM "group" WHERE name = 'example-publisher-1');
