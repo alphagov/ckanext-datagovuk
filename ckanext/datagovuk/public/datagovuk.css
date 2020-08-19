@@ -99,6 +99,7 @@ p.home-text {
 
 .home-footer {
   color: #000;
+  background: #ffffff;
 }
 
 h1.home-footer-heading {
@@ -110,3 +111,6 @@ p.home-footer-text {
   line-height: 1.5;
 }
 
+.homepage {
+  background: #128400;
+}

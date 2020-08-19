@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+{% block flash %}
+{{ super() }}
+<div class="alert alert-warning">
+  <p>There will be a publishing freeze from 06:30am on 27 August to 11:59pm to 28 August. You won't be able to publish, edit or delete datasets while we upgrade the data publishing tool.</p>
+  <p>There will not be any downtime for visitors – only publishing will be affected.</p>
+</div>
+{% endblock %}
