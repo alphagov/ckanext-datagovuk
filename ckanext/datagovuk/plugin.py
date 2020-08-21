@@ -208,7 +208,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
             DGUUserRegisterView,
-            DGUUserRequestResetView,
             me,
         )
         bp = Blueprint("datagovuk", self.__module__)
@@ -229,11 +228,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # call it directly instead of redirecting externally
         import ckan.views.user as ckan_user_views
         ckan_user_views.me = me
-
-        bp.add_url_rule(
-            u'/user/reset',
-            view_func=DGUUserRequestResetView.as_view(str(u'request_reset')),
-        )
 
         return bp
 
