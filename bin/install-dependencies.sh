@@ -9,7 +9,7 @@ ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='46b706549aaf13a4ef2451d6185d7a90a75aeb0f'
 
-ckan_sha='ckan-2.8.5-dgu'
+ckan_sha='568bc076ae4d42f8de53a1e3c62f413d17308abf'  # ckan-2.8.5-dgu HEAD at time of commit
 
 pycsw_tag='2.4.0'
 
