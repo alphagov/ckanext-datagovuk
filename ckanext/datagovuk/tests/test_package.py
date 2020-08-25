@@ -1,9 +1,13 @@
+from copy import deepcopy
+import json
+
 from bs4 import BeautifulSoup
-from mock import patch
+import mock
 from routes import url_for
 
 import ckan.plugins
 from ckan import model
+from ckan.lib.search import PackageSearchIndex
 from ckan.tests import factories, helpers
 from ckanext.datagovuk.tests.db_test import DBTest
 
@@ -56,7 +60,7 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
 
 
     ## Test organogram file upload
-    @patch("ckan.lib.helpers.uploader.get_storage_path", return_value='./')
+    @mock.patch("ckan.lib.helpers.uploader.get_storage_path", return_value='./')
     def test_resource_create_organogram_file_upload(self, mock_uploads_enabled):
         '''
         This should fail in 2.8 as the `upload` button isn't showing due to a
@@ -116,6 +120,74 @@ class TestPackageController(helpers.FunctionalTestBase, DBTest):
         assert 'name' in form.fields
         assert 'datafile-date' in form.fields
         assert 'format' in form.fields
+
+
+    ## Tests for indexing the package
+
+    @mock.patch("pysolr.Solr", autospec=True)
+    def test_package_indexing_truncates_unsafe_fields(self, mock_solr):
+        app = self._get_test_app()
+        with app.flask_app.test_request_context():
+            index = PackageSearchIndex()
+            try:
+                submitted = {
+                    "id": "test-index",
+                    "name": "monkey",
+                    "title": "Monkey",
+                    "state": "active",
+                    "private": False,
+                    "type": "dataset",
+                    "owner_org": None,
+                    "metadata_created": "2020-06-06T12:12:12.000000Z",
+                    "metadata_modified": "2020-06-06T12:12:12.000000Z",
+                    "notes": "something " + ("really " * 20000) + "long",
+                    "extras_foo": [
+                        "another " + ("really " * 20000) + "long field",
+                        {"something": "smaller"},
+                    ],
+                    "status": {
+                        "boo": 1,
+                        "bar": 0,
+                        "baz": [
+                            "short",
+                            "short",
+                            "l" + ("o" * 30000) + "ng",
+                        ],
+                    },
+                }
+                submitted["foo"] = deepcopy(submitted["extras_foo"])
+
+                expected = deepcopy(submitted)
+                expected["foo"][0] = expected["foo"][0][:15000]
+                expected["status"]["baz"][2] = expected["status"]["baz"][2][:15000]
+                # indexer alters these
+                expected["metadata_created"] = mock.ANY
+                expected["metadata_modified"] = mock.ANY
+
+                index.index_package(submitted)
+
+                self.assertEqual(len(mock_solr.return_value.add.mock_calls), 1)
+                self.assertEqual(len(mock_solr.return_value.add.mock_calls[0][2]["docs"]), 1)
+
+                actual = mock_solr.return_value.add.mock_calls[0][2]["docs"][0]
+                # indexer adds a bunch of keys we don't care about and can't predict
+                actual_common = {
+                    k: v
+                    for k, v in actual.items()
+                    if k in expected
+                }
+                self.assertEqual(
+                    expected,
+                    actual_common,
+                )
+
+                try:
+                    # data_dict must still be valid json
+                    json.loads(actual["data_dict"])
+                except Exception as e:
+                    self.fail(e)
+            finally:
+                index.clear()
 
 
     ## Tests for rendering the forms

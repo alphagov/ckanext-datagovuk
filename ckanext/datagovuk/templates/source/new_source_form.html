@@ -22,9 +22,9 @@
 
   {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
 
-  <div class="harvest-types control-group">
-    <label class="control-label">Source type</label>
-    <div class="controls">
+  <div class="form-group harvest-types control-group control-full">
+    <label class="control-label col-md-3">Source type</label>
+    <div class="controls col-md-9">
       {% for harvester in h.harvesters_info() %}
         {% set checked = False %}
         {# select first option if nothing in data #}
@@ -59,9 +59,9 @@
 
   {% if show_organizations_selector %}
     {% set existing_org = data.owner_org %}
-    <div class="control-group">
-      <label for="field-organizations" class="control-label">{{ _('Organization') }}</label>
-      <div class="controls">
+    <div class="form-group control-group">
+      <label for="field-organizations" class="control-label col-md-3">{{ _('Organization') }}</label>
+      <div class="controls col-md-9">
         <select id="field-organizations" name="owner_org" data-module="autocomplete">
           <option value="" {% if not selected_org and data.id %} selected="selected" {% endif %}>{{ _('No organization') }}</option>
           {% for organization in organizations_available %}
@@ -74,15 +74,15 @@
     </div>
   {% endif %}
 
-  <div class="control-group">
-    {{ _("Metadata fields from harvested datasets will be publicly available to users - including (where provided to us) personal information such as contact details for responsible parties.") }}
+  <div class="form-group control-group">
+    <p>{{ _("Metadata fields from harvested datasets will be publicly available to users - including (where provided to us) personal information such as contact details for responsible parties.") }}</p>
   </div>
 
   {% if data.get('id', None) and h.check_access('harvest_source_delete', {'id': data.id}) and data.get('state', 'none') == 'deleted' %}
-    <div class="control-group">
-      <label for="field-state" class="control-label">{{ _('State') }}</label>
-      <div class="controls">
-        <select id="field-state" name="state">
+    <div class="form-group control-group">
+      <label for="field-state" class="control-label col-md-3">{{ _('State') }}</label>
+      <div class="controls col-md-9">
+        <select id="field-state" class="form-control" name="state">
           <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
           <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
         </select>
@@ -90,16 +90,16 @@
     </div>
   {% endif %}
 
-  <p class="form-actions">
+  <div class="form-group form-actions u-overflow-visible">
     {% block delete_button %}
       {% if data.get('id', None) and h.check_access('harvest_source_delete', {'id': data.id}) and not data.get('state', 'none') == 'deleted' %}
         {% set locale_delete = h.dump_json({'content': _('This will flag the source as deleted but keep all its datasets and previous jobs. Are you sure you want to delete this harvest source?')}) %}
         {% set locale_clear = h.dump_json({'content': _('Warning: Apart from deleting this source, this command will remove all its datasets, as well as all previous job reports. Are you sure you want to continue?')}) %}
   <div class="dropdown btn-group">
-    <a href="#" class="btn btn-danger dropdown-toggle" data-toggle="dropdown">
+    <button class="btn btn-danger dropdown-toggle" data-toggle="dropdown">
       {{ _('Delete') }}
       <span class="caret"></span>
-    </a>
+    </button>
     <ul class="dropdown-menu">
       <li>
         <a href="{% url_for 'harvest_delete', id=data.name %}" data-module="confirm-action" data-module-i18n="{{ locale_delete }}">
@@ -117,6 +117,6 @@
     {% endblock %}
 
     <button id="save" name="save" type="submit" class="btn btn-primary">Save</button>
-  </p>
+  </div>
 
 </form>

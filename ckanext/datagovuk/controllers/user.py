@@ -28,6 +28,8 @@ class UserController(UserController):
         from ckanext.datagovuk.schema import user_edit_form_schema
         return user_edit_form_schema()
 
+    # intention: redirect users to dashboard_datasets instead of dashboard
+    # not covered by tests
     def me(self, locale=None):
         if not c.user:
             h.redirect_to(locale=locale, controller='user', action='login',
@@ -35,6 +37,8 @@ class UserController(UserController):
         user_ref = c.userobj.get_reference_preferred_for_uri()
         h.redirect_to(locale=locale, controller='user', action='dashboard_datasets')
 
+    # intention: 8 character limit instead of 4
+    # not covered by tests
     def _get_form_password(self):
         password1 = request.params.getone('password1')
         password2 = request.params.getone('password2')
@@ -48,6 +52,8 @@ class UserController(UserController):
             return password1
         raise ValueError(_('You must provide a password'))
 
+    # intention: allow password to be reset by email, not just username
+    # not covered by tests
     def request_reset(self):
         context = {'model': model, 'session': model.Session, 'user': c.user,
                    'auth_user_obj': c.userobj}

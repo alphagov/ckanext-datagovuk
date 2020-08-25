@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import unittest
+
 import ckan.plugins.toolkit as toolkit
 import ckan.tests.helpers as helpers
 import ckanext.datagovuk.plugin as plugin
@@ -19,8 +20,10 @@ class TestPaths(unittest.TestCase):
         self.assertEqual(path, '/harvest')
 
     def test_healthcheck_path(self):
-        path = toolkit.url_for('healthcheck')
-        self.assertEqual(path, '/healthcheck')
+        app = helpers._get_test_app()
+        with app.flask_app.test_request_context():
+            path = toolkit.url_for('datagovuk.healthcheck')
+            self.assertEqual(path, '/healthcheck')
 
     def test_home_path_redirects_to_index(self):
         app = helpers._get_test_app()

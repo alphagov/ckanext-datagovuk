@@ -8,6 +8,10 @@ body {
   background: #FFF;
 }
 
+.masthead {
+  margin-bottom: 0;
+}
+
 .masthead .navigation .nav-pills li a,
 .masthead .navigation .nav-pills li.active a {
 
@@ -59,14 +63,6 @@ a.btn .icon-briefcase {
   background-position: 36px 17px;
 }
 
-.form-horizontal .control-label {
-  width: 140px;
-}
-
-.form-horizontal .controls {
-  margin-left: 145px;
-}
-
 .controls #field-schema-vocabulary,
 .controls #field-codelist {
   width: 100%;
@@ -111,6 +107,109 @@ p.home-footer-text {
   line-height: 1.5;
 }
 
-.homepage {
-  background: #128400;
+@media (max-width: 767px) {
+  .toolbar .breadcrumb a {
+    color: #505050;
+  }
+}
+
+.form-control {
+  margin-bottom: 14px;
+}
+
+.control-label {
+  text-align: right;
+  padding-right: 0;
+  padding-top: 4px;
+}
+
+.control-full input[type=radio]{
+  width: auto;
+  margin-left: 0;
+}
+
+.harvest-types label.radio {
+  margin-bottom: 0;
+}
+
+.harvest-types label.radio input{
+  top: -1px;
+}
+
+.editor-info-block {
+  margin-top: -14px;
+  margin-bottom: 14px;
+}
+
+.float-container,
+.form-group {
+  overflow: auto;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-control {
+  height: 32px;
+}
+
+.select2-container.form-control {
+  padding: 0;
+  border: 0;
+}
+
+.select2-drop {
+  margin-top: -7px;
+}
+
+.select2-drop.select2-drop-above {
+  margin-top: -3px;
+}
+
+.form-actions {
+  padding-top: 14px;
+  border-top: 1px solid #707070;
+}
+
+.btn-danger {
+  background-image: linear-gradient(to bottom,#ee5f5b,#bd362f);
+}
+
+.btn-primary {
+  background-image: linear-gradient(to bottom,#30778d,#085871);
+}
+
+.js .image-upload .btn-remove-url {
+  margin-right: 15px;
+}
+
+.error .input-group-addon {
+  float: left;
+  display: block;
+  width: auto;
+}
+
+.error-block {
+  margin-top: -2px;
+}
+
+.error .form-control {
+  margin-bottom: -4px;
+}
+
+.u-overflow-hidden {
+  overflow: hidden;
+}
+
+.u-overflow-visible {
+  overflow: visible;
+}
+
+label.checkbox[for=field-remember] {
+  margin-left: 20px;
+}
+
+input {
+  height: 1.75em;
 }
