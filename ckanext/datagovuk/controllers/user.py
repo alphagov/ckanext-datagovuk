@@ -18,6 +18,7 @@ NotAuthorized = logic.NotAuthorized
 ValidationError = logic.ValidationError
 UsernamePasswordError = logic.UsernamePasswordError
 
+
 class UserController(UserController):
     def _new_form_to_db_schema(self):
         from ckanext.datagovuk.schema import user_new_form_schema
@@ -108,3 +109,7 @@ class UserController(UserController):
                                   unicode(e))
         return render('user/request_reset.html')
 
+    def new(self, data=None, errors=None, error_summary=None):
+        if request.method == 'POST':
+            abort(403, _('Unauthorized to create a user')) 
+        return super(UserController, self).new(data=data, errors=errors, error_summary=error_summary)

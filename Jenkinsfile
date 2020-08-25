@@ -4,7 +4,7 @@ library("govuk")
 
 REPOSITORY = 'ckanext-datagovuk'
 
-node ('ci-agent-7 || ci-agent-8') {
+node ('!(ci-agent-4)') {
 
   try {
     stage('Checkout') {
@@ -24,9 +24,19 @@ node ('ci-agent-7 || ci-agent-8') {
       sh("bash -c 'source venv/bin/activate ; ./bin/jenkins-tests.sh'")
     }
 
+    if (govuk.hasDockerfile()) {
+      govuk.dockerBuildTasks([:], "ckan")
+    }
+
     if (env.BRANCH_NAME == 'master') {
       stage('Push release tag') {
         govuk.pushTag(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER)
+      }
+
+      if (govuk.hasDockerfile()) {
+        stage("Tag Docker image") {
+          govuk.dockerTagMasterBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
+        }
       }
 
       stage('Deploy to Integration') {

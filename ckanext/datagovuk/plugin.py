@@ -314,7 +314,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # IMiddleware
 
     def before_send(self, event, hint):
-        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] \
+        return None if [i for i in ['localhost', 'integration', 'staging'] if i in config.get('ckan.site_url')] \
             else event
 
     def make_middleware(self, app, config):
