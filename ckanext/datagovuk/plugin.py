@@ -205,6 +205,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def get_blueprint(self):
         from ckanext.datagovuk.views.healthcheck import healthcheck
+        from ckanext.datagovuk.views.accessibility import accessibility
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
             DGUUserRegisterView,
@@ -214,6 +215,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         bp = Blueprint("datagovuk", self.__module__)
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
+        bp.add_url_rule(u"/accessibility", view_func=accessibility)
 
         bp.add_url_rule(
             u"/user/register",

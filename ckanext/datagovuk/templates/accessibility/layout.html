@@ -1,0 +1,70 @@
+<h1>Accessibility statement for ckan.publishing.service.gov.uk</h1>
+        
+        <p>This statement applies to ckan.publishing.services.gov.uk.</p>
+        <p>This website is run by Government Digital Service. We want as many people as possible to be able to use this website. For example, that means you should be able to:</p>
+        <ul>
+          <li>Navigate most of the website using just a keyboard</li>
+          <li>Navigate most of the website using speech recognition software</li>
+          <li>Listen to most of the website using a screen reader (including the most recent versions of JAWS, NVDA and VoiceOver)</li>
+        </ul>
+        <p><a href="https://mcmw.abilitynet.org.uk/">AbilityNet</a> has advice on making your device easier to use if you have a disability.</p>
+
+        <h3>How accessible this website is</h3>
+        <p>We know some parts of this website are not fully accessible:</p>
+        <ul>
+          <li>Certain dropdown fields across the site behave strangely when interacted with using screen readers</li>
+          <li>Not all fields are built in a way that makes them easy to interact with if visually impaired</li>
+          <li>Several forms across the site make use of a pop-up modal window which doesn’t notify users that it has been opened</li>
+          <li>Several forms use a “slug preview” component which doesn’t cater to visually impaired users</li>
+          <li>This site uses icons, several of which are not presented in a way that communicates to visually impaired users what they signify</li>
+          <li>Headings are inconsistent across the site and make navigating using headings difficult</li>
+          <li>Pages that use breadcrumbs will use links on their “active” breadcrumb which doesn’t communicate where they go or what they are for</li>
+          <li>Error messages throughout the site don’t use clear language</li>
+          <li>There is no way for keyboard users or screen reader users to go straight to page content</li>
+          <li>Certain page elements are built in a way that navigating through the site using keyboard results in certain page elements getting highlighted seemingly out of order</li>
+          <li>There are several examples of poor colour contrast across the site</li>
+        </ul>
+
+        <h3>Feedback and contact information</h3>
+        <p>If you need information on this website, you can contact the team via <a href="https://data.gov.uk/support">the data.gov.uk support page</a>.</p>
+        <p>We’ll consider your request and get back to you as soon as possible.</p>
+
+        <h3>Reporting accessibility problems with this website</h3>
+        <p>We’re always looking to improve the accessibility of this website. If you find any problems not listed on this page or think we’re not meeting accessibility requirements, contact us via the above contact details.</p>
+
+        <h3>Enforcement procedure</h3>
+        <p>The Equality and Human Rights Commission (EHRC) is responsible for enforcing the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018 (the ‘accessibility regulations’). If you’re not happy with how we respond to your complaint, <a href="https://www.equalityadvisoryservice.com/">contact the Equality Advisory and Support Service (EASS)</a>.</p>
+
+        <h2>Technical information about this website’s accessibility</h2>
+        <p>Government Digital Service is committed to making its website accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018.</p>
+
+        <h3>Compliance status</h3>
+        <p>This website is not compliant with the <a href="https://www.w3.org/TR/WCAG21/">Web Content Accessibility Guidelines version 2.1</a> AA standard. The exemptions are listed below.</p>
+
+        <h2>Non-accessible content</h2>
+        <p>The content listed below is non-accessible for the following reasons.</p>
+
+        <h3>Non-compliance with the accessibility regulations</h3>
+        <p>Several dropdown input fiends do not behave as expected when interacting with them using a screen reader. There isn’t any non-visual feedback to indicate that interaction is altering the page that a user is on at all. Screen reader users will not be able to interact with these specific input fields in a meaningful way. This fails WCAG 2.1 success criterion 4.1.2.</p>
+        <p>Several forms throughout the site use a modal window component. When a user interacts with something that would trigger the appearance of a modal window instance, there is no feedback to screen reader users that there is now a modal window as the central point of focus on the page. Additionally, in attempting to navigate to the modal window using keyboard or screen reader navigation, the user must go all the way through the page to reach the modal window markup. This fails WCAG 2.1 success criterion 2.4.3.</p>
+        <p>Several forms throughout the site use a slug preview component. This is a visual element that sits underneath critical name input fields and will auto-fill a slug for the element that is being created or edited. Users also have the choice to select a button next to the component, revealing an input field where they can enter a custom value to override the auto-filled value. For visually impaired users, there is no indication that this component and form field exists and no feedback to the user when they navigate past that component on the page. Also, if a user submits a form using the slug preview they will receive an error message that they have not filled in the slug field. This fails WCAG 2.1 success criteria 3.3.2, 3.3.3 and 4.1.2.</p>
+        <p>Use of headings throughout the site are inconsistent. Often there isn’t a heading that clearly describes what the page is. This fails WCAG 2.1 success criteria 2.4.6 and 3.2.3.</p>
+        <p>Several pages use a breadcrumb component. The “active” breadcrumb in this component is often a link but this is inconsistent across the site, both in terms of how the element behaves and where the element links to if it is a link. This fails WCAG success criterion 3.2.3.</p>
+        <p>The site uses unicode icons as presentational elements. There are several instances where these icons are used as the sole identifier of a link or an instruction without any additional labelling to inform visually impaired users what they would be interacting with. This fails WCAG success criterion 1.1.1.</p>
+        <p>Error messages used on forms are not always clear. Some error messages will initially refer to different input names compared to the input which is raising the error messages and some are suffering from overt bugs, with unusual content appearing as part of the error message. This fails WCAG success criterion 3.3.1.</p>
+        <p>There is no way to bypass the common navigation at the top of the page and go directly to the main content on site pages. This fails WCAG success criterion 2.4.1.</p>
+        <p>Several pages that use sub-navigation elements will appear in the wrong order when navigating using keyboard only. This fails WCAG criterion 2.4.3.</p>
+        <p>There are several examples of poor colour contrast across the site. This fails WCAG criterion 1.4.3.</p>
+
+        <h3>Content that’s not within the scope of the accessibility regulations</h3>
+        <h4>PDFs and other documents</h4>
+        <p>A central component of this service is the provision of open data. This is achieved primarily through providing publishers the ability to link to and organise data that they want to make publicly available and, in certain circumstances, hosting the data ourselves.</p>
+        <p>Whilst we discourage this practice, sometimes this data is in the form of documents in formats such as Word or PDF. We do not have precedent over the accessibility of these documents. It is the responsibility of the individual or governing body uploading said document to ensure that it is accessible.</p>
+
+        <h2>What we’re doing to improve accessibility</h2>
+        <p>In September 2020, the Government Digital Service team will be conducting research and review into this service, seeking ways to make it as effective in delivering it’s intended service as possible. Accessibility will be included in this process. Further information will be included in this statement following this review.</p>
+
+        <h2>Preparation of this accessibility statement</h2>
+        <p>This statement was prepared on 14/07/2020. It was last reviewed on 01/09/2020.</p>
+        <p>This website was last tested on 06/07/2020. This test was carried out internally by the Government Digital Service team.</p>
+        <p>We based this testing off of <a href="https://www.gov.uk/government/publications/doing-a-basic-accessibility-check-if-you-cant-do-a-detailed-one/doing-a-basic-accessibility-check-if-you-cant-do-a-detailed-one">Government Digital Service's own accessibility checking guidance</a>.</p>

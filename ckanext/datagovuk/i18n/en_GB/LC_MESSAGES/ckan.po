@@ -3239,6 +3239,9 @@ msgstr "data.gov.uk is built by Government Digital Service"
 msgid "Contact support"
 msgstr "Contact support"
 
+msgid "View the accessibility statement for ckan.publishing.service.gov.uk"
+msgstr "View the accessibility statement for ckan.publishing.service.gov.uk"
+
 #: ckan/templates/home/snippets/search.html:2
 msgid "E.g. environment"
 msgstr "E.g. environment"
