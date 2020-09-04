@@ -316,10 +316,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # IMiddleware
 
     def before_send(self, event, hint):
-        # disable sentry while CKAN is processing objects which have timed out due to upgrade
-        return None
-        # return None if [i for i in ['localhost', 'integration', 'staging'] if i in config.get('ckan.site_url')] \
-        #     else event
+        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] \
+            else event
 
     def make_middleware(self, app, config):
         # we get this called twice, once for Flask and once for Pylons
