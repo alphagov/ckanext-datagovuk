@@ -56,3 +56,26 @@ class TestPlugin(unittest.TestCase):
         assert ('__junk',) in data
         assert ('invalid', 0, 'key') in data[('__junk',)]
         assert ('invalid', 0, 'value') in data[('__junk',)]
+
+    def test_plugin_before_send(self):
+        mock_event  = {
+            'logentry': {
+                'message': 'System error'
+            }
+        }
+        response = DatagovukPlugin().before_send(mock_event, '')
+
+        assert response == mock_event
+
+    def test_plugin_before_send_ignores_data_errors(self):
+        mock_events = [
+            {'logentry': {'message': 'Found more than one dataset with the same guid xxx'}},
+            {'logentry': {'message': 'Errors found for object with GUID xxx'}},
+            {'logentry': {'message': 'Job timeout: xxx is taking longer than yyy minutes'}},
+            {'logentry': {'message': 'Job xxx was aborted or timed out, object yyy set to error'}},
+            {'logentry': {'message': 'Too many consecutive retries for object'}}
+        ]
+
+        for mock_event in mock_events:
+            response = DatagovukPlugin().before_send(mock_event, '')
+            assert not response

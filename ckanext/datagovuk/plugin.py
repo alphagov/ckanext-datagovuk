@@ -315,11 +315,19 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # IMiddleware
 
+    # Ignore these data errors on sentry as these would already be reported to publishers to resolve or raise
+    IGNORED_DATA_ERRORS = [
+        "Found more than one dataset with the same guid",   # DCat
+        "Errors found for object with GUID",                # Spatial
+        "Job timeout:",                                     # Harvest
+        "was aborted or timed out",                         # Harvest
+        "Too many consecutive retries for object"           # Harvest
+    ]
+
     def before_send(self, event, hint):
-        # disable sentry while CKAN is processing objects which have timed out due to upgrade
-        return None
-        # return None if [i for i in ['localhost', 'integration', 'staging'] if i in config.get('ckan.site_url')] \
-        #     else event
+        return None if [i for i in ['localhost', 'integration', 'staging'] if i in config.get('ckan.site_url')] or \
+            any(s in event['logentry']['message'] for s in self.IGNORED_DATA_ERRORS) \
+            else event
 
     def make_middleware(self, app, config):
         # we get this called twice, once for Flask and once for Pylons
