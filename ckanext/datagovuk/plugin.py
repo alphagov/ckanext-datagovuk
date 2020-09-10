@@ -325,7 +325,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     ]
 
     def before_send(self, event, hint):
-        return None if [i for i in ['localhost', 'integration', 'staging'] if i in config.get('ckan.site_url')] or \
+        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
             any(s in event['logentry']['message'] for s in self.IGNORED_DATA_ERRORS) \
             else event
 
