@@ -321,7 +321,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Errors found for object with GUID",                # Spatial
         "Job timeout:",                                     # Harvest
         "was aborted or timed out",                         # Harvest
-        "Too many consecutive retries for object"           # Harvest
+        "Too many consecutive retries for object",          # Harvest
+        "Harvest object does not exist:"                    # Harvest
     ]
 
     def before_send(self, event, hint):
