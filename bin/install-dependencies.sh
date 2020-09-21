@@ -2,7 +2,8 @@
 
 pip=${1-'/usr/bin/env pip'}
 
-ckan_harvest_sha='2ca4b6783957a11660343f8b2044a1998d90252d'
+ckan_harvest_fork='alphagov'
+ckan_harvest_sha='62be540a10163417295295b519ff20f880380e07'
 
 ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 
@@ -17,8 +18,8 @@ pipopt='--exists-action=b'
 
 $pip install $pipopt -U pip
 
-$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
-$pip install $pipopt -U "git+https://github.com/ckan/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
+$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
+$pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
 
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-dcat/$ckan_dcat_sha/requirements.txt)
 $pip install $pipopt -U "git+https://github.com/ckan/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat"
