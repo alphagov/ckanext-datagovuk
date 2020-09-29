@@ -1,5 +1,6 @@
 import logging
 from pylons import config
+import re
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -319,6 +320,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     IGNORED_DATA_ERRORS = [
         "Found more than one dataset with the same guid",   # DCat
         "Errors found for object with GUID",                # Spatial
+        "CSW identifier '(\w|-)+' already used, skipping",  # Spatial
         "Job timeout:",                                     # Harvest
         "was aborted or timed out",                         # Harvest
         "Too many consecutive retries for object",          # Harvest
@@ -327,7 +329,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def before_send(self, event, hint):
         return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
-            any(s in event['logentry']['message'] for s in self.IGNORED_DATA_ERRORS) \
+            any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
             else event
 
     def make_middleware(self, app, config):

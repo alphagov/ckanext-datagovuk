@@ -74,7 +74,8 @@ class TestPlugin(unittest.TestCase):
             {'logentry': {'message': 'Job timeout: xxx is taking longer than yyy minutes'}},
             {'logentry': {'message': 'Job xxx was aborted or timed out, object yyy set to error'}},
             {'logentry': {'message': 'Too many consecutive retries for object'}},
-            {'logentry': {'message': 'Harvest object does not exist: xxx'}}
+            {'logentry': {'message': 'Harvest object does not exist: xxx'}},
+            {'logentry': {'message': 'CSW identifier \'xxx-yyy-111-222\' already used, skipping'}},
         ]
 
         for mock_event in mock_events:
