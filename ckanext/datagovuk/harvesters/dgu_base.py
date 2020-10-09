@@ -2,7 +2,8 @@ import re
 import logging
 import uuid
 import datetime
-import pylons
+# import pylons
+from ckan.plugins.toolkit import config
 
 from ckan import model
 from ckan import logic
@@ -175,7 +176,7 @@ class DguHarvesterBase(HarvesterBase):
                 package_dict_defaults['extras'][key] = value
         if existing_dataset:
             extras_kept = set(
-                pylons.config.get('ckan.harvest.extras_not_overwritten', '')
+                config.get('ckan.harvest.extras_not_overwritten', '')
                 .split(' '))
             for extra_key in extras_kept:
                 if extra_key in existing_dataset.extras:
@@ -202,13 +203,13 @@ class DguHarvesterBase(HarvesterBase):
                                                  package_dict_defaults,
                                                  source_config,
                                                  existing_dataset)
-        except PackageDictError, e:
+        except PackageDictError as e:
             log.error('Harvest PackageDictError in get_package_dict %s %r',
                       e, harvest_object)
             self._save_object_error('Error converting to dataset: %s' % e,
                                     harvest_object, 'Import')
             return False
-        except Exception, e:
+        except Exception as e:
             log.exception('Harvest error in get_package_dict %r', harvest_object)
             self._save_object_error('System error', harvest_object, 'Import')
             return False
@@ -264,7 +265,7 @@ class DguHarvesterBase(HarvesterBase):
             try:
                 package_dict_created = tk.get_action('package_create')(context.copy(), package_dict)
                 log.info('Created new package name=%s id=%s guid=%s', package_dict.get('name'), package_dict_created['id'], harvest_object.guid)
-            except tk.ValidationError, e:
+            except tk.ValidationError as e:
                 self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
                 return False
         elif status == 'changed':
@@ -274,7 +275,7 @@ class DguHarvesterBase(HarvesterBase):
             try:
                 package_dict_updated = tk.get_action('package_update')(context.copy(), package_dict)
                 log.info('Updated package name=%s id=%s guid=%s', package_dict.get('name'), package_dict_updated['id'], harvest_object.guid)
-            except tk.ValidationError, e:
+            except tk.ValidationError as e:
                 self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
                 return False
 
@@ -444,10 +445,9 @@ class PackageDictDefaults(dict):
                     merged[key] = merged.get(key) or self[key]
                 else:
                     raise NotImplementedError()
-            except Exception, e:
+            except Exception as e:
                 # Raise a better exception with more info
                 import sys
-                raise type(e), type(e)(e.message + ' (key=%s)' % key), \
-                      sys.exc_info()[2]
+                raise (type(e), type(e)(e.message + ' (key=%s)' % key), \
+                      sys.exc_info()[2])
         return merged
-

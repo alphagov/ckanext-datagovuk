@@ -60,7 +60,7 @@ class InventoryHarvester(DguHarvesterBase):
                 req = requests.get(harvest_job.source.url)
                 e = req.raise_for_status()
                 content = req.content
-            except requests.exceptions.RequestException, e:
+            except requests.exceptions.RequestException as e:
                 # e.g. requests.exceptions.ConnectionError
                 self._save_gather_error(
                     'Failed to get content from URL: %s Error:%s %s' %
@@ -70,7 +70,7 @@ class InventoryHarvester(DguHarvesterBase):
 
         try:
             doc = InventoryDocument(content)
-        except InventoryXmlError, e:
+        except InventoryXmlError as e:
             self._save_gather_error(
                 'Failed to parse or validate the XML document: %s %s' %
                 (e.__class__.__name__, e), harvest_job)

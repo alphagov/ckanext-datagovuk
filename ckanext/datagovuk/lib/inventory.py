@@ -1,7 +1,7 @@
 import logging
-import cStringIO
+from io import BytesIO
 import os
-import HTMLParser
+from html.parser import HTMLParser
 import datetime
 
 import lxml.etree
@@ -34,10 +34,10 @@ class InventoryDocument(object):
         parser = lxml.etree.XMLParser(schema=schema)
 
         # Load and parse the Inventory XML
-        xml_file = cStringIO.StringIO(inventory_xml_string)
+        xml_file = BytesIO.StringIO(inventory_xml_string)
         try:
             self.doc = lxml.etree.parse(xml_file, parser=parser)
-        except lxml.etree.XMLSyntaxError, e:
+        except lxml.etree.XMLSyntaxError as e:
             raise InventoryXmlError(unicode(e))
         finally:
             xml_file.close()
@@ -97,7 +97,7 @@ class InventoryDocument(object):
         """
         # do getroot() so that we return an Element rather than an ElementTree,
         # since thats what dataset_to_dict wants.
-        return lxml.etree.parse(cStringIO.StringIO(node_xml_string)).getroot()
+        return lxml.etree.parse(BytesIO.StringIO(node_xml_string)).getroot()
 
 
     @classmethod
@@ -117,7 +117,7 @@ class InventoryDocument(object):
             d['rights'] = 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/'
 
         # Clean description to decode any encoded HTML
-        h = HTMLParser.HTMLParser()
+        h = HTMLParser()
         d['description'] = h.unescape(d.get('description', ''))
 
         services = []
@@ -155,4 +155,3 @@ class InventoryDocument(object):
             res['availability'] = cls._get_node_text(n.xpath('inv:Availability', namespaces=NSMAP))
             res['conforms_to'] = cls._get_node_text(n.xpath('inv:ConformsTo', namespaces=NSMAP))
             yield res
-
