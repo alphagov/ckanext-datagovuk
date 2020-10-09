@@ -51,7 +51,7 @@ def load_excel_store_errors(filename, sheet_name, errors, validation_errors, inp
                                converters=string_converters,
                                keep_default_na=False,
                                na_values=[''])
-    except XLRDError, e:
+    except XLRDError as e:
         errors.append(str(e))
         return pandas.DataFrame(columns=output_columns)
     # Verify number of columns
@@ -247,7 +247,7 @@ def load_references(xls_filename, errors, validation_errors):
                                  '(reference) professions',
                                  '(reference) units',
                                  ])
-    except XLRDError, e:
+    except XLRDError as e:
         if str(e) == "No sheet named <'(reference) units'>":
             validation_errors.append(str(e))
             return {}
@@ -257,7 +257,7 @@ def load_references(xls_filename, errors, validation_errors):
             # anyway. Read it again, just for the units.
             try:
                 dfs = pandas.read_excel(xls_filename, ['(reference) units'])
-            except XLRDError, e:
+            except XLRDError as e:
                 if str(e) == "No sheet named <'(reference) units'>":
                     validation_errors.append(str(e))
                 else:
@@ -396,7 +396,7 @@ def verify_graph(senior, junior, errors):
         try:
             top_level_boss_by_ref[ref] = get_top_level_boss_recursive(
                 boss_ref, posts_recursed)
-        except PostReportsToUnknownPostError, e:
+        except PostReportsToUnknownPostError as e:
             raise PostReportsToUnknownPostError('Error with senior post "%s": %s' % (ref, e))
 
         return top_level_boss_by_ref[ref]
@@ -409,7 +409,7 @@ def verify_graph(senior, junior, errors):
                           'Senior post %s "%s" up to the top in 100 steps - '
                           'is there a loop? Posts: %s'
                           % (index, ref, posts_recursed))
-        except PostReportsToUnknownPostError, e:
+        except PostReportsToUnknownPostError as e:
             errors.append(str(e))
         except PostReportLoopError, posts_recursed:
             if str(posts_recursed).split(' ')[-1] in \
@@ -994,7 +994,7 @@ def load_xls_and_get_errors(xls_filename):
     errors = validation_errors
     try:
         verify_graph(senior_df, junior_df, errors)
-    except ValidationFatalError, e:
+    except ValidationFatalError as e:
         # display error - organogram is not displayable
         return None, None, [unicode(e)], warnings, False
 
@@ -1040,7 +1040,7 @@ def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
     if verify_level != 'load':
         try:
             verify_graph(senior_df, junior_df, validate_errors)
-        except ValidationFatalError, e:
+        except ValidationFatalError as e:
             # display error - organogram is not displayable
             if print_errors:
                 print_error(unicode(e))
