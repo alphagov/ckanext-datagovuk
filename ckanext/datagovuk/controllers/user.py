@@ -105,7 +105,7 @@ class UserController(UserController):
                     h.flash_success(_('Please check your inbox for '
                                     'a reset code.'))
                     h.redirect_to('/')
-                except mailer.MailerException, e:
+                except mailer.MailerException as e:
                     h.flash_error(_('Could not send reset link: %s') %
                                   unicode(e))
         return render('user/request_reset.html')
