@@ -4,3 +4,4 @@
 from cli import *
 from logic import *
 from model import *
+from query import *

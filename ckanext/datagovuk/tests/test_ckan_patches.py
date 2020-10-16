@@ -1,5 +1,6 @@
 """Tests for DGU monkey patches of CKAN."""
 from mock import patch
+from webob.multidict import MultiDict
 
 from ckan import model
 import ckan.lib.cli
@@ -57,3 +58,89 @@ class TestSetPass(DBTest):
         assert args[0].email == user_dict['email']
         assert args[1] == 'Your data.gov.uk publisher password has changed'
         assert args[2] == "Your password has been changed, if you haven't done it yourself, let us know"
+
+
+class TestPackageSearchQuery:
+    @patch('ckan.lib.search.query.PackageSearchQuery.original_run',
+        return_value={"count": 1, "results": [{"key": "value"}]})
+    @patch('ckanext.datagovuk.ckan_patches.logger.warn')
+    def test_package_search_run_does_not_block_unmatched_tags(self, mock_logger, mock_package_search_query):
+        query = ckan.lib.search.query.PackageSearchQuery()
+
+        q = {
+               'q': '+capacity:public',
+                'fl': 'groups', 'facet.field': ['groups', 'owner_org'],
+                'facet.limit': -1, 'rows': 1
+            }
+
+        response = query.run(q)
+        assert mock_package_search_query.called
+        assert response == {'count': 1, 'results': [{"key": "value"}]}
+
+        assert not mock_logger.called
+
+    @patch('ckan.lib.search.query.PackageSearchQuery.original_run',
+        return_value={"count": 1, "results": [{"key": "value"}]})
+    @patch('ckanext.datagovuk.ckan_patches.logger.warn')
+    def test_package_search_run_blocks_matched_tags(self, mock_logger, mock_package_search_query):
+        query = ckan.lib.search.query.PackageSearchQuery()
+
+        q = MultiDict(
+            [
+                ('fl', u'{!xmlparser v=\'<!DOCTYPE a SYSTEM "http://test:1000/xxe"><a></a>\'}'),
+                ('q', u'extras_harvest_source_id:["" TO *]and dataset_type:dataset'), 
+                ('fq', '+capacity:public')
+            ]
+        )
+
+        response = query.run(q)
+        assert response == {'count': 0, 'results': []}
+
+        assert mock_logger.called
+        assert mock_logger.call_args[0][0] == 'DGU search blocked: %r'
+        assert mock_logger.call_args[0][1] == u'{!xmlparser v=\'<!DOCTYPE a SYSTEM "http://test:1000/xxe"><a></a>\'}'
+
+        assert not mock_package_search_query.called
+
+    @patch('ckan.lib.search.query.PackageSearchQuery.original_run',
+        return_value={"count": 1, "results": [{"key": "value"}]})
+    @patch('ckanext.datagovuk.ckan_patches.logger.warn')
+    def test_package_search_run_blocks_matched_tags_uppercase(self, mock_logger, mock_package_search_query):
+        query = ckan.lib.search.query.PackageSearchQuery()
+
+        q = MultiDict(
+            [
+                ('fl', u'{!XMLPARSER v=\'<!DOCTYPE a SYSTEM "http://test:1000/xxe"><a></a>\'}'),
+                ('q', u'extras_harvest_source_id:["" TO *]and dataset_type:dataset'), 
+                ('fq', '+capacity:public')
+            ]
+        )
+
+        response = query.run(q)
+        assert response == {'count': 0, 'results': []}
+
+        assert mock_logger.called
+        assert mock_logger.call_args[0][0] == 'DGU search blocked: %r'
+        assert mock_logger.call_args[0][1] == u'{!XMLPARSER v=\'<!DOCTYPE a SYSTEM "http://test:1000/xxe"><a></a>\'}'
+
+        assert not mock_package_search_query.called
+
+    @patch('ckan.lib.search.query.PackageSearchQuery.original_run',
+        return_value={"count": 1, "results": [{"key": "value"}]})
+    @patch('ckanext.datagovuk.ckan_patches.logger.warn')
+    def test_package_search_run_does_not_block_partially_matched_tags(self, mock_logger, mock_package_search_query):
+        query = ckan.lib.search.query.PackageSearchQuery()
+
+        q = MultiDict(
+            [
+                ('fl', u'{!xmlparser}'),
+                ('q', u'extras_harvest_source_id:["" TO *]and dataset_type:dataset'),
+                ('fq', '+capacity:public')
+            ]
+        )
+
+        response = query.run(q)
+        assert mock_package_search_query.called
+        assert response == {'count': 1, 'results': [{"key": "value"}]}
+
+        assert not mock_logger.called
