@@ -144,3 +144,23 @@ class TestPackageSearchQuery:
         assert response == {'count': 1, 'results': [{"key": "value"}]}
 
         assert not mock_logger.called
+
+    @patch('ckan.lib.search.query.PackageSearchQuery.original_run',
+        return_value={"count": 1, "results": [{"key": "value"}]})
+    @patch('ckanext.datagovuk.ckan_patches.logger.warn')
+    def test_package_search_run_can_handle_ascii(self, mock_logger, mock_package_search_query):
+        query = ckan.lib.search.query.PackageSearchQuery()
+
+        q = MultiDict(
+            [
+                ('fl', u'{\xa3!xmlparser}'),
+                ('q', u'extras_harvest_source_id:["" TO *]and dataset_type:dataset'),
+                ('fq', '+capacity:public')
+            ]
+        )
+
+        response = query.run(q)
+        assert mock_package_search_query.called
+        assert response == {'count': 1, 'results': [{"key": "value"}]}
+
+        assert not mock_logger.called
