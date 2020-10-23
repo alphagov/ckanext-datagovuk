@@ -404,14 +404,14 @@ def verify_graph(senior, junior, errors):
         ref = post['Post Unique Reference']
         try:
             top_level_boss = get_top_level_boss_recursive(ref)
-        except MaxDepthError, posts_recursed:
+        except MaxDepthError as posts_recursed:
             errors.append('Could not follow the reporting structure from '
                           'Senior post %s "%s" up to the top in 100 steps - '
                           'is there a loop? Posts: %s'
                           % (index, ref, posts_recursed))
         except PostReportsToUnknownPostError as e:
             errors.append(str(e))
-        except PostReportLoopError, posts_recursed:
+        except PostReportLoopError as posts_recursed:
             if str(posts_recursed).split(' ')[-1] in \
                     refs_that_report_to_themselves:
                 # error has already reported - no point flogging it
@@ -1005,7 +1005,7 @@ def load_xls_and_get_errors(xls_filename):
 
 
 def print_error(error_msg):
-    print 'ERROR:', error_msg.encode('utf8')  # encoding for Drupal exec()
+    print('ERROR:', error_msg.encode('utf8'))  # encoding for Drupal exec()
 
 
 def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
@@ -1023,14 +1023,14 @@ def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
     junior_df = load_junior(xls_filename, load_errors, validation_errors, references)
 
     if load_errors:
-        print 'Critical error(s):'
+        print('Critical error(s):')
         if print_errors:
             for error in load_errors:
                 print_error(error)
         # errors mean no rows can be got from the file, so can't do anything
         return 'load', senior_df, junior_df, load_errors, warnings
     if validation_errors and verify_level == 'load, display and be valid':
-        print 'Validation error(s) during load:'
+        print('Validation error(s) during load:')
         if print_errors:
             for error in validation_errors:
                 print_error(error)
@@ -1077,7 +1077,7 @@ def calculate_organogram_name(org):
 def write_output_files(basename, output_folder, senior_df, junior_df):
     senior_filename = os.path.join(output_folder, basename + '-senior.csv')
     junior_filename = os.path.join(output_folder, basename + '-junior.csv')
-    print "Writing", senior_filename, junior_filename
+    print("Writing", senior_filename, junior_filename)
 
     save_csvs(senior_filename, junior_filename, senior_df, junior_df)
 
@@ -1098,7 +1098,7 @@ def create_organogram_csvs(input_xls_file):
 
 
 def main(input_xls_filepath, output_folder):
-    print "Loading", input_xls_filepath
+    print("Loading", input_xls_filepath)
 
     if args.date:
         verify_level = get_verify_level(args.date, input_xls_filepath)
@@ -1127,10 +1127,10 @@ def main(input_xls_filepath, output_folder):
     index = [{'name': name, 'value': basename}]  # a list because of legacy
     index = sorted(index, key=lambda x: x['name'])
     index_filename = os.path.join(output_folder, 'index.json')
-    print "Writing index file:", index_filename
+    print("Writing index file:", index_filename)
     with open(index_filename, 'w') as f:
         json.dump(index, f)
-    print "Done."
+    print("Done.")
 
     # return values are only for the tests
     return senior_filename, junior_filename, senior_df, junior_df
@@ -1145,7 +1145,7 @@ def save_csvs(senior_filename, junior_filename, senior_df, junior_df):
 
 
 def usage():
-    print "Usage: %s input_1.xls input_2.xls ... output_folder/" % sys.argv[0]
+    print("Usage: %s input_1.xls input_2.xls ... output_folder/" % sys.argv[0])
     sys.exit()
 
 

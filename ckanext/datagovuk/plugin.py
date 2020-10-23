@@ -1,5 +1,5 @@
 import logging
-from pylons import config
+from ckan.plugins.toolkit import config
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -16,8 +16,6 @@ import ckanext.datagovuk.upload as upload
 
 from ckanext.datagovuk.logic.theme_validator import valid_theme
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
-
-from pylons.wsgiapp import PylonsApp
 
 from flask import Blueprint
 
@@ -329,12 +327,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             else event
 
     def make_middleware(self, app, config):
-        # we get this called twice, once for Flask and once for Pylons
-        if isinstance(app, PylonsApp):
-            return SentryWsgiMiddleware(app)
-        else:
-            sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
-            return app
+        sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
+        return app
 
     # IResourceController
 
