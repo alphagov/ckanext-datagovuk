@@ -2,7 +2,6 @@ import re
 import logging
 import uuid
 import datetime
-# import pylons
 from ckan.plugins.toolkit import config
 
 from ckan import model

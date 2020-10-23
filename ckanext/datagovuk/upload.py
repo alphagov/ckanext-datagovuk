@@ -15,7 +15,7 @@ import datetime
 from dateutil import parser
 
 from slugify import slugify
-from pylons import config
+from ckan.plugins.toolkit import config
 import boto3
 import requests
 from botocore.exceptions import ClientError
