@@ -293,10 +293,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
             m.connect('organization_activity', '/publisher/activity/{id}/{offset}',
                     action='activity')
-            m.connect('organization_read', '/publisher/{id}', action='read')
+            m.connect('organization_read', '/publisher/{id}')
             m.connect('organization_about', '/publisher/about/{id}',
                     action='about')
-            m.connect('organization_read', '/publisher/{id}', action='read',
+            m.connect('organization_read', '/publisher/{id}',
                     ckan_icon='sitemap')
             m.connect('organization_edit', '/publisher/edit/{id}',
                     action='edit')
@@ -306,7 +306,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
                     '/publisher/bulk_process/{id}',
                     action='bulk_process')
 
-        route_map.connect('harvest_index', '/harvest', action='index')
 
         return route_map
 
