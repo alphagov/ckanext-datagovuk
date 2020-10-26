@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import cgi
-from StringIO import StringIO
+from io import StringIO
 import unittest
 
 import pylons.config as config
