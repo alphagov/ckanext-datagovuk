@@ -33,7 +33,7 @@
     <select id="field-schema-vocabulary" class="form-control" name="schema-vocabulary">
       <option value></option>
       {% for schema in h.alphabetise_dict(h.schemas()) %}
-        <option value="{{ schema[0] }}" {% if data.get('schema-vocabulary', '') == schema[0] %}selected="selected"{% endif %}>{{ schema[1].decode("utf8") }}</option>
+        <option value="{{ schema[0] }}" {% if data.get('schema-vocabulary', '') == schema[0] %}selected="selected"{% endif %}>{{ schema[1] }}</option>
       {% endfor %}
     </select>
     {% if errors.get('schema-vocabulary', '') %}
