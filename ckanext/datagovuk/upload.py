@@ -6,7 +6,6 @@ Contains functions that upload the organograms to S3.
 '''
 import cgi
 import os
-import StringIO
 import zipfile
 import mimetypes
 import collections
@@ -20,7 +19,6 @@ import boto3
 import requests
 from botocore.exceptions import ClientError
 
-import paste.fileapp
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.uploader as uploader
 from ckan.common import request
