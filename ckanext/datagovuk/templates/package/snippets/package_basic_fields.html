@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block package_basic_fields_url %}
-  {% set prefix = h.url_for(controller='package', action='read', id='') %}
+  {% set prefix = h.url_for(controller='dataset', action='read', id='') %}
   {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': '/', 'data-module-placeholder': '<dataset>'} %}
   {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
 {% endblock %}
@@ -117,5 +117,3 @@
 
 {% block package_basic_fields_tags %}
 {% endblock %}
-
-

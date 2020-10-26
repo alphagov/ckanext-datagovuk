@@ -2,7 +2,7 @@
 
 {% block page_primary_action %}
   {% if h.check_access('package_create', {'owner_org': c.group_dict.id}) %}
-    {% link_for _('Add Dataset'), controller='package', action='new', group=c.group_dict.id, class_='btn btn-primary', icon='plus-square' %}
+    {% link_for _('Add Dataset'), controller='dataset', action='new', group=c.group_dict.id, class_='btn btn-primary', icon='plus-square' %}
   {% endif %}
   {% if h.check_access('harvest_source_create') %}
     <a href="{{ h.url_for('harvest_new', group=c.group_dict.id) }}" class="btn btn-primary"><i class="fa fa-plus-square"></i> {{ _('Add Harvest Source') }}</a>
