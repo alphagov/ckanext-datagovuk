@@ -32,7 +32,7 @@
   {{ super() }}
 {% endblock %}
 
-{% block styles %}
+{% block custom_styles %}
   {{ super() }}
-  {% resource 'public/datagovuk.css' %}
+  <link rel="stylesheet" href="/datagovuk.css" />
 {% endblock %}
