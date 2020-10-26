@@ -89,6 +89,9 @@ setup(
         [ckan.test_plugins]
         test_harvester=ckanext.harvest.tests.test_queue:MockHarvester
 
+        [ckan.click_command]
+        datagovuk = ckanext.datagovuk.lib.cli:datagovuk
+
         [paste.paster_command]
         passwords_reset = ckanext.datagovuk.lib.cli:PasswordResetsCommand
         create_dgu_test_data = ckanext.datagovuk.lib.cli:CreateDGUTestDataCommand
