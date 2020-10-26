@@ -31,10 +31,11 @@ def remove_pii_from_list(search_results):
 
 
 def remove_pii(element):
+    valid_element = {}
     for key in element.keys():
-        if key in PII_LIST:
-            del element[key]
-    return element
+        if key not in PII_LIST:
+            valid_element[key] = element[key]
+    return valid_element
 
 
 def remove_pii_block(data):
