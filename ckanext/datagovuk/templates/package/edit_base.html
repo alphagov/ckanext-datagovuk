@@ -1,8 +1,8 @@
 {% ckan_extends %}
 
 {% block content_primary_nav %}
-  {{ h.build_nav_icon('dataset_edit', _('Edit metadata'), id=pkg.name) }}
-  {{ h.build_nav_icon('dataset_resources', _('Add data'), id=pkg.name) }}
+  {{ h.build_nav_icon('dataset.edit', _('Edit metadata'), id=pkg.name) }}
+  {{ h.build_nav_icon('dataset.resources', _('Add data'), id=pkg.name) }}
 {% endblock %}
 
 {% block content_action %}
