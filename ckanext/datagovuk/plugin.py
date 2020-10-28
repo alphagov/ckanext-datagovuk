@@ -210,6 +210,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # IBlueprint
 
     def get_blueprint(self):
+        from ckanext.datagovuk.views.dataset import dataset_search
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.accessibility import accessibility
         from ckanext.datagovuk.views.user import (
@@ -222,6 +223,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
         bp.add_url_rule(u"/accessibility", view_func=accessibility)
+        bp.add_url_rule(u"/api/search/dataset", view_func=dataset_search)
+        bp.add_url_rule(u"/api/3/search/dataset", view_func=dataset_search)
 
         bp.add_url_rule(
             u"/user/register",
