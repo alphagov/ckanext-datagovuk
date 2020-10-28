@@ -2,7 +2,7 @@
 
 {% block header_logo %}
   <span class="header-logo">
-    <a href="{{ h.url_for('home') }}">
+    <a href="{{ h.url_for('home.index') }}">
       {{ g.site_title }}
       {% if g.site_description %} | {{ g.site_description }}{% endif %}
     </a>
@@ -11,8 +11,8 @@
 
 {% block header_site_navigation_tabs %}
   {{ h.build_nav_main(
-    ('search', _('Datasets')),
-    ('organizations_index', _('Organizations')),
+    ('dataset.search', _('Datasets')),
+    ('organization.index', _('Organizations')),
   ) }}
   <li>{{ h.nav_link(_('Harvest'), named_route='harvest_search') }}</li>
   <li><a href="https://data.gov.uk/support">Support</a></li>
