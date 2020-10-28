@@ -8,20 +8,21 @@ PII_LIST = [
 ]
 
 
-def remove_pii_from_api_search_dataset(data):
-        json_data = json.loads(data)
+def remove_pii_from_api_search_dataset(json_data):
+    if 'result' in json_data.keys():
+        json_data = json_data["result"]
 
-        for element in json_data['results']:
-            if 'data_dict' in element:
-                element['data_dict'] = remove_pii_block(element['data_dict'])
-            if 'validated_data_dict' in element:
-                element['validated_data_dict'] = remove_pii_block(element['validated_data_dict'])
-            if 'extras' in element:
-                element['extras'] = remove_pii(element['extras'])
-            if hasattr(element, 'keys'):
-                element = remove_pii(element)
+    for element in json_data['results']:
+        if 'data_dict' in element:
+            element['data_dict'] = remove_pii_block(element['data_dict'])
+        if 'validated_data_dict' in element:
+            element['validated_data_dict'] = remove_pii_block(element['validated_data_dict'])
+        if 'extras' in element:
+            element['extras'] = remove_pii(element['extras'])
+        if hasattr(element, 'keys'):
+            element = remove_pii(element)
 
-        return json.dumps(json_data)
+    return json.dumps(json_data)
 
 
 def remove_pii_from_list(search_results):
