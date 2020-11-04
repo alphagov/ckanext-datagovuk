@@ -14,7 +14,7 @@ def validate_password(self, password):
 
 
 def _verify_password_and_upgrade_from_drupal7(self, password):
-    if isinstance(password, unicode):
+    if isinstance(password, str):
         password = password.encode('ascii', 'ignore')
 
     from ckanext.datagovuk.lib.drupal_password import user_check_password

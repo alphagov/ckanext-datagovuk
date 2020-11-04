@@ -137,7 +137,7 @@ class DguHarvesterBase(HarvesterBase):
         # Set defaults for the package_dict, mainly from the source_config
         package_dict_defaults = PackageDictDefaults()
         package_id = previous_object.package_id if previous_object else None
-        package_dict_defaults['id'] = package_id or unicode(uuid.uuid4())
+        package_dict_defaults['id'] = package_id or str(uuid.uuid4())
         existing_dataset = model.Package.get(package_id)
 
         if existing_dataset:
@@ -236,7 +236,7 @@ class DguHarvesterBase(HarvesterBase):
         # Drop the validation restrictions on tags
         # (TODO: make this optional? get schema from config?)
         tag_schema = logic.schema.default_tags_schema()
-        tag_schema['name'] = [not_empty, unicode]
+        tag_schema['name'] = [not_empty, str]
         package_schema['tags'] = tag_schema
         context['schema'] = package_schema
 
@@ -245,8 +245,8 @@ class DguHarvesterBase(HarvesterBase):
             # ckanext-spatial won't be be able to link the extent to the
             # package.
             if not package_dict.get('id'):
-                package_dict['id'] = unicode(uuid.uuid4())
-            package_schema['id'] = [unicode]
+                package_dict['id'] = str(uuid.uuid4())
+            package_schema['id'] = [str]
 
             # Save reference to the package on the object
             harvest_object.package_id = package_dict['id']
