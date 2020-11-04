@@ -107,5 +107,5 @@ class UserController(UserController):
                     h.redirect_to('/')
                 except mailer.MailerException as e:
                     h.flash_error(_('Could not send reset link: %s') %
-                                  unicode(e))
+                                  str(e))
         return render('user/request_reset.html')
