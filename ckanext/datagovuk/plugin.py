@@ -76,9 +76,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'codelist': [toolkit.get_validator('ignore_missing'),
                          toolkit.get_converter('convert_to_extras')],
             'author_email': [toolkit.get_validator('ignore_missing'),
-                             unicode],
+                             str],
             'maintainer_email': [toolkit.get_validator('ignore_missing'),
-                             unicode],
+                             str],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -94,7 +94,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         extras_schema['key'] = [
             not_empty,
             extra_key_not_in_root_schema,
-            unicode,
+            str,
         ]
 
         schema['extras'] = extras_schema

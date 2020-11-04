@@ -304,7 +304,7 @@ def verify_graph(senior, junior, errors):
     be displayed (e.g. no "top post").
     '''
     # ignore eliminated posts (i.e. don't exist any more)
-    senior_ = senior[senior['Name'].astype(unicode) != "Eliminated"]
+    senior_ = senior[senior['Name'].astype(str) != "Eliminated"]
 
     # merge posts which are job shares
     # "duplicated will be the grade, job title, job/team function,
@@ -428,10 +428,10 @@ def verify_graph(senior, junior, errors):
 
     # do all juniors report to a correct senior ref?
     junior_report_to_refs = set(junior['Reporting Senior Post'])
-    eliminated_posts = set(senior[senior['Name'].astype(unicode) == "Eliminated"]['Post Unique Reference'])
+    eliminated_posts = set(senior[senior['Name'].astype(str) == "Eliminated"]['Post Unique Reference'])
     bad_junior_refs = junior_report_to_refs - senior_post_refs
     for ref in bad_junior_refs:
-        posts = junior[junior['Reporting Senior Post'].astype(unicode) == ref]
+        posts = junior[junior['Reporting Senior Post'].astype(str) == ref]
         for post_index, post in posts.iterrows():
             if ref == 'nan' or ref is None or pandas.isnull(ref):
                 problem = 'You must not leave this cell blank - all junior posts must report to a senior post.'
@@ -886,9 +886,9 @@ class Excel(object):
         # there are none of those
         if value == '*' and list_.any():
             return False
-        value_ = unicode(value).lower()
+        value_ = str(value).lower()
         for item in list_:
-            if value_ == unicode(item).lower():
+            if value_ == str(item).lower():
                 return False
         return True
 
@@ -996,7 +996,7 @@ def load_xls_and_get_errors(xls_filename):
         verify_graph(senior_df, junior_df, errors)
     except ValidationFatalError as e:
         # display error - organogram is not displayable
-        return None, None, [unicode(e)], warnings, False
+        return None, None, [str(e)], warnings, False
 
     # If we get this far then it will display, although there might be problems
     # with some posts
@@ -1043,7 +1043,7 @@ def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
         except ValidationFatalError as e:
             # display error - organogram is not displayable
             if print_errors:
-                print_error(unicode(e))
+                print_error(str(e))
             return 'validating tree', senior_df, junior_df, validate_errors, warnings
 
         if verify_level == 'load, display and be valid' and validate_errors:
