@@ -13,7 +13,7 @@ def user_password_validator(key, data, errors, context):
 
     if isinstance(value, Missing):
         pass
-    elif not isinstance(value, basestring):
+    elif not isinstance(value, str):
         errors[('password',)].append(_('Passwords must be strings'))
     elif value == '':
         pass
