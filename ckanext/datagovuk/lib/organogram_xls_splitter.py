@@ -609,7 +609,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
         if is_blank(d):
             validation_errors.append(u'%s: The "Job Title" cannot be blank.' % cell_ref)
         else:
-            if isinstance(d, basestring) and d != 'N/D':
+            if isinstance(d, str) and d != 'N/D':
                 if a in (0, '0'):
                     if d != 'Not in post':
                         validation_errors.append(u'%s: Because the "Post Unique Reference" is "0" (individual is paid but not in post), the "Job Title" must be "Not in post".' % cell_ref)
@@ -636,7 +636,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
         if is_blank(e):
             validation_errors.append(u'%s: The "Job/Team Function" cannot be blank.' % cell_ref)
         else:
-            if isinstance(e, basestring) and e != 'N/D':
+            if isinstance(e, str) and e != 'N/D':
                 if a == 0:  # but what about string '0'?
                     if e != 'N/A':
                         validation_errors.append(u'%s: Because the "Post Unique Reference" is "0" (individual is paid but not in post), the "Job/Team Function" must be "N/A".' % cell_ref)
@@ -731,7 +731,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
         if is_blank(i):
             validation_errors.append(u'%s: The "Contact Phone" must be supplied - it cannot be blank.' % cell_ref)
         else:
-            if (is_number(i) or isinstance(i, basestring)) and \
+            if (is_number(i) or isinstance(i, str)) and \
                 (i != 'N/D' or j != 'N/D'):
                 if a in (0, '0') or b in ('Vacant', 'VACANT', 'vacant', 'Eliminated', 'ELIMINATED', 'eliminated'):
                     ref_value = '"Post Unique Reference" is "0" (individual is paid but not in post)' if a in (0, '0') else '"Name" is "Vacant" or "Eliminated"'
@@ -778,7 +778,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
             # j_invalid = (is_blank(j) and not is_blank(a)) or \
             #     (j == 'N/A' and a != '0') or \
             #     (i == 'N/D' and j == 'N/D') or \
-            #     not (j == 'N/D' or (isinstance(j, basestring) and
+            #     not (j == 'N/D' or (isinstance(j, str) and
             #                         '@' in j and '.' in j))
             # split up ao2 into the four conditions
             if is_blank(j) and not is_blank(a):
@@ -787,7 +787,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
                 validation_errors.append(u'%s: The "Contact E-mail" can only be "N/A" if the "Post Unique Reference" is "0" (individual is paid but not in post).' % cell_ref)
             elif i == 'N/D' and j == 'N/D':
                 validation_errors.append(u'%s: You must provide at least one form of contact. You cannot have both "Contact Phone" and "Contact E-mail" as "N/D".' % cell_ref)
-            elif not (j == 'N/D' or (isinstance(j, basestring) and
+            elif not (j == 'N/D' or (isinstance(j, str) and
                                      '@' in j and '.' in j)):
                 validation_errors.append(u'%s: The "Contact E-mail" must be a valid email address (containing "@" and "." characters) unless the "Name" is "Vacant" or "Eliminated", or the "Post Unique Reference" is "0" (the individual is paid but not in post). It cannot be blank.' % cell_ref)
 
