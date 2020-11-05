@@ -170,7 +170,7 @@ class DguHarvesterBase(HarvesterBase):
                        dataset_id=package_dict_defaults['id'])
             for key, value in default_extras.iteritems():
                 # Look for replacement strings
-                if isinstance(value, basestring):
+                if isinstance(value, str):
                     value = value.format(env)
                 package_dict_defaults['extras'][key] = value
         if existing_dataset:
@@ -368,7 +368,7 @@ class DguHarvesterBase(HarvesterBase):
         site D. The metadata_provence will be a list of four dicts with the
         details: [A, B, C, D].
         '''
-        if isinstance(harvested_provenance, basestring):
+        if isinstance(harvested_provenance, str):
             harvested_provenance = json.loads(harvested_provenance)
         elif harvested_provenance is None:
             harvested_provenance = []
@@ -440,7 +440,7 @@ class PackageDictDefaults(dict):
                 elif isinstance(self[key], dict):
                     merged[key] = dict(self[key].items() +
                                         merged.get(key, {}).items())
-                elif isinstance(self[key], basestring):
+                elif isinstance(self[key], str):
                     merged[key] = merged.get(key) or self[key]
                 else:
                     raise NotImplementedError()
