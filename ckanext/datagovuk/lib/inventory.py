@@ -1,5 +1,5 @@
 import logging
-from io import BytesIO
+from io import BytesIO, StringIO
 import os
 from html.parser import HTMLParser
 import datetime
@@ -34,9 +34,10 @@ class InventoryDocument(object):
         parser = lxml.etree.XMLParser(schema=schema)
 
         # Load and parse the Inventory XML
-        xml_file = BytesIO.StringIO(inventory_xml_string)
+        xml_file = StringIO(str(inventory_xml_string))
         try:
-            self.doc = lxml.etree.parse(xml_file, parser=parser)
+            # self.doc = lxml.etree.parse(xml_file, parser=parser)
+            self.doc = lxml.etree.fromstring(inventory_xml_string)
         except lxml.etree.XMLSyntaxError as e:
             raise InventoryXmlError(str(e))
         finally:
@@ -54,7 +55,7 @@ class InventoryDocument(object):
         """
         md = {}
 
-        root = self.doc.getroot()
+        root = self.doc
         modified_str = root.get('Modified')
         md['modified'] = datetime.datetime.strptime(modified_str, '%Y-%m-%d').date() if modified_str else None
         md['identifier'] = self._get_node_text(root.xpath('inv:Identifier', namespaces=NSMAP))
@@ -95,9 +96,7 @@ class InventoryDocument(object):
         """
         Converts a Dataset node serialized as an XML string to an etree node.
         """
-        # do getroot() so that we return an Element rather than an ElementTree,
-        # since thats what dataset_to_dict wants.
-        return lxml.etree.parse(BytesIO.StringIO(node_xml_string)).getroot()
+        return lxml.etree.fromstring(node_xml_string)
 
 
     @classmethod

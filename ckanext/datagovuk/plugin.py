@@ -210,6 +210,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # IBlueprint
 
     def get_blueprint(self):
+        print('*** blueprints')
         from ckanext.datagovuk.views.dataset import dataset_search
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.accessibility import accessibility
@@ -220,6 +221,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             me,
         )
         bp = Blueprint("datagovuk", self.__module__)
+
+        # toolkit.add_template_directory(config, 'templates')
+        # toolkit.add_public_directory(config, 'public')
+
+        bp.template_folder = u'templates'
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
         bp.add_url_rule(u"/accessibility", view_func=accessibility)
@@ -246,11 +252,18 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             view_func=DGUUserRequestResetView.as_view(str(u'request_reset')),
         )
 
+        # m.connect('organizations_index', '/publisher', action='index')
+        # m.connect('organization_index', '/publisher', action='index')
+        # m.connect('organization_new', '/publisher/new', action='new')
+        from ckan.views.group import index as organization_index
+        bp.add_url_rule('/publisher', view_func=organization_index)
+
         return bp
 
     # IRoutes
 
     def before_map(self, route_map):
+        print("***** before map")
         # user_controller = 'ckanext.datagovuk.controllers.user:UserController'
         healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
         api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
@@ -264,6 +277,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
         route_map.redirect('/home', '/')
+
+        
         return route_map
 
     def after_map(self, route_map):

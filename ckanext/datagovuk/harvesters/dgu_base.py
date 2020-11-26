@@ -438,7 +438,8 @@ class PackageDictDefaults(dict):
                     merged[key] = self[key] + merged.get(key, [])
                     merged[key] = remove_duplicates_in_a_list(merged[key])
                 elif isinstance(self[key], dict):
-                    merged[key] = dict(self[key].items() +
+                    # replaced + with | for python3 union of dicts
+                    merged[key] = dict(self[key].items() |
                                         merged.get(key, {}).items())
                 elif isinstance(self[key], str):
                     merged[key] = merged.get(key) or self[key]
