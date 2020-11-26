@@ -69,7 +69,7 @@ class InventoryHarvester(DguHarvesterBase):
                 return None
 
         try:
-            doc = InventoryDocument(content)
+            doc = InventoryDocument(content.encode('utf-8'))
         except InventoryXmlError as e:
             self._save_gather_error(
                 'Failed to parse or validate the XML document: %s %s' %
@@ -88,7 +88,7 @@ class InventoryHarvester(DguHarvesterBase):
         previous = model.Session.query(HarvestJob)\
             .filter(HarvestJob.source_id==harvest_job.source_id)\
             .filter(HarvestJob.status!='New')\
-            .order_by("gather_finished desc").first()
+            .order_by(HarvestJob.gather_finished.desc()).first()
         # We thought about using the document's modified date to see if it is
         # unchanged from the previous harvest, but it's hard to tell if the
         # previous harvest was not successful due to whatever reason, so don't
