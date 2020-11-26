@@ -4,6 +4,7 @@ from ckanext.datagovuk.lib.mailer import send_password_alert
 
 
 def set_password(self):
+    print("*** DGU password")
     ckan.cli.user.original_set_password(self)
 
     if len(self.args) > 1:
