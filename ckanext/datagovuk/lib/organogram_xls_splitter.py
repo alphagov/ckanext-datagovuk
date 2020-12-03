@@ -44,10 +44,10 @@ def load_excel_store_errors(filename, sheet_name, errors, validation_errors, inp
     try:
         # need to convert strings at this stage or leading zeros get lost
         string_converters = dict((col, str) for col in string_columns)
-        df = pandas.read_excel(filename,
+        df = pandas.read_excel(filename.name,
                                sheet_name,
                                convert_float=True,
-                               parse_cols=len(input_columns)-1,
+                               usecols=range(len(input_columns)),
                                converters=string_converters,
                                keep_default_na=False,
                                na_values=[''])
@@ -241,7 +241,7 @@ def standard_references():
 def load_references(xls_filename, errors, validation_errors):
     # Output columns can be different. Update according to the rename_columns dict:
     try:
-        dfs = pandas.read_excel(xls_filename,
+        dfs = pandas.read_excel(xls_filename.name,
                                 [#'core-24-depts',
                                  '(reference) senior-staff-grades',
                                  '(reference) professions',
@@ -812,7 +812,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
             validation_errors.append(u'%s: The "Reports to Senior Post" value must be supplied - it cannot be blank.' % cell_ref)
         else:
             if k != 'XX':  # what about lowercase?
-                seniorPostUniqueReference = df.ix[:, 0]
+                seniorPostUniqueReference = df.iloc[:, 0]
                 # invalid unless the value is in column A
                 if not_match(k, seniorPostUniqueReference):
                     validation_errors.append(u'%s: The "Reports to Senior Post" value must match one of the values in "Post Unique Reference" (column A) or be "XX" (which is a top level post - reports to no-one in this sheet).' % cell_ref)
@@ -1088,8 +1088,8 @@ def create_organogram_csvs(input_xls_file):
     senior_df, junior_df, errors, warnings, _will_display = \
         load_xls_and_get_errors(input_xls_file)
 
-    senior_csv = io.BytesIO()
-    junior_csv = io.BytesIO()
+    senior_csv = io.StringIO()
+    junior_csv = io.StringIO()
 
     if not errors:
         save_csvs(senior_csv, junior_csv, senior_df, junior_df)

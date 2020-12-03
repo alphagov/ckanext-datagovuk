@@ -408,7 +408,7 @@ def run_etl_on_file_and_return_csv_lines(input_xls_filepath, date='2011-03-31',
         return csv_read(senior_filepath), csv_read(junior_filepath)
 
 def csv_read(filepath):
-    with open(filepath, 'rb') as f:
+    with open(filepath, 'r') as f:
         return f.read().strip().decode('utf8').split('\n')
 
 class EtlError(Exception):
