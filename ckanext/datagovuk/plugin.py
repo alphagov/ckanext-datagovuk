@@ -25,6 +25,8 @@ import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
+from ckan.views.group import index as organization_index, register_group_plugin_rules
+
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.ITranslation)
@@ -210,21 +212,13 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # IBlueprint
 
     def get_blueprint(self):
-        print('*** blueprints')
         from ckanext.datagovuk.views.dataset import dataset_search
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.accessibility import accessibility
-        from ckanext.datagovuk.views.user import (
-            DGUUserEditView,
-            DGUUserRegisterView,
-            DGUUserRequestResetView,
-            me,
-        )
+
+        # bp = Blueprint("datagovuk", self.__module__,
+        #                 url_defaults={u'group_type': u'organization', u'is_organization': True})
         bp = Blueprint("datagovuk", self.__module__)
-
-        # toolkit.add_template_directory(config, 'templates')
-        # toolkit.add_public_directory(config, 'public')
-
         bp.template_folder = u'templates'
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
@@ -232,101 +226,22 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         bp.add_url_rule(u"/api/search/dataset", view_func=dataset_search)
         bp.add_url_rule(u"/api/3/search/dataset", view_func=dataset_search)
 
-        bp.add_url_rule(
-            u"/user/register",
-            view_func=DGUUserRegisterView.as_view(str(u'register')),
-        )
+        def dgu_home():
+            return toolkit.redirect_to(toolkit.url_for('home.index'))
 
-        _user_edit_view = DGUUserEditView.as_view(str(u'edit'))
-        bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
-        bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
+        bp.add_url_rule(u"/home", view_func=dgu_home)
 
-        bp.add_url_rule(u'/user/me', view_func=me)
-        # also monkeypatch occurrence in original module as some views
-        # call it directly instead of redirecting externally
-        import ckan.views.user as ckan_user_views
-        ckan_user_views.me = me
-
-        bp.add_url_rule(
-            u'/user/reset',
-            view_func=DGUUserRequestResetView.as_view(str(u'request_reset')),
-        )
-
-        # m.connect('organizations_index', '/publisher', action='index')
-        # m.connect('organization_index', '/publisher', action='index')
-        # m.connect('organization_new', '/publisher/new', action='new')
+        # allow for /publisher route, not sure if needed if /organization is ok
         from ckan.views.group import index as organization_index
-        bp.add_url_rule('/publisher', view_func=organization_index)
+        bp.add_url_rule('/publisher', view_func=organization_index, strict_slashes=False)
+        bp.add_url_rule('/publisher/new', view_func=organization_index, strict_slashes=False)
+
+        # monkeypatch set_password
+        import ckan.cli.user
+        from ckanext.datagovuk.ckan_patches.cli import set_password
+        ckan.cli.user.set_password = set_password
 
         return bp
-
-    # IRoutes
-
-    def before_map(self, route_map):
-        print("***** before map")
-        # user_controller = 'ckanext.datagovuk.controllers.user:UserController'
-        healthcheck_controller = 'ckanext.datagovuk.controllers.healthcheck:HealthcheckController'
-        api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
-        # with SubMapper(route_map, controller=user_controller) as m:
-        #     m.connect('register', '/user/register', action='register')
-        #     m.connect('/user/logged_in', action='logged_in')
-        #     m.connect('/user/edit', action='edit')
-        #     m.connect('/user/edit/{id:.*}', action='edit')
-        #     m.connect('/user/reset', action='request_reset')
-        route_map.connect('healthcheck', '/healthcheck', controller=healthcheck_controller, action='healthcheck')
-        route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
-        route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
-        route_map.redirect('/home', '/')
-
-        
-        return route_map
-
-    def after_map(self, route_map):
-        # Deletes all the organization routes
-        delete_routes_by_path_startswith(route_map, '/organization')
-
-        harvest_org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
-        route_map.connect('harvest_org_list', '/publisher/harvest/' + '{id}', controller=harvest_org_controller, action='source_list')
-
-        # add this function in OrganizationController as CKAN doesn't have 'publisher' group type
-        def _guess_group_type(self, expecting_name=False):
-            return 'organization'
-        
-        from ckan.controllers.organization import OrganizationController
-        OrganizationController._guess_group_type = _guess_group_type
-
-        # Recreates the organization routes with /publisher instead.
-        with SubMapper(route_map, controller='organization') as m:
-            m.connect('organizations_index', '/publisher', action='index')
-            m.connect('organization_index', '/publisher', action='index')
-            m.connect('organization_new', '/publisher/new', action='new')
-            for action in [
-            'delete',
-            'admins',
-            'member_new',
-            'member_delete',
-            'history']:
-                m.connect('organization_' + action,
-                        '/publisher/' + action + '/{id}',
-                        action=action)
-
-            m.connect('organization_activity', '/publisher/activity/{id}/{offset}',
-                    action='activity')
-            m.connect('organization_read', '/publisher/{id}')
-            m.connect('organization_about', '/publisher/about/{id}',
-                    action='about')
-            m.connect('organization_read', '/publisher/{id}',
-                    ckan_icon='sitemap')
-            m.connect('organization_edit', '/publisher/edit/{id}',
-                    action='edit')
-            m.connect('organization_members', '/publisher/members/{id}',
-                    action='members')
-            m.connect('organization_bulk_process',
-                    '/publisher/bulk_process/{id}',
-                    action='bulk_process')
-
-
-        return route_map
 
     # ITemplateHelpers
 
@@ -394,22 +309,3 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def before_update(self, context, _, resource):
         """Runs before resource_update. Modifies resource destructively to put in the S3 URL"""
         self.before_create_or_update(context, resource)
-
-    import ckanext.datagovuk.ckan_patches  # import does the monkey patching
-
-
-def delete_routes_by_path_startswith(map, path_startswith):
-    """
-    This function will remove from the routing map any
-    path that starts with the provided argument (/ required).
-
-    Not really a great thing to be doing, but CKAN doesn't
-    provide a way to i18n URLs because it'll likely cause
-    clashes with other group subclasses.
-    """
-    matches_to_delete = []
-    for match in map.matchlist:
-        if match.routepath.startswith(path_startswith):
-            matches_to_delete.append(match)
-    for match in matches_to_delete:
-        map.matchlist.remove(match)
