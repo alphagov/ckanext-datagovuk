@@ -13,7 +13,7 @@ import ckan.lib.dictization.model_dictize as model_dictize
 
 from ckan.model import User
 
-from ckanext.datagovuk.pii_helpers import remove_pii, remove_pii_from_list
+from ckanext.datagovuk.pii_helpers import remove_pii, remove_pii_from_api_search_dataset
 
 log = __import__('logging').getLogger(__name__)
 
@@ -69,7 +69,7 @@ def user_auth(context, data_dict):
 
 @side_effect_free
 def dgu_package_search(context, data_dict):
-    return remove_pii_from_list(package_search(context, data_dict))
+    return remove_pii_from_api_search_dataset(package_search(context, data_dict), json_dumps=False)
 
 
 @side_effect_free
