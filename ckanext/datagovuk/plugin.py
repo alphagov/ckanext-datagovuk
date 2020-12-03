@@ -215,6 +215,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.dataset import dataset_search
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.accessibility import accessibility
+        from ckanext.datagovuk.views.user import me
 
         # bp = Blueprint("datagovuk", self.__module__,
         #                 url_defaults={u'group_type': u'organization', u'is_organization': True})
@@ -240,6 +241,12 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         import ckan.cli.user
         from ckanext.datagovuk.ckan_patches.cli import set_password
         ckan.cli.user.set_password = set_password
+
+        bp.add_url_rule(u'/user/me', view_func=me)
+        # also monkeypatch occurrence in original module as some views
+        # call it directly instead of redirecting externally
+        import ckan.views.user as ckan_user_views
+        ckan_user_views.me = me
 
         return bp
 
