@@ -25,8 +25,7 @@ def _get_location(res):
     return urlparse(location)._replace(scheme='', netloc='').geturl()
 
 
-# class TestPackageController(helpers.FunctionalTestBase, DBTest):
-@pytest.mark.usefixtures("clean_db", "with_plugins")
+@pytest.mark.usefixtures("clean_db", "with_plugins", "with_request_context")
 class TestPackageController:
     @classmethod
     def _create_org(self):
@@ -204,7 +203,7 @@ class TestPackageController:
         env, response = self._get_package_new_page(app)
         assert 'dataset-edit' in response.get_data(as_text=True)
 
-    @pytest.mark.skip("Originally copied from CKAN but since removed")
+    @pytest.mark.skip("Originally copied from CKAN but since removed from 2.9")
     def test_resource_form_renders(self, app):
         self._create_org()
         env, form = self._get_package_new_page(app)
@@ -230,8 +229,7 @@ class TestPackageController:
 
         assert '/dataset/edit/' in response.headers['location']
 
-    @pytest.mark.skip()
-    def test_previous_button_populates_form(self, app):
+    def test_previous_button_populates_form(self, app, user_env):
         url = url_for("dataset.new")
         response = app.post(url, environ_overrides=user_env,
             data={
