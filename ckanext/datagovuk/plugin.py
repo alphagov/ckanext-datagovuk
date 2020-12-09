@@ -215,7 +215,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.dataset import dataset_search
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.accessibility import accessibility
-        from ckanext.datagovuk.views.user import me
+        from ckanext.datagovuk.views.user import (
+            DGUUserEditView,
+            DGUUserRegisterView,
+            me,
+        )
 
         bp = Blueprint("datagovuk", self.__module__)
         bp.template_folder = u'templates'
@@ -239,6 +243,15 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         import ckan.cli.user
         from ckanext.datagovuk.ckan_patches.cli import set_password
         ckan.cli.user.set_password = set_password
+
+        bp.add_url_rule(
+            u"/user/register",
+            view_func=DGUUserRegisterView.as_view(str(u'register')),
+        )
+
+        _user_edit_view = DGUUserEditView.as_view(str(u'edit'))
+        bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
+        bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
 
         bp.add_url_rule(u'/user/me', view_func=me)
         # also monkeypatch occurrence in original module as some views
