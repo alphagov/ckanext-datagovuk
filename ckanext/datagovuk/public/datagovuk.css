@@ -210,3 +210,7 @@ label.checkbox[for=field-remember] {
 input {
   height: 1.75em;
 }
+
+.activity .item .date {
+  white-space: normal;
+}
