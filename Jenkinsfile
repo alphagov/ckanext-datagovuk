@@ -15,7 +15,7 @@ node ('!(ci-agent-4)') {
 
     stage('Installing Packages') {
       sh("rm -rf ./venv")
-      sh("virtualenv --no-site-packages ./venv")
+      sh("python3.6 -m venv ./venv")
       sh("./bin/install-dependencies.sh ./venv/bin/pip")
     }
 
