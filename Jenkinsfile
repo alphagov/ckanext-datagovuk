@@ -10,7 +10,6 @@ node ('!(ci-agent-4)') {
     stage('Checkout') {
       govuk.checkoutFromGitHubWithSSH(REPOSITORY)
       govuk.cleanupGit()
-      govuk.mergeIntoBranch('main')
     }
 
     stage('Installing Packages') {
