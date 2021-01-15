@@ -240,7 +240,6 @@ class TestPackageController:
             follow_redirects=False)
 
         location = _get_location(response)
-        print('*** location', location)
         response = app.post(location, environ_overrides=user_env, data={
             "id": "",
             "save": "go-dataset"

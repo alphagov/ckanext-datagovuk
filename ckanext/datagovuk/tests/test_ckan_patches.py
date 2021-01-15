@@ -3,7 +3,7 @@ import pytest
 from mock import patch
 
 from ckan import model
-from ckan.tests import factories#, helpers
+from ckan.tests import factories
 
 
 @pytest.mark.usefixtures("clean_db")
@@ -32,8 +32,6 @@ def test_setpass_sends_email_alert_to_user(mock_mailer, cli):
 
     from ckan.cli.cli import ckan
     cli.invoke(ckan, ['user', 'setpass', user_dict['name']], input="newpass\nnewpass\n")
-
-
 
     assert mock_mailer.called
     args, kwargs = mock_mailer.call_args

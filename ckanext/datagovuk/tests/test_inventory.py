@@ -4,7 +4,6 @@ import uuid
 
 import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
-# from ckanext.datagovuk.tests.db_test import DBTest
 import ckanext.harvest.tests.factories as harvest_factories
 from ckan.model import Package
 from ckanext.datagovuk.harvesters.inventory_harvester import InventoryHarvester
