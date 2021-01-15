@@ -256,10 +256,6 @@ sample_api_search_dataset_strings = '''
 
 
 class TestRemovePII:
-    # def test_removes_pii_from_package_search(self):
-    #     res = remove_pii_from_list(sample_package_search_result)
-    #     assert not any(elem in PII_LIST for elem in res)
-
     def test_removes_pii_from_package_show(self):
         res = remove_pii(sample_package_show_result.copy())
         assert not any(elem in PII_LIST for elem in res)
