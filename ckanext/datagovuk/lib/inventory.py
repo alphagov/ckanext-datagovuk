@@ -36,7 +36,6 @@ class InventoryDocument(object):
         # Load and parse the Inventory XML
         xml_file = StringIO(str(inventory_xml_string))
         try:
-            # self.doc = lxml.etree.parse(xml_file, parser=parser)
             self.doc = lxml.etree.fromstring(inventory_xml_string)
         except lxml.etree.XMLSyntaxError as e:
             raise InventoryXmlError(str(e))

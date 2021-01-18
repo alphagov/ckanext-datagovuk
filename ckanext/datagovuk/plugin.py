@@ -217,8 +217,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.accessibility import accessibility
         from ckanext.datagovuk.views.user import me
 
-        # bp = Blueprint("datagovuk", self.__module__,
-        #                 url_defaults={u'group_type': u'organization', u'is_organization': True})
         bp = Blueprint("datagovuk", self.__module__)
         bp.template_folder = u'templates'
 
