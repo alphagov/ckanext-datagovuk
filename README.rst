@@ -71,7 +71,7 @@ do::
 Running the Tests
 -----------------
 
-Start by running the [docker ckan](https://github.com/alphagov/docker-ckan#development-mode) stack so that the CKAN environment is set up.
+Start by running the `docker ckan <https://github.com/alphagov/docker-ckan#development-mode>`_ stack so that the CKAN environment is set up.
 
 Run the tests, do::
 
@@ -81,7 +81,7 @@ Run the tests, do::
 Creating test data
 -----------------
 
-In order to be able to run the [CKAN functional tests](https://github.com/alphagov/ckan-functional-tests) 
+In order to be able to run the `CKAN functional tests <https://github.com/alphagov/ckan-functional-tests>`_
 we need to create test data. 
 
 Before running the paster command set the environment varibales:
