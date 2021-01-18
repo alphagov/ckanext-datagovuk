@@ -28,16 +28,6 @@ class UserController(UserController):
         from ckanext.datagovuk.schema import user_edit_form_schema
         return user_edit_form_schema()
 
-    # def me(self, locale=None):
-    #     if not c.user:
-    #         h.redirect_to(locale=locale, controller='user', action='login',
-    #                       id=None)
-    #     user_ref = c.userobj.get_reference_preferred_for_uri()
-    #     h.redirect_to(locale=locale, controller='user', action='dashboard_datasets')
-
-    ## use new config settings
-    # ckan.route_after_login = dashboard.datasets
-
     # intention: 8 character limit instead of 4
     # not covered by tests
     def _get_form_password(self):
