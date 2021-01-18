@@ -77,9 +77,6 @@ def create_dgu_test_data(context):
     if not publisher:
         print('=== Creating example publisher 1')
         model.Session.flush()
-        # rev = model.repo.new_revision()
-        # rev.author = u"DGU test admin"
-        # rev.message = u"Creating Example Publisher #1."
 
         publisher = model.Group(
             name=u"example-publisher-1",
@@ -89,10 +86,6 @@ def create_dgu_test_data(context):
         publisher.is_organization = True
         model.Session.add(publisher)
         model.repo.commit_and_remove()
-
-        # rev = model.repo.new_revision()
-        # rev.author = u"DGU test admin"
-        # rev.message = u"Adding charity-ngo category for example publisher 1."
 
         category = model.GroupExtra(group_id=publisher.id, key="category", value="charity-ngo")
         model.Session.add(category)
@@ -145,10 +138,6 @@ def create_dgu_test_data(context):
             model.Session.flush()
 
             print("=== Updating the example dataset to be in line with how DGU processes it")
-            # rev = model.repo.new_revision()
-            # rev.author = u"DGU test admin"
-            # rev.message = u"Updating example-data-number-one for CKAN functional tests"
-
             dataset = model.Package.get("example-dataset-number-one")
 
             contact_name = model.PackageExtra(package_id=dataset.id, key="contact-name", value="Example User")
@@ -191,9 +180,6 @@ def create_dgu_test_data(context):
     if not publisher2:
         print('=== Creating example publisher 2')
         model.Session.flush()
-        # rev = model.repo.new_revision()
-        # rev.author = u"DGU test admin"
-        # rev.message = u'''Creating Example Publisher #2.'''
 
         publisher2 = model.Group(
             name=u"example-publisher-2",
@@ -225,8 +211,6 @@ def remove_dgu_test_data(context):
 
     print('====== Removing DGU test data')
 
-    # flask_app = context.meta["flask_app"]
-    # with flask_app.test_request_context():
     engine = sqlalchemy.create_engine(tk.config.get('sqlalchemy.url'))
     model.init_model(engine)
 
