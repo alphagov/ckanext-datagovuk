@@ -109,6 +109,8 @@ def themes():
         "education": "Education",
         "health": "Health",
         "transport": "Transport",
+        "digital-services-performance": "Digital services performance",
+        "government-reference-data": "Government reference data"
     }
     return themes_dict
 

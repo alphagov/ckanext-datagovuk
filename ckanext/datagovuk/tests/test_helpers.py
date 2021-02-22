@@ -57,6 +57,8 @@ class TestHelpers(DBTest):
             "education": "Education",
             "health": "Health",
             "transport": "Transport",
+            "digital-services-performance": "Digital services performance",
+            "government-reference-data": "Government reference data"
         }
         self.assertEqual(h.themes(), themes_dict)
 
