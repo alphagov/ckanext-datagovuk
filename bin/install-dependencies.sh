@@ -16,8 +16,6 @@ pycsw_tag='2.4.0'
 
 pipopt='--exists-action=b'
 
-$pip install $pipopt -U pip
-
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
 $pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
 
