@@ -19,6 +19,8 @@ pipopt='--exists-action=b'
 
 $pip install $pipopt -U pip
 
+$pip uninstall $pipopt -y enum34
+
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirement-setuptools.txt)
 $pip install $pipopt -r https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirements.txt
 $pip install $pipopt -Ue "git+https://github.com/ckan/ckan.git@$ckan_sha#egg=ckan"
