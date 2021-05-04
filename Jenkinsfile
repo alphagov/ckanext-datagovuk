@@ -30,7 +30,7 @@ node ('!(ci-agent-4)') {
       govuk.dockerBuildTasks([:], "ckan")
     }
 
-    if (env.BRANCH_NAME == 'master') {
+    if (env.BRANCH_NAME == 'main') {
       stage('Push release tag') {
         govuk.pushTag(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER)
       }
