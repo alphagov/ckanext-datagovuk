@@ -15,9 +15,8 @@ node ('!(ci-agent-4)') {
 
     stage('Installing Packages') {
       sh("rm -rf ./venv")
-      sh("virtualenv --no-site-packages ./venv")
-      sh("curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py")
-      sh("bash -c 'venv/bin/python get-pip.py pip==20.3.4'")
+      sh("virtualenv --python=/opt/python2.7/bin/python --no-site-packages ./venv")
+      sh("bash -c 'venv/bin/python -m pip install --upgrade 'pip==20.3.4''")
       sh("./bin/install-dependencies.sh ./venv/bin/pip")
     }
 
