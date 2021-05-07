@@ -5,7 +5,7 @@ pip=${1-'/usr/bin/env pip'}
 ckan_harvest_fork='alphagov'
 ckan_harvest_sha='d939cd1a7d767af16816310d8d954d33e2b79c7c'
 
-ckan_dcat_sha='46b706549aaf13a4ef2451d6185d7a90a75aeb0f'
+ckan_dcat_sha='b757e5be643a17f08b1bb102348c370abee149d5'
 
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='2a78cc968232925acbc53b2315172cecca54f924'
@@ -15,6 +15,8 @@ ckan_sha='ckan-2.8.3-dgu'
 pycsw_tag='2.4.0'
 
 pipopt='--exists-action=b'
+
+$pip install $pipopt -U numpy==1.16.4
 
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
 $pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
