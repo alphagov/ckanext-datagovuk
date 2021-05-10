@@ -31,12 +31,12 @@ node ('!(ci-agent-4)') {
 
     if (env.BRANCH_NAME == 'main') {
       stage('Push release tag') {
-        govuk.pushTag(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER)
+        govuk.pushTag(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER, 'main')
       }
 
       if (govuk.hasDockerfile()) {
         stage("Tag Docker image") {
-          govuk.dockerTagMasterBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
+          govuk.dockerTagBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
         }
       }
 
