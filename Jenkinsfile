@@ -39,9 +39,12 @@ node ('!(ci-agent-4)') {
           govuk.dockerTagBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
         }
       }
-
-      stage('Deploy to Integration') {
-        govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
+    }
+    else {
+      if (env.BRANCH_NAME == 'main-2.9') {
+        stage('Deploy CKAN 2.9 to Integration') {
+          govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
+        }
       }
     }
   } catch (e) {
