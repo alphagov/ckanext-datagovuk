@@ -321,6 +321,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Found more than one dataset with the same guid",   # DCat
         "Errors found for object with GUID",                # Spatial
         "CSW identifier '(\w|-)+' already used, skipping",  # Spatial
+        "Exception during import:",                         # Spatial
         "Job timeout:",                                     # Harvest
         "was aborted or timed out",                         # Harvest
         "Too many consecutive retries for object",          # Harvest
