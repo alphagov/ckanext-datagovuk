@@ -40,12 +40,10 @@ node ('!(ci-agent-4)') {
         }
       }
     }
-    else {
-      if (env.BRANCH_NAME == 'main-2.9') {
-        stage('Deploy CKAN 2.9 to Integration') {
-          govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
-        }
-      }
+    else if (env.BRANCH_NAME == 'main-2.9') {
+      stage('Deploy CKAN 2.9 to Integration') {
+        govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
+      }      
     }
   } catch (e) {
     currentBuild.result = 'FAILED'
