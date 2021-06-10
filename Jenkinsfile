@@ -10,11 +10,13 @@ node ('!(ci-agent-4)') {
     stage('Checkout') {
       govuk.checkoutFromGitHubWithSSH(REPOSITORY)
       govuk.cleanupGit()
+      govuk.mergeIntoBranch('main')
     }
 
     stage('Installing Packages') {
       sh("rm -rf ./venv")
-      sh("python3.6 -m venv ./venv")
+      sh("virtualenv --python=/opt/python2.7/bin/python --no-site-packages ./venv")
+      sh("bash -c 'venv/bin/python -m pip install --upgrade 'pip==20.3.4''")
       sh("./bin/install-dependencies.sh ./venv/bin/pip")
     }
 
