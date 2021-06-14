@@ -10,8 +10,8 @@ ckan_dcat_sha='6b7ec505f303fb18e0eebcebf67130d36b3dca82'
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='d8dd6bd910f08c1f5408487cf2a455fc8ac0a91b'
 
-# ckan 2.9.1
-ckan_sha='bb272bfc7167b35cbff8ce48ed815dd4e23597ba'
+# ckan 2.9.3
+ckan_sha='e8b7970423e2cce9731441edd13f7fcfd3be58e9'
 
 pycsw_tag='2.4.0'
 
