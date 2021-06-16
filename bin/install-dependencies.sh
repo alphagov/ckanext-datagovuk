@@ -11,7 +11,7 @@ ckan_spatial_fork='alphagov'
 ckan_spatial_sha='d8dd6bd910f08c1f5408487cf2a455fc8ac0a91b'
 
 # ckan 2.9.3
-ckan_sha='e8b7970423e2cce9731441edd13f7fcfd3be58e9'
+ckan_sha='65a035890428ae581648696871a3021b7ca0f2f4'
 
 pycsw_tag='2.4.0'
 
@@ -21,9 +21,9 @@ $pip install $pipopt -U numpy==1.16.4
 
 $pip uninstall $pipopt -y enum34
 
-$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirement-setuptools.txt)
-$pip install $pipopt -r https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirements.txt
-$pip install $pipopt -Ue "git+https://github.com/ckan/ckan.git@$ckan_sha#egg=ckan"
+$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/alphagov/ckan/$ckan_sha/requirement-setuptools.txt)
+$pip install $pipopt -r https://raw.githubusercontent.com/alphagov/ckan/$ckan_sha/requirements.txt
+$pip install $pipopt -Ue "git+https://github.com/alphagov/ckan.git@$ckan_sha#egg=ckan"
 
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
 $pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
