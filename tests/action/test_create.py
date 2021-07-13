@@ -73,7 +73,7 @@ def mock_data():
     TestWhenValidOrganogramXlsFile.data_dict = {
         "package_id": "1234",
         "url": "valid-organogram.xls",
-        "upload": create.FakeFieldStorage("valid-organogram.xls", open(fixture_path, 'r'))
+        "upload": create.FakeFieldStorage("valid-organogram.xls", open(fixture_path, 'rb'))
     }
 
     TestWhenValidOrganogramXlsFile.pkg_dict = {
@@ -94,7 +94,7 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
     @patch("ckanext.datagovuk.action.create.mimetypes.guess_type")
     @patch("ckanext.datagovuk.action.create.resource_create_core", side_effect=fake_resource_create)
     def test_create_resource_uploads_resource_with_same_timestamp(
-        self, mock_resource_create, mock_guess_type, mock_get_action, mock_upload, mock_data
+        self, mock_resource_create, mock_guess_type, mock_get_action, mock_upload, mock_data, mock_field_storage
     ):
         mock_resource_create.mock_resource_create_list = []
         mock_guess_type.return_value = ['application/vnd.ms-excel']
@@ -172,7 +172,7 @@ class TestWhenValidOrganogramXlsFile(TestResourceCreate):
         self.data_dict = {
             "package_id": "1234",
             "url": "valid-organogram.xls",
-            "upload": create.FakeFieldStorage("valid-organogram.xls", open(self.fixture_path)),
+            "upload": create.FakeFieldStorage("valid-organogram.xls", open(self.fixture_path, 'rb')),
             "datafile-date": "2019-05-23"
         }
 
@@ -226,7 +226,7 @@ def mock_xlsx_data():
     TestWhenValidOrganogramXlsxFile.data_dict = {
         "package_id": "1234",
         "url": "valid-organogram.xls",
-        "upload": create.FakeFieldStorage("valid-organogram.xlsx", open(fixture_path, 'r'))
+        "upload": create.FakeFieldStorage("valid-organogram.xlsx", open(fixture_path, 'rb'))
     }
 
     TestWhenValidOrganogramXlsxFile.pkg_dict = {
@@ -276,7 +276,7 @@ def mock_invalid_senior():
     TestWithInvalidSeniorsInOrganogramExcelFile.data_dict = {
         "package_id": "1234",
         "url": "invalid-organogram.xls",
-        "upload": create.FakeFieldStorage("invalid-organogram.xls", open(fixture_path))
+        "upload": create.FakeFieldStorage("invalid-organogram.xls", open(fixture_path, 'rb'))
     }
 
     TestWithInvalidSeniorsInOrganogramExcelFile.pkg_dict = {
@@ -340,7 +340,7 @@ def mock_invalid_junior():
     TestWithInvalidJuniorsInOrganogramExcelFile.data_dict = {
         "package_id": "1234",
         "url": "invalid-organogram.xls",
-        "upload": create.FakeFieldStorage("invalid-organogram.xls", open(fixture_path))
+        "upload": create.FakeFieldStorage("invalid-organogram.xls", open(fixture_path, 'rb'))
     }
 
     TestWithInvalidJuniorsInOrganogramExcelFile.pkg_dict = {

@@ -33,7 +33,7 @@ class ValidationFatalError(Exception):
     pass
 
 
-def load_excel_store_errors(filename, sheet_name, errors, validation_errors, input_columns, rename_columns, integer_columns, string_columns):
+def load_excel_store_errors(stream, sheet_name, errors, validation_errors, input_columns, rename_columns, integer_columns, string_columns):
     """Carefully load an Excel file, taking care to log errors and produce clean output.
     You'll always receive a dataframe with the expected columns, though it might contain 0 rows if
     there are errors. Strings will be stored in the 'errors' array.
@@ -44,13 +44,16 @@ def load_excel_store_errors(filename, sheet_name, errors, validation_errors, inp
     try:
         # need to convert strings at this stage or leading zeros get lost
         string_converters = dict((col, str) for col in string_columns)
-        df = pandas.read_excel(filename.name,
-                               sheet_name,
-                               convert_float=True,
-                               usecols=range(len(input_columns)),
-                               converters=string_converters,
-                               keep_default_na=False,
-                               na_values=[''])
+        stream.seek(0)
+        data = pandas.ExcelFile(io.BytesIO(stream.read()))
+        df = data.parse(
+                            sheet_name,
+                            convert_float=True,
+                            usecols=range(len(input_columns)),
+                            converters=string_converters,
+                            keep_default_na=False,
+                            na_values=['']
+                        )
     except XLRDError as e:
         errors.append(str(e))
         return pandas.DataFrame(columns=output_columns)
@@ -238,15 +241,15 @@ def standard_references():
     references['professions'] = [u'Communications', u'Economics', u'Finance', u'Human Resources', u'Information Technology', u'Internal Audit', u'Knowledge and Information Management (KIM)', u'Law', u'Medicine', u'Military', u'Operational Delivery', u'Operational Research', u'Other', u'Planning', u'Policy', u'Procurement', u'Programme and Project Management (PPM)', u'Property and asset management', u'Psychology', u'Science and Engineering', u'Social Research', u'Statisticians', u'Tax Professionals', u'Vets']
     return references
 
-def load_references(xls_filename, errors, validation_errors):
+def load_references(xls_stream, errors, validation_errors):
     # Output columns can be different. Update according to the rename_columns dict:
     try:
-        dfs = pandas.read_excel(xls_filename.name,
-                                [#'core-24-depts',
-                                 '(reference) senior-staff-grades',
-                                 '(reference) professions',
-                                 '(reference) units',
-                                 ])
+        data = pandas.ExcelFile(io.BytesIO(xls_stream.read()))
+        dfs = data.parse([#'core-24-depts',
+                            '(reference) senior-staff-grades',
+                            '(reference) professions',
+                            '(reference) units',
+                        ])
     except XLRDError as e:
         if str(e) == "No sheet named <'(reference) units'>":
             validation_errors.append(str(e))
