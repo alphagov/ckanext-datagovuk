@@ -33,6 +33,14 @@ class FakeFieldStorage(cgi.FieldStorage):
         self.file = stream
         self.file.seek(0)
 
+    def read(self):
+        self.file.seek(0)
+        return self.file.read()
+
+    def seek(self, pos):
+        self.file.seek(pos)
+
+
 def resource_create(context, data_dict):
     '''Wraps the original CKAN resource creation
     to handle XLS organogram uploads and split them into
@@ -64,9 +72,9 @@ def resource_create(context, data_dict):
         if pkg_dict.get('schema-vocabulary') in organogram_ids:
             log.debug("Organogram detected")
 
-            file_handle = data_dict['upload'].file
+            file_stream = data_dict['upload']
 
-            errors, warnings, senior_csv, junior_csv = create_organogram_csvs(file_handle)
+            errors, warnings, senior_csv, junior_csv = create_organogram_csvs(file_stream)
 
             if errors:
                 context['session'].rollback()
