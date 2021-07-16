@@ -293,9 +293,12 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     ]
 
     def before_send(self, event, hint):
-        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
-            any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
-            else event
+        # disable sentry while CKAN is processing objects which have timed out due to upgrade
+        return None
+
+        # return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
+        #     any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
+        #     else event
 
     def make_middleware(self, app, config):
         sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
