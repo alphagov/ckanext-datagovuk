@@ -3,7 +3,7 @@
 pip=${1-'/usr/bin/env pip'}
 
 ckan_harvest_fork='alphagov'
-ckan_harvest_sha='283ac0498fd22056fb8572d49b25cd8492b7178f'
+ckan_harvest_sha='ba53566fb51d6d860b2a1c36b46fe9ebe2cf53b3'
 
 ckan_dcat_sha='6b7ec505f303fb18e0eebcebf67130d36b3dca82'
 
