@@ -58,6 +58,7 @@ class TestPlugin:
         assert ('invalid', 0, 'key') in data[('__junk',)]
         assert ('invalid', 0, 'value') in data[('__junk',)]
 
+    @pytest.mark.skip("Sentry errors disabled during upgrade - enable this test after upgrade complete")
     def test_plugin_before_send(self):
         mock_event  = {
             'logentry': {
