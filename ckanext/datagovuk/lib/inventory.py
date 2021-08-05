@@ -1,7 +1,7 @@
 import logging
-import cStringIO
+from io import BytesIO, StringIO
 import os
-import HTMLParser
+from html.parser import HTMLParser
 import datetime
 
 import lxml.etree
@@ -34,11 +34,11 @@ class InventoryDocument(object):
         parser = lxml.etree.XMLParser(schema=schema)
 
         # Load and parse the Inventory XML
-        xml_file = cStringIO.StringIO(inventory_xml_string)
+        xml_file = StringIO(str(inventory_xml_string))
         try:
-            self.doc = lxml.etree.parse(xml_file, parser=parser)
-        except lxml.etree.XMLSyntaxError, e:
-            raise InventoryXmlError(unicode(e))
+            self.doc = lxml.etree.fromstring(inventory_xml_string)
+        except lxml.etree.XMLSyntaxError as e:
+            raise InventoryXmlError(str(e))
         finally:
             xml_file.close()
 
@@ -54,7 +54,7 @@ class InventoryDocument(object):
         """
         md = {}
 
-        root = self.doc.getroot()
+        root = self.doc
         modified_str = root.get('Modified')
         md['modified'] = datetime.datetime.strptime(modified_str, '%Y-%m-%d').date() if modified_str else None
         md['identifier'] = self._get_node_text(root.xpath('inv:Identifier', namespaces=NSMAP))
@@ -95,9 +95,7 @@ class InventoryDocument(object):
         """
         Converts a Dataset node serialized as an XML string to an etree node.
         """
-        # do getroot() so that we return an Element rather than an ElementTree,
-        # since thats what dataset_to_dict wants.
-        return lxml.etree.parse(cStringIO.StringIO(node_xml_string)).getroot()
+        return lxml.etree.fromstring(node_xml_string)
 
 
     @classmethod
@@ -117,7 +115,7 @@ class InventoryDocument(object):
             d['rights'] = 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/'
 
         # Clean description to decode any encoded HTML
-        h = HTMLParser.HTMLParser()
+        h = HTMLParser()
         d['description'] = h.unescape(d.get('description', ''))
 
         services = []
@@ -155,4 +153,3 @@ class InventoryDocument(object):
             res['availability'] = cls._get_node_text(n.xpath('inv:Availability', namespaces=NSMAP))
             res['conforms_to'] = cls._get_node_text(n.xpath('inv:ConformsTo', namespaces=NSMAP))
             yield res
-

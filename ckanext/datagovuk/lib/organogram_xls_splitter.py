@@ -33,7 +33,7 @@ class ValidationFatalError(Exception):
     pass
 
 
-def load_excel_store_errors(filename, sheet_name, errors, validation_errors, input_columns, rename_columns, integer_columns, string_columns):
+def load_excel_store_errors(stream, sheet_name, errors, validation_errors, input_columns, rename_columns, integer_columns, string_columns):
     """Carefully load an Excel file, taking care to log errors and produce clean output.
     You'll always receive a dataframe with the expected columns, though it might contain 0 rows if
     there are errors. Strings will be stored in the 'errors' array.
@@ -44,14 +44,17 @@ def load_excel_store_errors(filename, sheet_name, errors, validation_errors, inp
     try:
         # need to convert strings at this stage or leading zeros get lost
         string_converters = dict((col, str) for col in string_columns)
-        df = pandas.read_excel(filename,
-                               sheet_name,
-                               convert_float=True,
-                               parse_cols=len(input_columns)-1,
-                               converters=string_converters,
-                               keep_default_na=False,
-                               na_values=[''])
-    except XLRDError, e:
+        stream.seek(0)
+        data = pandas.ExcelFile(io.BytesIO(stream.read()))
+        df = data.parse(
+                            sheet_name,
+                            convert_float=True,
+                            usecols=range(len(input_columns)),
+                            converters=string_converters,
+                            keep_default_na=False,
+                            na_values=['']
+                        )
+    except XLRDError as e:
         errors.append(str(e))
         return pandas.DataFrame(columns=output_columns)
     # Verify number of columns
@@ -238,16 +241,16 @@ def standard_references():
     references['professions'] = [u'Communications', u'Economics', u'Finance', u'Human Resources', u'Information Technology', u'Internal Audit', u'Knowledge and Information Management (KIM)', u'Law', u'Medicine', u'Military', u'Operational Delivery', u'Operational Research', u'Other', u'Planning', u'Policy', u'Procurement', u'Programme and Project Management (PPM)', u'Property and asset management', u'Psychology', u'Science and Engineering', u'Social Research', u'Statisticians', u'Tax Professionals', u'Vets']
     return references
 
-def load_references(xls_filename, errors, validation_errors):
+def load_references(xls_stream, errors, validation_errors):
     # Output columns can be different. Update according to the rename_columns dict:
     try:
-        dfs = pandas.read_excel(xls_filename,
-                                [#'core-24-depts',
-                                 '(reference) senior-staff-grades',
-                                 '(reference) professions',
-                                 '(reference) units',
-                                 ])
-    except XLRDError, e:
+        data = pandas.ExcelFile(io.BytesIO(xls_stream.read()))
+        dfs = data.parse([#'core-24-depts',
+                            '(reference) senior-staff-grades',
+                            '(reference) professions',
+                            '(reference) units',
+                        ])
+    except XLRDError as e:
         if str(e) == "No sheet named <'(reference) units'>":
             validation_errors.append(str(e))
             return {}
@@ -257,7 +260,7 @@ def load_references(xls_filename, errors, validation_errors):
             # anyway. Read it again, just for the units.
             try:
                 dfs = pandas.read_excel(xls_filename, ['(reference) units'])
-            except XLRDError, e:
+            except XLRDError as e:
                 if str(e) == "No sheet named <'(reference) units'>":
                     validation_errors.append(str(e))
                 else:
@@ -304,7 +307,7 @@ def verify_graph(senior, junior, errors):
     be displayed (e.g. no "top post").
     '''
     # ignore eliminated posts (i.e. don't exist any more)
-    senior_ = senior[senior['Name'].astype(unicode) != "Eliminated"]
+    senior_ = senior[senior['Name'].astype(str) != "Eliminated"]
 
     # merge posts which are job shares
     # "duplicated will be the grade, job title, job/team function,
@@ -396,7 +399,7 @@ def verify_graph(senior, junior, errors):
         try:
             top_level_boss_by_ref[ref] = get_top_level_boss_recursive(
                 boss_ref, posts_recursed)
-        except PostReportsToUnknownPostError, e:
+        except PostReportsToUnknownPostError as e:
             raise PostReportsToUnknownPostError('Error with senior post "%s": %s' % (ref, e))
 
         return top_level_boss_by_ref[ref]
@@ -404,14 +407,14 @@ def verify_graph(senior, junior, errors):
         ref = post['Post Unique Reference']
         try:
             top_level_boss = get_top_level_boss_recursive(ref)
-        except MaxDepthError, posts_recursed:
+        except MaxDepthError as posts_recursed:
             errors.append('Could not follow the reporting structure from '
                           'Senior post %s "%s" up to the top in 100 steps - '
                           'is there a loop? Posts: %s'
                           % (index, ref, posts_recursed))
-        except PostReportsToUnknownPostError, e:
+        except PostReportsToUnknownPostError as e:
             errors.append(str(e))
-        except PostReportLoopError, posts_recursed:
+        except PostReportLoopError as posts_recursed:
             if str(posts_recursed).split(' ')[-1] in \
                     refs_that_report_to_themselves:
                 # error has already reported - no point flogging it
@@ -428,10 +431,10 @@ def verify_graph(senior, junior, errors):
 
     # do all juniors report to a correct senior ref?
     junior_report_to_refs = set(junior['Reporting Senior Post'])
-    eliminated_posts = set(senior[senior['Name'].astype(unicode) == "Eliminated"]['Post Unique Reference'])
+    eliminated_posts = set(senior[senior['Name'].astype(str) == "Eliminated"]['Post Unique Reference'])
     bad_junior_refs = junior_report_to_refs - senior_post_refs
     for ref in bad_junior_refs:
-        posts = junior[junior['Reporting Senior Post'].astype(unicode) == ref]
+        posts = junior[junior['Reporting Senior Post'].astype(str) == ref]
         for post_index, post in posts.iterrows():
             if ref == 'nan' or ref is None or pandas.isnull(ref):
                 problem = 'You must not leave this cell blank - all junior posts must report to a senior post.'
@@ -609,7 +612,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
         if is_blank(d):
             validation_errors.append(u'%s: The "Job Title" cannot be blank.' % cell_ref)
         else:
-            if isinstance(d, basestring) and d != 'N/D':
+            if isinstance(d, str) and d != 'N/D':
                 if a in (0, '0'):
                     if d != 'Not in post':
                         validation_errors.append(u'%s: Because the "Post Unique Reference" is "0" (individual is paid but not in post), the "Job Title" must be "Not in post".' % cell_ref)
@@ -636,7 +639,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
         if is_blank(e):
             validation_errors.append(u'%s: The "Job/Team Function" cannot be blank.' % cell_ref)
         else:
-            if isinstance(e, basestring) and e != 'N/D':
+            if isinstance(e, str) and e != 'N/D':
                 if a == 0:  # but what about string '0'?
                     if e != 'N/A':
                         validation_errors.append(u'%s: Because the "Post Unique Reference" is "0" (individual is paid but not in post), the "Job/Team Function" must be "N/A".' % cell_ref)
@@ -731,7 +734,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
         if is_blank(i):
             validation_errors.append(u'%s: The "Contact Phone" must be supplied - it cannot be blank.' % cell_ref)
         else:
-            if (is_number(i) or isinstance(i, basestring)) and \
+            if (is_number(i) or isinstance(i, str)) and \
                 (i != 'N/D' or j != 'N/D'):
                 if a in (0, '0') or b in ('Vacant', 'VACANT', 'vacant', 'Eliminated', 'ELIMINATED', 'eliminated'):
                     ref_value = '"Post Unique Reference" is "0" (individual is paid but not in post)' if a in (0, '0') else '"Name" is "Vacant" or "Eliminated"'
@@ -778,7 +781,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
             # j_invalid = (is_blank(j) and not is_blank(a)) or \
             #     (j == 'N/A' and a != '0') or \
             #     (i == 'N/D' and j == 'N/D') or \
-            #     not (j == 'N/D' or (isinstance(j, basestring) and
+            #     not (j == 'N/D' or (isinstance(j, str) and
             #                         '@' in j and '.' in j))
             # split up ao2 into the four conditions
             if is_blank(j) and not is_blank(a):
@@ -787,7 +790,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
                 validation_errors.append(u'%s: The "Contact E-mail" can only be "N/A" if the "Post Unique Reference" is "0" (individual is paid but not in post).' % cell_ref)
             elif i == 'N/D' and j == 'N/D':
                 validation_errors.append(u'%s: You must provide at least one form of contact. You cannot have both "Contact Phone" and "Contact E-mail" as "N/D".' % cell_ref)
-            elif not (j == 'N/D' or (isinstance(j, basestring) and
+            elif not (j == 'N/D' or (isinstance(j, str) and
                                      '@' in j and '.' in j)):
                 validation_errors.append(u'%s: The "Contact E-mail" must be a valid email address (containing "@" and "." characters) unless the "Name" is "Vacant" or "Eliminated", or the "Post Unique Reference" is "0" (the individual is paid but not in post). It cannot be blank.' % cell_ref)
 
@@ -812,7 +815,7 @@ def in_sheet_validation_senior_columns(row, df, validation_errors, sheet_name, r
             validation_errors.append(u'%s: The "Reports to Senior Post" value must be supplied - it cannot be blank.' % cell_ref)
         else:
             if k != 'XX':  # what about lowercase?
-                seniorPostUniqueReference = df.ix[:, 0]
+                seniorPostUniqueReference = df.iloc[:, 0]
                 # invalid unless the value is in column A
                 if not_match(k, seniorPostUniqueReference):
                     validation_errors.append(u'%s: The "Reports to Senior Post" value must match one of the values in "Post Unique Reference" (column A) or be "XX" (which is a top level post - reports to no-one in this sheet).' % cell_ref)
@@ -886,9 +889,9 @@ class Excel(object):
         # there are none of those
         if value == '*' and list_.any():
             return False
-        value_ = unicode(value).lower()
+        value_ = str(value).lower()
         for item in list_:
-            if value_ == unicode(item).lower():
+            if value_ == str(item).lower():
                 return False
         return True
 
@@ -994,9 +997,9 @@ def load_xls_and_get_errors(xls_filename):
     errors = validation_errors
     try:
         verify_graph(senior_df, junior_df, errors)
-    except ValidationFatalError, e:
+    except ValidationFatalError as e:
         # display error - organogram is not displayable
-        return None, None, [unicode(e)], warnings, False
+        return None, None, [str(e)], warnings, False
 
     # If we get this far then it will display, although there might be problems
     # with some posts
@@ -1005,7 +1008,7 @@ def load_xls_and_get_errors(xls_filename):
 
 
 def print_error(error_msg):
-    print 'ERROR:', error_msg.encode('utf8')  # encoding for Drupal exec()
+    print('ERROR:', error_msg.encode('utf8'))  # encoding for Drupal exec()
 
 
 def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
@@ -1023,14 +1026,14 @@ def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
     junior_df = load_junior(xls_filename, load_errors, validation_errors, references)
 
     if load_errors:
-        print 'Critical error(s):'
+        print('Critical error(s):')
         if print_errors:
             for error in load_errors:
                 print_error(error)
         # errors mean no rows can be got from the file, so can't do anything
         return 'load', senior_df, junior_df, load_errors, warnings
     if validation_errors and verify_level == 'load, display and be valid':
-        print 'Validation error(s) during load:'
+        print('Validation error(s) during load:')
         if print_errors:
             for error in validation_errors:
                 print_error(error)
@@ -1040,10 +1043,10 @@ def load_xls_and_stop_on_errors(xls_filename, verify_level, print_errors=True):
     if verify_level != 'load':
         try:
             verify_graph(senior_df, junior_df, validate_errors)
-        except ValidationFatalError, e:
+        except ValidationFatalError as e:
             # display error - organogram is not displayable
             if print_errors:
-                print_error(unicode(e))
+                print_error(str(e))
             return 'validating tree', senior_df, junior_df, validate_errors, warnings
 
         if verify_level == 'load, display and be valid' and validate_errors:
@@ -1077,7 +1080,7 @@ def calculate_organogram_name(org):
 def write_output_files(basename, output_folder, senior_df, junior_df):
     senior_filename = os.path.join(output_folder, basename + '-senior.csv')
     junior_filename = os.path.join(output_folder, basename + '-junior.csv')
-    print "Writing", senior_filename, junior_filename
+    print("Writing", senior_filename, junior_filename)
 
     save_csvs(senior_filename, junior_filename, senior_df, junior_df)
 
@@ -1088,8 +1091,8 @@ def create_organogram_csvs(input_xls_file):
     senior_df, junior_df, errors, warnings, _will_display = \
         load_xls_and_get_errors(input_xls_file)
 
-    senior_csv = io.BytesIO()
-    junior_csv = io.BytesIO()
+    senior_csv = io.StringIO()
+    junior_csv = io.StringIO()
 
     if not errors:
         save_csvs(senior_csv, junior_csv, senior_df, junior_df)
@@ -1098,7 +1101,7 @@ def create_organogram_csvs(input_xls_file):
 
 
 def main(input_xls_filepath, output_folder):
-    print "Loading", input_xls_filepath
+    print("Loading", input_xls_filepath)
 
     if args.date:
         verify_level = get_verify_level(args.date, input_xls_filepath)
@@ -1127,10 +1130,10 @@ def main(input_xls_filepath, output_folder):
     index = [{'name': name, 'value': basename}]  # a list because of legacy
     index = sorted(index, key=lambda x: x['name'])
     index_filename = os.path.join(output_folder, 'index.json')
-    print "Writing index file:", index_filename
+    print("Writing index file:", index_filename)
     with open(index_filename, 'w') as f:
         json.dump(index, f)
-    print "Done."
+    print("Done.")
 
     # return values are only for the tests
     return senior_filename, junior_filename, senior_df, junior_df
@@ -1145,7 +1148,7 @@ def save_csvs(senior_filename, junior_filename, senior_df, junior_df):
 
 
 def usage():
-    print "Usage: %s input_1.xls input_2.xls ... output_folder/" % sys.argv[0]
+    print("Usage: %s input_1.xls input_2.xls ... output_folder/" % sys.argv[0])
     sys.exit()
 
 

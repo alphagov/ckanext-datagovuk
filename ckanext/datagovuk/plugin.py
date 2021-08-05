@@ -1,6 +1,6 @@
 import logging
-from pylons import config
 import re
+from ckan.plugins.toolkit import config
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -15,10 +15,9 @@ import ckanext.datagovuk.action.get
 import ckanext.datagovuk.action.update
 import ckanext.datagovuk.upload as upload
 
+from ckanext.datagovuk.lib import cli
 from ckanext.datagovuk.logic.theme_validator import valid_theme
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
-
-from pylons.wsgiapp import PylonsApp
 
 from flask import Blueprint
 
@@ -26,10 +25,13 @@ import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
+from ckan.views.group import index as organization_index, register_group_plugin_rules
+
 
 class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.ITranslation)
     plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.IClick)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IBlueprint)
@@ -40,6 +42,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IMiddleware, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
+
+    # IClick
+
+    def get_commands(self):
+        return cli.get_commands()
 
     # IConfigurer
 
@@ -72,9 +79,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'codelist': [toolkit.get_validator('ignore_missing'),
                          toolkit.get_converter('convert_to_extras')],
             'author_email': [toolkit.get_validator('ignore_missing'),
-                             unicode],
+                             str],
             'maintainer_email': [toolkit.get_validator('ignore_missing'),
-                             unicode],
+                             str],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -90,7 +97,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         extras_schema['key'] = [
             not_empty,
             extra_key_not_in_root_schema,
-            unicode,
+            str,
         ]
 
         schema['extras'] = extras_schema
@@ -205,18 +212,37 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     # IBlueprint
 
     def get_blueprint(self):
+        from ckanext.datagovuk.views.dataset import dataset_search, dataset_search_v3
         from ckanext.datagovuk.views.healthcheck import healthcheck
         from ckanext.datagovuk.views.accessibility import accessibility
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
             DGUUserRegisterView,
-            DGUUserRequestResetView,
             me,
         )
+
         bp = Blueprint("datagovuk", self.__module__)
+        bp.template_folder = u'templates'
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
         bp.add_url_rule(u"/accessibility", view_func=accessibility)
+        bp.add_url_rule(u"/api/search/dataset", view_func=dataset_search)
+        bp.add_url_rule(u"/api/3/search/dataset", view_func=dataset_search_v3)
+
+        def dgu_home():
+            return toolkit.redirect_to(toolkit.url_for('home.index'))
+
+        bp.add_url_rule(u"/home", view_func=dgu_home)
+
+        # allow for /publisher route, not sure if needed if /organization is ok
+        from ckan.views.group import index as organization_index
+        bp.add_url_rule('/publisher', view_func=organization_index, strict_slashes=False)
+        bp.add_url_rule('/publisher/new', view_func=organization_index, strict_slashes=False)
+
+        # monkeypatch set_password
+        import ckan.cli.user
+        from ckanext.datagovuk.ckan_patches.cli import set_password
+        ckan.cli.user.set_password = set_password
 
         bp.add_url_rule(
             u"/user/register",
@@ -233,69 +259,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         import ckan.views.user as ckan_user_views
         ckan_user_views.me = me
 
-        bp.add_url_rule(
-            u'/user/reset',
-            view_func=DGUUserRequestResetView.as_view(str(u'request_reset')),
-        )
-
         return bp
-
-    # IRoutes
-
-    def before_map(self, route_map):
-        api_search_dataset_controller = 'ckanext.datagovuk.controllers.api:DGUApiController'
-        route_map.connect('/api/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
-        route_map.connect('/api/3/search/dataset', controller=api_search_dataset_controller, action='api_search_dataset')
-        route_map.redirect('/home', '/')
-        return route_map
-
-    def after_map(self, route_map):
-        # Deletes all the organization routes
-        delete_routes_by_path_startswith(route_map, '/organization')
-
-        harvest_org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
-        route_map.connect('harvest_org_list', '/publisher/harvest/' + '{id}', controller=harvest_org_controller, action='source_list')
-
-        # add this function in OrganizationController as CKAN doesn't have 'publisher' group type
-        def _guess_group_type(self, expecting_name=False):
-            return 'organization'
-        
-        from ckan.controllers.organization import OrganizationController
-        OrganizationController._guess_group_type = _guess_group_type
-
-        # Recreates the organization routes with /publisher instead.
-        with SubMapper(route_map, controller='organization') as m:
-            m.connect('organizations_index', '/publisher', action='index')
-            m.connect('organization_index', '/publisher', action='index')
-            m.connect('organization_new', '/publisher/new', action='new')
-            for action in [
-            'delete',
-            'admins',
-            'member_new',
-            'member_delete',
-            'history']:
-                m.connect('organization_' + action,
-                        '/publisher/' + action + '/{id}',
-                        action=action)
-
-            m.connect('organization_activity', '/publisher/activity/{id}/{offset}',
-                    action='activity')
-            m.connect('organization_read', '/publisher/{id}', action='read')
-            m.connect('organization_about', '/publisher/about/{id}',
-                    action='about')
-            m.connect('organization_read', '/publisher/{id}', action='read',
-                    ckan_icon='sitemap')
-            m.connect('organization_edit', '/publisher/edit/{id}',
-                    action='edit')
-            m.connect('organization_members', '/publisher/members/{id}',
-                    action='members')
-            m.connect('organization_bulk_process',
-                    '/publisher/bulk_process/{id}',
-                    action='bulk_process')
-
-        route_map.connect('harvest_index', '/harvest', action='index')
-
-        return route_map
 
     # ITemplateHelpers
 
@@ -329,17 +293,16 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     ]
 
     def before_send(self, event, hint):
-        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
-            any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
-            else event
+        # disable sentry while CKAN is processing objects which have timed out due to upgrade
+        return None
+
+        # return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
+        #     any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
+        #     else event
 
     def make_middleware(self, app, config):
-        # we get this called twice, once for Flask and once for Pylons
-        if isinstance(app, PylonsApp):
-            return SentryWsgiMiddleware(app)
-        else:
-            sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
-            return app
+        sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
+        return app
 
     # IResourceController
 
@@ -368,22 +331,3 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def before_update(self, context, _, resource):
         """Runs before resource_update. Modifies resource destructively to put in the S3 URL"""
         self.before_create_or_update(context, resource)
-
-    import ckanext.datagovuk.ckan_patches  # import does the monkey patching
-
-
-def delete_routes_by_path_startswith(map, path_startswith):
-    """
-    This function will remove from the routing map any
-    path that starts with the provided argument (/ required).
-
-    Not really a great thing to be doing, but CKAN doesn't
-    provide a way to i18n URLs because it'll likely cause
-    clashes with other group subclasses.
-    """
-    matches_to_delete = []
-    for match in map.matchlist:
-        if match.routepath.startswith(path_startswith):
-            matches_to_delete.append(match)
-    for match in matches_to_delete:
-        map.matchlist.remove(match)

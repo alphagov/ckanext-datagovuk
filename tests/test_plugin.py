@@ -1,4 +1,4 @@
-"""Tests for plugin.py."""
+import pytest
 import unittest
 
 from ckan.lib.navl.dictization_functions import augment_data
@@ -34,13 +34,14 @@ sample_data_invalid = {
 }
 
 
-class TestPlugin(unittest.TestCase):
+@pytest.mark.usefixtures("with_plugins")
+class TestPlugin:
     def test_plugin_action_mapping(self):
         action_mapping = DatagovukPlugin().get_actions()
 
-        self.assertEqual(action_mapping['resource_create'], create.resource_create)
-        self.assertEqual(action_mapping['user_create'], create.user_create)
-        self.assertEqual(action_mapping['user_auth'], get.user_auth)
+        assert action_mapping['resource_create'] == create.resource_create
+        assert action_mapping['user_create'] == create.user_create
+        assert action_mapping['user_auth'] == get.user_auth
 
     def test_plugin_schema_update(self):
         package_schema = DatagovukPlugin().update_package_schema()
@@ -57,6 +58,7 @@ class TestPlugin(unittest.TestCase):
         assert ('invalid', 0, 'key') in data[('__junk',)]
         assert ('invalid', 0, 'value') in data[('__junk',)]
 
+    @pytest.mark.skip("Sentry errors disabled during upgrade - enable this test after upgrade complete")
     def test_plugin_before_send(self):
         mock_event  = {
             'logentry': {

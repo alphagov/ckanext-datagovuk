@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import cgi
-from StringIO import StringIO
+from io import StringIO
+import pytest
 import unittest
 
-import pylons.config as config
+from ckan.common import config
 from botocore.exceptions import ClientError
 from ckanext.datagovuk.plugin import DatagovukPlugin
 from ckanext.datagovuk.upload import upload_resource_to_s3
@@ -20,17 +21,12 @@ class MockAction:
             return {"name": "test"}
 
 
-@patch.dict(
-    "pylons.config",
-    {
-        "ckan.datagovuk.s3_aws_access_key_id": "key-id",
-        "ckan.datagovuk.s3_aws_secret_access_key": "secret-key",
-        "ckan.datagovuk.s3_bucket_name": "test-bucket",
-        "ckan.datagovuk.s3_url_prefix": "https://s3.amazonaws.com/test/",
-        "ckan.datagovuk.s3_aws_region_name": "eu-west-1",
-    },
-)
-class TestUpload(unittest.TestCase):
+@pytest.mark.ckan_config("ckan.datagovuk.s3_aws_access_key_id", "key-id")
+@pytest.mark.ckan_config("ckan.datagovuk.s3_aws_secret_access_key", "secret-key")
+@pytest.mark.ckan_config("ckan.datagovuk.s3_bucket_name", "test-bucket")
+@pytest.mark.ckan_config("ckan.datagovuk.s3_url_prefix", "https://s3.amazonaws.com/test/")
+@pytest.mark.ckan_config("ckan.datagovuk.s3_aws_region_name", "eu-west-1")
+class TestUpload:
     upload = cgi.FieldStorage()
     upload.file = StringIO("hello world")
     resource = {

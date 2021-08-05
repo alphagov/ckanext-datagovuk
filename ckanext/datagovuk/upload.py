@@ -6,7 +6,6 @@ Contains functions that upload the organograms to S3.
 '''
 import cgi
 import os
-import StringIO
 import zipfile
 import mimetypes
 import collections
@@ -15,12 +14,11 @@ import datetime
 from dateutil import parser
 
 from slugify import slugify
-from pylons import config
+from ckan.plugins.toolkit import config
 import boto3
 import requests
 from botocore.exceptions import ClientError
 
-import paste.fileapp
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.uploader as uploader
 from ckan.common import request
@@ -106,7 +104,7 @@ def upload_resource_to_s3(context, resource):
         logger.info("Uploading resource %s to S3" % resource.get('name', ''))
         bucket.Object(s3_filepath).delete()
         obj = bucket.put_object(Key=s3_filepath,
-                                Body=body,
+                                Body=body.getvalue().encode('utf-8'),
                                 ContentType=content_type)
         obj.Acl().put(ACL='public-read')
         logger.info("Successfully uploaded resource %s to S3" % resource.get('name', ''))

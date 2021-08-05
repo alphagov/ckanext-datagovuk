@@ -13,10 +13,10 @@ node ('!(ci-agent-4)') {
       govuk.mergeIntoBranch('main')
     }
 
-    stage('Installing Packages') {
+    stage('Installing Packages for python 3 release') {
       sh("rm -rf ./venv")
-      sh("virtualenv --python=/opt/python2.7/bin/python --no-site-packages ./venv")
-      sh("bash -c 'venv/bin/python -m pip install --upgrade 'pip==20.3.4''")
+      sh("python3.6 -m venv ./venv")
+      sh("bash -c 'venv/bin/python -m pip install --upgrade 'pip==21.2.2''")
       sh("./bin/install-dependencies.sh ./venv/bin/pip")
     }
 
@@ -36,14 +36,13 @@ node ('!(ci-agent-4)') {
 
       if (govuk.hasDockerfile()) {
         stage("Tag Docker image") {
-          govuk.dockerTagBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
+          govuk.dockerTagBranch("ckan29", env.BRANCH_NAME, env.BUILD_NUMBER)
         }
       }
-    }
-    else if (env.BRANCH_NAME == 'main-2.9') {
-      stage('Deploy CKAN 2.9 to Integration') {
-        govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
-      }      
+
+      stage('Deploy to Integration') {
+        govuk.deployIntegration('ckan29', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
+      }
     }
   } catch (e) {
     currentBuild.result = 'FAILED'

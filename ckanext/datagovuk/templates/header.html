@@ -2,7 +2,7 @@
 
 {% block header_logo %}
   <span class="header-logo">
-    <a href="{{ h.url_for('home') }}">
+    <a href="{{ h.url_for('home.index') }}">
       {{ g.site_title }}
       {% if g.site_description %} | {{ g.site_description }}{% endif %}
     </a>
@@ -11,10 +11,10 @@
 
 {% block header_site_navigation_tabs %}
   {{ h.build_nav_main(
-    ('search', _('Datasets')),
-    ('organizations_index', _('Organizations')),
-    ('harvest_index', _('Harvest'))
+    ('dataset.search', _('Datasets')),
+    ('organization.index', _('Organizations')),
   ) }}
+  <li>{{ h.nav_link(_('Harvest'), named_route='harvest_search') }}</li>
   <li><a href="https://data.gov.uk/support">Support</a></li>
 {% endblock %}
 
@@ -40,7 +40,7 @@
   {% set new_activities = h.new_activities() %}
   <li class="notifications {% if new_activities > 0 %}notifications-important{% endif %}">
     {% set notifications_tooltip = ngettext('Dashboard (%(num)d new item)', 'Dashboard (%(num)d new items)', new_activities) %}
-    <a href="{{ h.url_for(controller='user', action='dashboard_datasets') }}" title="{{ notifications_tooltip }}">
+    <a href="{{ h.url_for('dashboard.datasets') }}" title="{{ notifications_tooltip }}">
       <i class="fa fa-tachometer" aria-hidden="true"></i>
       <span class="text">{{ _('Dashboard') }}</span>
       <span class="badge">{{ new_activities }}</span>
@@ -62,4 +62,3 @@
     </li>
   {% endblock %}
 {% endblock %}
-

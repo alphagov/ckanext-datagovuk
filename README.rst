@@ -71,20 +71,17 @@ do::
 Running the Tests
 -----------------
 
-To run the tests, do::
+Start by running the `docker ckan <https://github.com/alphagov/docker-ckan#development-mode>`_ stack so that the CKAN environment is set up.
 
-    nosetests -v --nologcapture --with-pylons=test.ini --ckan ckanext.datagovuk
+Run the tests, do::
 
-To run the tests and produce a coverage report, first make sure you have
-coverage installed in your virtualenv (``pip install coverage``) then run::
-
-    nosetests -v --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.datagovuk --cover-inclusive --cover-erase --cover-tests --ckan ckanext.datagovuk
+    python -m pytest --ckan-ini=test.ini ckanext/datagovuk/tests/
 
 -----------------
 Creating test data
 -----------------
 
-In order to be able to run the (CKAN functional tests)[https://github.com/alphagov/ckan-functional-tests] 
+In order to be able to run the `CKAN functional tests <https://github.com/alphagov/ckan-functional-tests>`_
 we need to create test data. 
 
 Before running the paster command set the environment varibales:
@@ -93,8 +90,8 @@ Before running the paster command set the environment varibales:
 
 Then run the paster command:
 
-   paster --plugin=ckanext-datagovuk create_dgu_test_data -c $CKAN_INI
+   ckan datagovuk create-dgu-test-data
 
 In order to remove the test data:
 
-   paster --plugin=ckanext-datagovuk remove_dgu_test_data -c $CKAN_INI
+   ckan datagovuk remove-dgu-test-data
