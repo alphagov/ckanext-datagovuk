@@ -21,7 +21,7 @@ $pip install $pipopt -U numpy==1.16.4
 
 $pip uninstall $pipopt -y enum34
 
-# needed for harvester run-test to targest harvest sources
+# needed for harvester run-test to target harvest sources
 $pip install $pipopt -U factory-boy==2.12.0 mock==2.0.0 pytest==4.6.5
 
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/ckan/ckan/$ckan_sha/requirement-setuptools.txt)
