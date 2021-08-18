@@ -259,7 +259,7 @@ def load_references(xls_stream, errors, validation_errors):
             # this doesn't matter - we will use the standard_references
             # anyway. Read it again, just for the units.
             try:
-                dfs = pandas.read_excel(xls_filename, ['(reference) units'])
+                dfs = pandas.read_excel(xls_stream, ['(reference) units'])
             except XLRDError as e:
                 if str(e) == "No sheet named <'(reference) units'>":
                     validation_errors.append(str(e))
