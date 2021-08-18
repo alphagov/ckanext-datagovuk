@@ -284,7 +284,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     IGNORED_DATA_ERRORS = [
         "Found more than one dataset with the same guid",           # DCat
         "Errors found for object with GUID",                        # Spatial
-        "CSW identifier '(\w|-)+' already used, skipping",          # Spatial
+        "CSW identifier '\{?(\w|-)+\}?' already used, skipping",    # Spatial
         "Exception during import:",                                 # Spatial
         "Job timeout:",                                             # Harvest
         "was aborted or timed out",                                 # Harvest

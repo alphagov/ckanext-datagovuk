@@ -77,6 +77,7 @@ class TestPlugin:
             {'logentry': {'message': 'Too many consecutive retries for object'}},
             {'logentry': {'message': 'Harvest object does not exist: xxx'}},
             {'logentry': {'message': 'CSW identifier \'xxx-yyy-111-222\' already used, skipping'}},
+            {'logentry': {'message': 'CSW identifier \'{xxx-yyy-111-222}\' already used, skipping'}},
             {'logentry': {
                 'message': '''Exception during import: Traceback (most recent call last):
   File "/data/vhost/ckan/shared/venv/lib/python2.7/site-packages/ckanext/spatial/harvesters/gemini.py", line 74, in import_stage
