@@ -282,14 +282,15 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # Ignore these data errors on sentry as these would already be reported to publishers to resolve or raise
     IGNORED_DATA_ERRORS = [
-        "Found more than one dataset with the same guid",   # DCat
-        "Errors found for object with GUID",                # Spatial
-        "CSW identifier '(\w|-)+' already used, skipping",  # Spatial
-        "Exception during import:",                         # Spatial
-        "Job timeout:",                                     # Harvest
-        "was aborted or timed out",                         # Harvest
-        "Too many consecutive retries for object",          # Harvest
-        "Harvest object does not exist:"                    # Harvest
+        "Found more than one dataset with the same guid",           # DCat
+        "Errors found for object with GUID",                        # Spatial
+        "CSW identifier '(\w|-)+' already used, skipping",          # Spatial
+        "Exception during import:",                                 # Spatial
+        "Job timeout:",                                             # Harvest
+        "was aborted or timed out",                                 # Harvest
+        "Too many consecutive retries for object",                  # Harvest
+        "Harvest object does not exist:",                           # Harvest
+        "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
     ]
 
     def before_send(self, event, hint):

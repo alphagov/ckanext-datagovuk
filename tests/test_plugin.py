@@ -88,7 +88,16 @@ class TestPlugin:
 Exception: Harvest object xxx (https://example.harvest.source/xxx.xml) has a GUID yyy already in use by xxx1 (https:/example1.harvest.source/test.xml) in harvest source zzz
                 '''
                 }
-            }
+            },
+            {
+                'logentry': {
+                    'message': 'Errors found by ETL were not picked up by spreadsheet: ["Sheet \"(final data) '
+                    'senior-staff\" cell E11: The \"Job/Team Function\" can only be \"N/A\" if the \"Post Unique '
+                    'Reference\" is \"0\" (individual is paid but not in post).","Sheet \"(final data) senior-staff\" '
+                    'cell H11: The \"Unit\" can only be \"N/A\" if the \"Post Unique Reference\" is \"0\" '
+                    '(individual is paid but not in post)."]'
+                }
+            },
         ]
 
         for mock_event in mock_events:
