@@ -76,6 +76,7 @@ class TestPlugin:
             {'logentry': {'message': 'Job xxx was aborted or timed out, object yyy set to error'}},
             {'logentry': {'message': 'Too many consecutive retries for object'}},
             {'logentry': {'message': 'Harvest object does not exist: xxx'}},
+            {'logentry': {'message': 'Gather stage failed'}},
             {'logentry': {
                 'message': "None - {'author_email': ['Email example@test.uk  is not a valid "
                 "format'], 'maintainer_email': ['Email example2@test.uk  is not a valid format']}"

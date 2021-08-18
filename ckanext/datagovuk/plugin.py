@@ -291,6 +291,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Too many consecutive retries for object",                  # Harvest
         "Harvest object does not exist:",                           # Harvest
         "is not a valid format",                                    # Harvest
+        "Gather stage failed",                                      # Harvest
         "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
     ]
 
