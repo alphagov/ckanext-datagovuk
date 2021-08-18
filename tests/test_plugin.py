@@ -105,6 +105,7 @@ Exception: Harvest object xxx (https://example.harvest.source/xxx.xml) has a GUI
                     '(individual is paid but not in post)."]'
                 }
             },
+            {'logentry': {'message': '404 Not Found: User not found'}},
         ]
 
         for mock_event in mock_events:

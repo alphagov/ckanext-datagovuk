@@ -293,6 +293,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "is not a valid format",                                    # Harvest
         "Gather stage failed",                                      # Harvest
         "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
+        "User not found",                                           # CKAN
     ]
 
     def before_send(self, event, hint):
