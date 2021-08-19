@@ -76,7 +76,14 @@ class TestPlugin:
             {'logentry': {'message': 'Job xxx was aborted or timed out, object yyy set to error'}},
             {'logentry': {'message': 'Too many consecutive retries for object'}},
             {'logentry': {'message': 'Harvest object does not exist: xxx'}},
+            {'logentry': {'message': 'Gather stage failed'}},
+            {'logentry': {
+                'message': "None - {'author_email': ['Email example@test.uk  is not a valid "
+                "format'], 'maintainer_email': ['Email example2@test.uk  is not a valid format']}"
+                }
+            },
             {'logentry': {'message': 'CSW identifier \'xxx-yyy-111-222\' already used, skipping'}},
+            {'logentry': {'message': 'CSW identifier \'{xxx-yyy-111-222}\' already used, skipping'}},
             {'logentry': {
                 'message': '''Exception during import: Traceback (most recent call last):
   File "/data/vhost/ckan/shared/venv/lib/python2.7/site-packages/ckanext/spatial/harvesters/gemini.py", line 74, in import_stage
@@ -88,7 +95,17 @@ class TestPlugin:
 Exception: Harvest object xxx (https://example.harvest.source/xxx.xml) has a GUID yyy already in use by xxx1 (https:/example1.harvest.source/test.xml) in harvest source zzz
                 '''
                 }
-            }
+            },
+            {
+                'logentry': {
+                    'message': 'Errors found by ETL were not picked up by spreadsheet: ["Sheet \"(final data) '
+                    'senior-staff\" cell E11: The \"Job/Team Function\" can only be \"N/A\" if the \"Post Unique '
+                    'Reference\" is \"0\" (individual is paid but not in post).","Sheet \"(final data) senior-staff\" '
+                    'cell H11: The \"Unit\" can only be \"N/A\" if the \"Post Unique Reference\" is \"0\" '
+                    '(individual is paid but not in post)."]'
+                }
+            },
+            {'logentry': {'message': '404 Not Found: User not found'}},
         ]
 
         for mock_event in mock_events:
