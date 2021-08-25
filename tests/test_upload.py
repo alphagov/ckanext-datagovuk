@@ -9,7 +9,6 @@ from botocore.exceptions import ClientError
 from ckanext.datagovuk.plugin import DatagovukPlugin
 from ckanext.datagovuk.upload import upload_resource_to_s3
 from mock import Mock, patch
-from nose.tools import assert_raises
 
 
 class MockAction:
@@ -75,6 +74,6 @@ class TestUpload:
 
         resource = self.resource.copy()
 
-        with assert_raises(ClientError):
+        with pytest.raises(ClientError):
             upload_resource_to_s3({}, resource)
         assert config.get("ckan.datagovuk.s3_url_prefix") not in resource["url"]
