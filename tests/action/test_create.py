@@ -37,13 +37,19 @@ class TestResourceCreate:
 
 class TestWhenNotExcelFile(TestResourceCreate):
     data_dict = {
+        "package_id": "1234",
         "url": "file.jpg",
     }
-
+    pkg_dict = {
+        "schema-vocabulary": "",
+    }
 
     @patch("ckanext.datagovuk.action.create.resource_create_core")
     def test_calls_the_original_function_with_original_args(self, original_function):
-        create.resource_create(self.context, self.data_dict)
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+            create.resource_create(self.context, self.data_dict)
+
         original_function.assert_called_once_with(self.context, self.data_dict)
 
 
@@ -399,3 +405,37 @@ class TestWithInvalidJuniorsInOrganogramExcelFile:
             'Sheet "(final data) junior-staff" cell D10: Post reporting to unknown senior post "MADEUP"',
         ]
         assert set(validation_error.error_dict["message"]) == set(expected_errors)
+
+
+@pytest.fixture
+def mock_invalid_organogram_file():
+    fixture_path = os.path.join(os.path.dirname(__file__), "../data/sample-invalid-junior.xls")
+
+    TestWithNonXlsFileInOrganogram.data_dict = {
+        "package_id": "1234",
+        "url": "invalid-organogram.csv",
+        "upload": create.FakeFieldStorage("invalid-organogram.csv", open(fixture_path, 'rb'))
+    }
+
+    TestWithNonXlsFileInOrganogram.pkg_dict = {
+        "schema-vocabulary": "538b857a-64ba-490e-8440-0e32094a28a7",
+    }
+
+
+class TestWithNonXlsFileInOrganogram:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.context = {
+            "session": Mock(),
+        }
+
+    @patch("ckanext.datagovuk.action.create.resource_create_core")
+    def test_raises_a_validation_error(self, _original_function, mock_invalid_organogram_file):
+        validation_error = None
+
+        with patch("ckanext.datagovuk.action.create.get_action") as mock_get_action:
+            mock_get_action.return_value = lambda *_args: self.pkg_dict
+
+            with pytest.raises(ValidationError) as err:
+                create.resource_create(self.context, self.data_dict)
+        assert 'Organogram template XLS file expected but got: invalid-organogram.csv' in str(err.value)

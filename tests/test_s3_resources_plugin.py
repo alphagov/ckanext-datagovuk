@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 import unittest
 from mock import patch
+import pytest
 
 from ckanext.datagovuk.plugin import DatagovukPlugin
-from nose.tools import assert_raises
+from ckan.plugins.toolkit import ValidationError
 
 
 class TestS3ResourcesPlugin:
     plugin = DatagovukPlugin()
 
     def test_s3_config_exception(self):
-        with assert_raises(KeyError) as context:
+        with pytest.raises(KeyError) as context:
             self.plugin.before_create_or_update({}, {"upload": "dummy value"})
-        assert str(context.exception) == "'Required S3 config options missing'"
+        assert str(context.value) == "'Required S3 config options missing'"
 
     @patch("ckanext.datagovuk.plugin.upload.config_exists")
     def test_upload_early_abort(self, mock_check_config):
@@ -39,3 +40,4 @@ class TestS3ResourcesPlugin:
 
         self.plugin.before_create_or_update({}, resource)
         assert not mock_check_config.called
+

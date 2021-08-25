@@ -20,6 +20,11 @@ from ckanext.datagovuk.upload import upload_resource_to_s3
 
 log = __import__('logging').getLogger(__name__)
 
+ORGANOGRAM_IDS = {
+    '538b857a-64ba-490e-8440-0e32094a28a7', # Local authority
+    'd3c0b23f-6979-45e4-88ed-d2ab59b005d0', # Departmental
+    }
+
 
 # defined as they are in ckan/action/create.py to save further hacks to the
 # function copied from there
@@ -55,21 +60,16 @@ def resource_create(context, data_dict):
     mimetype = mimetypes.guess_type(data_dict['url'])[0]
     log.debug("Mimetype: %s" % mimetype)
 
+    package_id = get_or_bust(data_dict, 'package_id')
+
+    pkg_dict = get_action('package_show')(
+        dict(context, return_type='dict'),
+        {'id': package_id})
+
     if mimetype in ('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
         log.debug("Excel file detected")
 
-        package_id = get_or_bust(data_dict, 'package_id')
-
-        pkg_dict = get_action('package_show')(
-            dict(context, return_type='dict'),
-            {'id': package_id})
-
-        organogram_ids = {
-            '538b857a-64ba-490e-8440-0e32094a28a7', # Local authority
-            'd3c0b23f-6979-45e4-88ed-d2ab59b005d0', # Departmental
-            }
-
-        if pkg_dict.get('schema-vocabulary') in organogram_ids:
+        if pkg_dict.get('schema-vocabulary') in ORGANOGRAM_IDS:
             log.debug("Organogram detected")
 
             file_stream = data_dict['upload']
@@ -91,6 +91,10 @@ def resource_create(context, data_dict):
                 senior_resource = _create_csv_resource('Senior', senior_csv, data_dict.copy(), context, timestamp_str)
                 junior_resource = _create_csv_resource('Junior', junior_csv, data_dict.copy(), context, timestamp_str)
                 return senior_resource
+    elif pkg_dict.get('schema-vocabulary') in ORGANOGRAM_IDS:
+        err = f"Organogram template XLS file expected but got: {data_dict['url']}"
+        log.error(err)
+        raise ValidationError(err, {"URL": err})
 
     log.debug("Passing args through to the CKAN resource_create")
     return resource_create_core(context, data_dict)
