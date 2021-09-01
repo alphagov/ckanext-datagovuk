@@ -77,6 +77,15 @@ class TestPlugin:
             {'logentry': {'message': 'Too many consecutive retries for object'}},
             {'logentry': {'message': 'Harvest object does not exist: xxx'}},
             {'logentry': {'message': 'Gather stage failed'}},
+            {'logentry': {'message': 'User  not authorised to create packages'}},
+            {'logentry': {'message': 'User  not authorised to read resource xxx'}},
+            {'logentry': {'message': 'User  not authorised to read package xxx'}},
+            {'logentry': {'message': 'Action resource_create requires an authenticated user'}},
+            {'logentry': {'message': '401 Unauthorized: Not authorised to see this page'}},
+            {'logentry': {'message': 
+                '404 Not Found: The requested URL was not found on the server. If you entered the URL '
+                'manually please check your spelling and try again.'}
+            },
             {'logentry': {
                 'message': "None - {'author_email': ['Email example@test.uk  is not a valid "
                 "format'], 'maintainer_email': ['Email example2@test.uk  is not a valid format']}"

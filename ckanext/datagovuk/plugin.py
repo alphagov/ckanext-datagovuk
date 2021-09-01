@@ -294,6 +294,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Gather stage failed",                                      # Harvest
         "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
         "User not found",                                           # CKAN
+        "not authorised to",                                        # CKAN
+        "Action resource_create requires an authenticated user",    # CKAN
+        "Not Found: The requested URL was not found on the server.",# CKAN
+        "401 Unauthorized: Not authorised to see this page",        # CKAN
     ]
 
     def before_send(self, event, hint):
