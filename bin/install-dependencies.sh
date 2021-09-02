@@ -15,9 +15,9 @@ ckan_sha='e8b7970423e2cce9731441edd13f7fcfd3be58e9'
 
 pycsw_tag='2.4.0'
 
-pipopt='--exists-action=b'
+pipopt='--exists-action=b --force-reinstall'
 
-$pip install $pipopt -U numpy==1.16.4
+$pip install $pipopt -U numpy==1.16.4 wheel==0.37.0
 
 $pip uninstall $pipopt -y enum34
 
