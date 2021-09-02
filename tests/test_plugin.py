@@ -86,6 +86,7 @@ class TestPlugin:
                 '404 Not Found: The requested URL was not found on the server. If you entered the URL '
                 'manually please check your spelling and try again.'}
             },
+            {'logentry': {'message': 'The email address \'test@example.gov\' belongs to a registered user.'}},
             {'logentry': {
                 'message': "None - {'author_email': ['Email example@test.uk  is not a valid "
                 "format'], 'maintainer_email': ['Email example2@test.uk  is not a valid format']}"
