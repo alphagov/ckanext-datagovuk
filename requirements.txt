@@ -1,13 +1,14 @@
-awesome-slugify==1.6.5
 beautifulsoup4==4.9.3
 blinker==1.4
-boto3==1.15.1
+boto3==1.18.34
 gunicorn
 lxml>=2.3
 numpy==1.16.4
 psycopg2==2.8.6
 pandas==1.1.4
+python-slugify==5.0.2
 Shapely>=1.2.13
 sentry-sdk==0.17.6
 six==1.15.0
+sqlalchemy==1.3.5
 xlrd==1.2.0
