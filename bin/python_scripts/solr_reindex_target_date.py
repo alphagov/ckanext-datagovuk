@@ -51,26 +51,39 @@ def get_datasets_with_target_date(target_date):
     return cursor
 
 
-def create_dataset_list(target_date, rows):
-    with open("reindex_datasets-%s.txt" % target_date, "w+") as f:
+def get_datasets_with_resource_target_date(target_date):
+    cursor = connection.cursor()
+    sql = """
+    SELECT name FROM package WHERE id IN (SELECT package_id FROM resource WHERE last_modified = '%s')  and state='active';
+    """ % (target_date)
+
+    cursor.execute(sql)
+
+    return cursor
+
+
+def create_dataset_list(target_date, rows, is_resource):
+    resource_suffix = '-resource' if is_resource else ''
+    with open("reindex_datasets%s-%s.txt" % (resource_suffix, target_date), "w+") as f:
         for row in rows:
             f.write(row)
-    logger.info('TXT - Written %s lines to reindex_datasets-%s.txt', len(rows.split('\n')) - 1, target_date)
+    logger.info('TXT - Written %s lines to reindex_datasets%s-%s.txt', len(rows.split('\n')) - 1, resource_suffix, target_date)
 
 
-def reindex_solr(target_date):
-    with open("reindex_datasets-%s.txt" % target_date, "r+") as f:
+def reindex_solr(target_date, is_resource):
+    resource_suffix = '-resource' if is_resource else ''
+    with open("reindex_datasets%s-%s.txt" % (resource_suffix, target_date), "r+") as f:
         lines = f.readlines()
         for i, line in enumerate(lines):
             fields = line.split(',')
 
-            paster_command = 'paster --plugin=ckan search-index rebuild {} --config {}'.format(
-                fields[0], '/srv/app/production.ini' if is_dev() else '/var/ckan/ckan.ini')
+            ckan_command = 'ckan -c {} search-index rebuild {}'.format(
+                '/srv/app/production.ini' if is_dev() else '/var/ckan/ckan.ini', fields[0])
 
-            logger.info('CKAN reindex %d/%d - Running command: %s', i+1, len(lines), paster_command)
+            logger.info('CKAN reindex %d/%d - Running command: %s', i+1, len(lines), ckan_command)
 
             try:
-                subprocess.call(paster_command, shell=True)
+                subprocess.call(ckan_command, shell=True)
             except Exception as exception:
                 logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
@@ -79,12 +92,20 @@ def main(target_date=None, command=None):
     while not target_date:
         target_date = raw_input('Dataset target date (yyyy-mm-dd)? ')
 
-    while command not in ['show', 'reindex']:
-        command = raw_input('(Options: show, reindex) show? ')
+    get_datasets = get_datasets_with_target_date
+
+    while command not in ['show', 'reindex', 'show-resource', 'reindex-resource']:
+        command = raw_input('(Options: show, reindex, show-resource, reindex-resource) show? ')
         if not command:
             command = 'show'
 
-    reindex = command == 'reindex'
+    is_resource = '-resource' in command
+    if is_resource:
+        logger.info('Processing resources')
+        reindex = command == 'reindex-resource'
+        get_datasets = get_datasets_with_resource_target_date
+    else:
+        reindex = command == 'reindex'
 
     setup_logging(log_to_file=reindex)
 
@@ -98,14 +119,14 @@ def main(target_date=None, command=None):
     txt_rows = ''
 
     logger.info('Reindex datasets')
-    for i, dataset in enumerate(get_datasets_with_target_date(target_date)):
+    for i, dataset in enumerate(get_datasets(target_date)):
         logger.info('%d - %s', i, dataset)
         if reindex:
             txt_rows += ','.join(dataset) + '\n'
 
     if reindex:
-        create_dataset_list(target_date, txt_rows)
-        reindex_solr(target_date)
+        create_dataset_list(target_date, txt_rows, is_resource)
+        reindex_solr(target_date, is_resource)
 
     logger.info('Processing complete')
 
