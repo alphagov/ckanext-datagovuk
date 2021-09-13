@@ -81,6 +81,7 @@ class TestPlugin:
             {'logentry': {'message': 'User  not authorised to create packages'}},
             {'logentry': {'message': 'User  not authorised to read resource xxx'}},
             {'logentry': {'message': 'User  not authorised to read package xxx'}},
+            {'logentry': {'message': '404 Not Found: Dataset not found'}},
             {'logentry': {'message': 'Action resource_create requires an authenticated user'}},
             {'logentry': {'message': '401 Unauthorized: Not authorised to see this page'}},
             {'logentry': {'message': 
