@@ -11,7 +11,7 @@ ckan_spatial_fork='alphagov'
 ckan_spatial_sha='3f423de1e9e4e6975725712626d904887779b408'
 
 # ckan 2.9.3 - with dgu fixes
-ckan_sha='aa83bb94b869ef9b15d5bb4a7789e5fa7d9130d2'
+ckan_sha='bc7ed57aba16f755adb39a9b38d04d543a4f4be1'
 ckan_fork='alphagov'
 
 pycsw_tag='2.4.0'
