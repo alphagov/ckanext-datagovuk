@@ -299,6 +299,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Action resource_create requires an authenticated user",    # CKAN
         "Not Found: The requested URL was not found on the server.",# CKAN
         "404 Not Found: Dataset not found",                         # CKAN
+        "404 Not Found: Resource not found",                        # CKAN
         "401 Unauthorized: Not authorised to see this page",        # CKAN
         "The email address '.+' belongs to a registered user.",     # CKAN
     ]
