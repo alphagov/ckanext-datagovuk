@@ -39,3 +39,14 @@ def test_setpass_sends_email_alert_to_user(mock_mailer, cli):
     assert args[0].email == user_dict['email']
     assert args[1] == 'Your data.gov.uk publisher password has changed'
     assert args[2] == "Your password has been changed, if you haven't done it yourself, let us know"
+
+
+@pytest.mark.ckan_config('ckan.plugins', 'datagovuk')
+@pytest.mark.usefixtures("clean_db", "with_plugins")
+def test_add_username_uses_relaxed_schema(cli):
+    from click.testing import CliRunner
+    from ckan.cli.cli import ckan
+    response = cli.invoke(ckan, ['user', 'add', '"Test User"', 'email=test@example.com'], input="testpass\ntestpass\n")
+
+    assert response.exit_code == 0
+    assert 'Successfully created user: "Test User"' in response.output
