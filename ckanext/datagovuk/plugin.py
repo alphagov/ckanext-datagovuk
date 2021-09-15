@@ -294,6 +294,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "is not a valid format",                                    # Harvest
         "Gather stage failed",                                      # Harvest
         "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
+        "Organogram template XLS file expected but got:",           # Datagovuk
         "User not found",                                           # CKAN
         "Group not found",                                          # CKAN
         "not authorised to",                                        # CKAN
