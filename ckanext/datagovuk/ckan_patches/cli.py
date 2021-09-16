@@ -16,3 +16,5 @@ def set_password(ctx, username):
 
     _user = model.User.get(username)
     send_password_alert(_user)
+
+ckan.cli.user.set_password = set_password

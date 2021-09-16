@@ -77,7 +77,7 @@ def upload_resource_to_s3(context, resource):
     filename = (
         resource.get("timestamp", timestamp.strftime("%Y-%m-%dT%H-%M-%SZ"))
         + "-"
-        + slugify(resource.get("name"), lowercase=True)
+        + slugify(resource.get("name")).lower()
         + extension
     )
 

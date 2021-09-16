@@ -118,6 +118,7 @@ Exception: Harvest object xxx (https://example.harvest.source/xxx.xml) has a GUI
                     '(individual is paid but not in post)."]'
                 }
             },
+            {'logentry': {'message': 'Organogram template XLS file expected but got: : Organogram to upload - org.csv'}},
             {'logentry': {'message': '404 Not Found: User not found'}},
         ]
 

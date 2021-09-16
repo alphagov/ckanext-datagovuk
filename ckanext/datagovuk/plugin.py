@@ -220,6 +220,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             DGUUserRegisterView,
             me,
         )
+        from ckanext.datagovuk.schema import user_new_form_schema, user_edit_form_schema
 
         bp = Blueprint("datagovuk", self.__module__)
         bp.template_folder = u'templates'
@@ -239,11 +240,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         bp.add_url_rule('/publisher', view_func=organization_index, strict_slashes=False)
         bp.add_url_rule('/publisher/new', view_func=organization_index, strict_slashes=False)
 
-        # monkeypatch set_password
-        import ckan.cli.user
-        from ckanext.datagovuk.ckan_patches.cli import set_password
-        ckan.cli.user.set_password = set_password
-
         bp.add_url_rule(
             u"/user/register",
             view_func=DGUUserRegisterView.as_view(str(u'register')),
@@ -257,9 +253,14 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         # also monkeypatch occurrence in original module as some views
         # call it directly instead of redirecting externally
         import ckan.views.user as ckan_user_views
+        ckan_user_views._edit_form_to_db_schema = user_edit_form_schema
+        ckan_user_views._new_form_to_db_schema = user_new_form_schema
         ckan_user_views.me = me
 
         return bp
+
+    # import these for monkey patching
+    from ckanext.datagovuk.ckan_patches import cli, logic, query
 
     # ITemplateHelpers
 
@@ -293,6 +294,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "is not a valid format",                                    # Harvest
         "Gather stage failed",                                      # Harvest
         "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
+        "Organogram template XLS file expected but got:",           # Datagovuk
         "User not found",                                           # CKAN
         "Group not found",                                          # CKAN
         "not authorised to",                                        # CKAN
