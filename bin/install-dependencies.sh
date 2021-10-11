@@ -5,7 +5,8 @@ pip=${1-'/usr/bin/env pip'}
 ckan_harvest_fork='alphagov'
 ckan_harvest_sha='f52605c9a4f8ccaa0f5e83937c59ce9bf58cbc06'
 
-ckan_dcat_sha='6b7ec505f303fb18e0eebcebf67130d36b3dca82'
+ckan_dcat_fork='alphagov'
+ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='3f423de1e9e4e6975725712626d904887779b408'
@@ -32,13 +33,8 @@ $pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#e
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
 $pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
 
-$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/ckan/ckanext-dcat/$ckan_dcat_sha/requirements.txt)
-$pip install $pipopt -U "git+https://github.com/ckan/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat"
-
-$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt)
-$pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
-
-$pip install $pipopt -r requirements.txt
+$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt)
+$pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat"
 
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw.git/$pycsw_tag/requirements.txt)
 $pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_tag#egg=pycsw"
@@ -46,3 +42,8 @@ $pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_tag#
 pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")"
 (cd $pycsw_src && /usr/bin/env python setup.py build)
 $pip install $pipopt -e .
+
+$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt)
+$pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
+
+$pip install $pipopt -r requirements.txt
