@@ -7,16 +7,16 @@ venv/bin/pip install -r dev-requirements.txt
 
 DB_NAME="ckanext_dgu_$(date -u -Ins | tr -dc 0-9)"
 
-createdb $DB_NAME
+createdb -U postgres -h 127.0.0.1 -p 54313 $DB_NAME
 
 # echo "\n[app:main]\nsqlalchemy.url = postgresql:///$DB_NAME\nsolr_url = http://localhost:8983/solr/$DB_NAME\n" >> test-jenkins.ini
 
 ckan config-tool test-jenkins.ini \
-  "sqlalchemy.url = postgresql:///$DB_NAME" \
+  "sqlalchemy.url = postgresql://postgres@127.0.0.1:54313/$DB_NAME" \
   "solr_url = http://localhost:8983/solr/$DB_NAME"
 
 ckan config-tool test.ini \
-  "sqlalchemy.url = postgresql:///$DB_NAME" \
+  "sqlalchemy.url = postgresql://postgres@127.0.0.1:54313/$DB_NAME" \
   "solr_url = http://localhost:8983/solr/$DB_NAME"
 
 curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=$DB_NAME&configSet=ckan28"
@@ -34,5 +34,5 @@ bin/run-tests.sh
 
 # deliberately only drop DBs if tests pass. otherwise leave DBs
 # as it may help in diagnosing failure
-dropdb $DB_NAME
+dropdb -U postgres -h 127.0.0.1 -p 54313 $DB_NAME
 curl "http://localhost:8983/solr/admin/cores?action=UNLOAD&core=$DB_NAME&deleteIndex=true&deleteDataDir=true&deleteInstanceDir=true"
