@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+{% block flash %}
+{{ super() }}
+<div class="alert alert-warning">
+  <p>There will be a publishing freeze from 06:30am on 20 December to 11:59pm on 21 December.</p>
+  <p>The CKAN publishing tool will not be available. Users can access datasets on <a href="data.gov.uk">data.gov.uk</a> in the normal way during this time.</p>
+</div>
+{% endblock %}
