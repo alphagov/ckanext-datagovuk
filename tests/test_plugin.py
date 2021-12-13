@@ -76,6 +76,7 @@ class TestPlugin:
             {'logentry': {'message': 'Job xxx was aborted or timed out, object yyy set to error'}},
             {'logentry': {'message': 'Too many consecutive retries for object'}},
             {'logentry': {'message': 'Harvest object does not exist: xxx'}},
+            {'logentry': {'message': 'Harvest job does not exist: xxx'}},
             {'logentry': {'message': 'Gather stage failed'}},
             {'logentry': {'message': '404 Not Found: Group not found'}},
             {'logentry': {'message': 'User  not authorised to create packages'}},
