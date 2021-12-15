@@ -148,6 +148,7 @@ def load_senior(excel_filename, errors, validation_errors, references):
       u'Actual Pay Ceiling (£)',
       u'Total Pay (£)',
       u'Professional/Occupational Group',
+      u'Office Region',
       u'Notes',
       u'Valid?']
     rename_columns = {
@@ -186,6 +187,7 @@ def load_junior(excel_filename, errors, validation_errors, references):
       u'Generic Job Title',
       u'Number of Posts in FTE',
       u'Professional/Occupational Group',
+      u'Office Region',
       u'Valid?']
     integer_columns = [
       u'Payscale Minimum (£)',
