@@ -335,7 +335,7 @@ class TestWithInvalidSeniorsInOrganogramExcelFile:
 
         assert validation_error
 
-        expected_error = 'Sheet "(final data) senior-staff" cell S4: Invalid row, as indicated by the red colour in cell S4.'
+        expected_error = 'Sheet "(final data) senior-staff" cell T4: Invalid row, as indicated by the red colour in cell T4.'
         assert validation_error.error_dict["message"] == [expected_error]
 
 
@@ -399,7 +399,7 @@ class TestWithInvalidJuniorsInOrganogramExcelFile:
         assert validation_error
 
         expected_errors = [
-            'Sheet "(final data) junior-staff" cell K3 etc: Multiple invalid rows. They are indicated by the red colour in column K. Rows affected: 3, 10, 15.',
+            'Sheet "(final data) junior-staff" cell L10 etc: Multiple invalid rows. They are indicated by the red colour in column L. Rows affected: 10, 15.',
             'Sheet "(final data) junior-staff" cell D15: You must not leave this cell blank - all junior posts must report to a senior post.',
             'Sheet "(final data) junior-staff" cell D9: Post reporting to senior post "OLD" that is Eliminated',
             'Sheet "(final data) junior-staff" cell D10: Post reporting to unknown senior post "MADEUP"',
