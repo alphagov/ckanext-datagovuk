@@ -117,7 +117,9 @@ def load_excel_store_errors(stream, sheet_name, errors, validation_errors, input
     for column_name in df.columns:
         # columns with strings have detected 'object' type
         if df[column_name].dtype == 'O':
-            df[column_name] = df[column_name].str.strip()
+            df[column_name] = df[column_name].astype(str)
+            for i, row in enumerate(df[column_name]):
+                df[column_name][i] = row.strip()
     return df
 
 def blank_out_columns(df, blank_columns):
@@ -148,6 +150,7 @@ def load_senior(excel_filename, errors, validation_errors, references):
       u'Actual Pay Ceiling (£)',
       u'Total Pay (£)',
       u'Professional/Occupational Group',
+      u'Office Region',
       u'Notes',
       u'Valid?']
     rename_columns = {
@@ -186,6 +189,7 @@ def load_junior(excel_filename, errors, validation_errors, references):
       u'Generic Job Title',
       u'Number of Posts in FTE',
       u'Professional/Occupational Group',
+      u'Office Region',
       u'Valid?']
     integer_columns = [
       u'Payscale Minimum (£)',
