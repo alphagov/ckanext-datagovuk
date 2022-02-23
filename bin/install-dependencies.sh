@@ -9,7 +9,7 @@ ckan_dcat_fork='alphagov'
 ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='3f423de1e9e4e6975725712626d904887779b408'
+ckan_spatial_sha='433c7f2a4ba0b05871fe8bbc9b0518aa594f392d'
 
 # ckan 2.9.3 - with dgu fixes
 ckan_sha='bc7ed57aba16f755adb39a9b38d04d543a4f4be1'
