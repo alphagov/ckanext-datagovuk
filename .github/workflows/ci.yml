@@ -1,0 +1,65 @@
+name: ckanext-datagovuk ci
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    container:
+      image: govuk/ckan-dev:2.9
+    services:
+      solr:
+        image: ckan/ckan-solr-dev:2.9
+      postgres:
+        image: postgres:13.6
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:3
+    env:
+      CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@postgres/ckan_test
+      CKAN_SOLR_URL: http://solr:8983/solr/ckan
+      CKAN_REDIS_URL: redis://redis:6379/1
+      CKAN_SITE_URL: http://test.ckan.net
+      PGPASSWORD: postgres
+      CRYPTOGRAPHY_DONT_BUILD_RUST: 1
+      TZ: UTC
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create Database
+      run: |
+        psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
+        createdb --encoding=utf-8 --host=postgres --username=postgres --owner=ckan_default ckan_test
+    - name: pip cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Install harvester
+      run: |
+        git clone https://github.com/ckan/ckanext-harvest
+        cd ckanext-harvest
+        pip install -r pip-requirements.txt
+        pip install -r dev-requirements.txt
+        pip install -e .
+    - name: Install requirements (ckanext-datagovuk)
+      run: |
+        pip install -r requirements.txt
+        pip install -e .
+    - name: Update config
+      run: |
+        # Replace default path to CKAN core config file with the one on the container
+        sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
+        # set the i18n directory
+        sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
+    - name: Init Database
+      run: |
+        ckan db init
+    - name: Run tests
+      run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
