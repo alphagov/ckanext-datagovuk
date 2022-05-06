@@ -9,7 +9,7 @@ jobs:
       image: govuk/ckan-dev:2.9
     services:
       solr:
-        image: ckan/ckan-solr-dev:2.9
+        image: govuk/solr:6.6.2
       postgres:
         image: postgres:13.6
         env:
