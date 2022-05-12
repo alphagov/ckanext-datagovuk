@@ -10,9 +10,11 @@
 ### Step by step
 
 Make sure you have the following:
-1. The AWS DB admin password from govuk-secrets
-2. The full AWS hostname of the CKAN machine you want to restore to e.g. `ip-10-1-4-229.eu-west-1.compute.internal.integration`
 
+1. The AWS CKAN DB admin password from govuk-secrets (`govuk::node::s_ckan_db_admin::postgres_password`, in `puppet_aws/hieradata/blue/{ENV}_credentials.yaml`)
+1. The full AWS hostname of the CKAN machine you want to restore to e.g. `ip-10-1-4-229.eu-west-1.compute.internal.integration`
+
+```
 ckan $
   govuk_puppet --test # Establish a baseline
   sudo service puppet stop
@@ -39,18 +41,23 @@ ckan $
   govuk_puppet --test
   sudo service puppet restart # may need to edit the puppet config to `yes` if you're told it can't restart
   sudo service ckan restart
+```
 
 To reindex Solr, there are three ways to do this:
-1. Full reindex which destroys the existing index and creates a new index, default behaviour if no options are specified (WARNING: removes all existing data and takes several days to complete).
-2. Add only missing datasets using option `-m` (approximately 15 seconds per dataset).
-3. Update all records in the index, but do not delete the old index using option `-r` (this allows the website to continue running whilst the reindex takes place).
 
+1. Full reindex which destroys the existing index and creates a new index, default behaviour if no options are specified (WARNING: removes all existing data and takes several days to complete).
+1. Add only missing datasets using option `-m` (approximately 15 seconds per dataset).
+1. Update all records in the index, but do not delete the old index using option `-r` (this allows the website to continue running whilst the reindex takes place).
+
+```
 ckan $
   cd /var/apps/ckan
   sudo -u deploy govuk_setenv ckan venv/bin/paster search-index rebuild [OPTIONS] -c /var/ckan/ckan.ini
+```
 
 ### Copying legacy organograms
 
+```
 local $
   aws sts assume-role --role-arn <role_arn> --serial-number <mfa_arn> --token-code <mfa_token> --role-session-name "$(whoami)-$(date +%d-%m-%y_%H-%M)" --duration-seconds 28800 --profile gds
 bytemark $
@@ -61,5 +68,7 @@ bytemark $
   exit # Clear your environment variables and flush bash history to disk
 bytemark $
   vi ~/.bash_history # remove your secrets
+```
+
 aws console:
   Check the box next to the `legacy` directory and click Actions -> Make public.  This will take a few minutes.
