@@ -185,6 +185,12 @@ class TestPackageController:
                     for k, v in actual.items()
                     if k in expected
                 }
+
+                # status is coming back as str type rather than json
+                # set it back to json for full comparison
+                if type(actual_common['status']) is str:
+                   actual_common['status'] = json.loads(actual_common['status'])
+
                 assert expected == actual_common
 
                 try:
