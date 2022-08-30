@@ -43,7 +43,7 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install harvester
       run: |
-        git clone https://github.com/ckan/ckanext-harvest
+        git clone --depth 1 https://github.com/ckan/ckanext-harvest
         cd ckanext-harvest
         pip install -r pip-requirements.txt
         pip install -r dev-requirements.txt
