@@ -11,7 +11,7 @@ jobs:
       solr:
         image: govuk/solr:6.6.2
       postgres:
-        image: postgres:13.6
+        image: postgres:13.8-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
