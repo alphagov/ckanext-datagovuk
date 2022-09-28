@@ -46,6 +46,8 @@ $pip install $pipopt -e .
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt)
 $pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
+$pip install $pipopt -U cryptography==2.8
+
 $pip install $pipopt -r requirements.txt
 
 $pip install $pipopt -U pyyaml==5.3.1
