@@ -25,19 +25,9 @@ node ('!(ci-agent-4)') {
       sh("bash -c 'source venv/bin/activate ; ./bin/jenkins-tests.sh'")
     }
 
-    if (govuk.hasDockerfile()) {
-      govuk.dockerBuildTasks([:], "ckan")
-    }
-
     if (env.BRANCH_NAME == 'main') {
       stage('Push release tag') {
         govuk.pushTag(REPOSITORY, BRANCH_NAME, 'release_' + BUILD_NUMBER, 'main')
-      }
-
-      if (govuk.hasDockerfile()) {
-        stage("Tag Docker image") {
-          govuk.dockerTagBranch("ckan", env.BRANCH_NAME, env.BUILD_NUMBER)
-        }
       }
 
       stage('Deploy to Integration') {
