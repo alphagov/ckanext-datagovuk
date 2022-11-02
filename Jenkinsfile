@@ -31,7 +31,7 @@ node ('!(ci-agent-4)') {
       }
 
       stage('Deploy to Integration') {
-        govuk.deployIntegration('ckan', BRANCH_NAME, 'release_' + BUILD_NUMBER, 'deploy')
+        govuk.deployToIntegration('ckan', 'release_' + BUILD_NUMBER, 'deploy')
       }
     }
   } catch (e) {
