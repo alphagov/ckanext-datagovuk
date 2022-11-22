@@ -11,9 +11,9 @@ ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='433c7f2a4ba0b05871fe8bbc9b0518aa594f392d'
 
-# ckan 2.9.3 - with dgu fixes
-ckan_sha='bc7ed57aba16f755adb39a9b38d04d543a4f4be1'
-ckan_fork='alphagov'
+# ckan 2.9.7
+ckan_sha='0cb8a700d8254b429b37257a0b4e7a07d7d7c62e'
+ckan_fork='ckan'
 
 pycsw_tag='2.4.0'
 
@@ -30,13 +30,13 @@ $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/c
 $pip install $pipopt -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt
 $pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan"
 
-$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
-$pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
-
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt)
 $pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat"
 
-$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw.git/$pycsw_tag/requirements.txt)
+$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt)
+$pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest"
+
+$pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_tag/requirements.txt)
 $pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_tag#egg=pycsw"
 
 pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")"
