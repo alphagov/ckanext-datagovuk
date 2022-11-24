@@ -15,7 +15,7 @@ node ('!(ci-agent-4)') {
 
     stage('Installing Packages for python 3 release') {
       sh("rm -rf ./venv")
-      sh("python3.7 -m venv ./venv")
+      sh("python3.6 -m venv ./venv")
       sh("bash -c 'venv/bin/python -m pip install --upgrade 'pip==21.2.2''")
       sh("./bin/install-dependencies.sh ./venv/bin/pip")
     }
