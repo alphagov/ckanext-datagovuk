@@ -11,8 +11,8 @@ ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 ckan_spatial_fork='alphagov'
 ckan_spatial_sha='433c7f2a4ba0b05871fe8bbc9b0518aa594f392d'
 
-# ckan 2.9.3 - with dgu fixes
-ckan_sha='bc7ed57aba16f755adb39a9b38d04d543a4f4be1'
+# ckan 2.9.3 - alphagov/ckan/commits/fix-user-security
+ckan_sha='885f9e0b668e3496a8f2c0c0a9f1cb59bf810e16'
 ckan_fork='alphagov'
 
 pycsw_tag='2.4.0'
