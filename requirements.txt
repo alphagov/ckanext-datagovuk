@@ -1,6 +1,6 @@
 beautifulsoup4==4.9.3
 blinker==1.4
-boto3==1.18.34
+boto3==1.26.22
 gunicorn
 lxml>=2.3
 numpy==1.16.4
