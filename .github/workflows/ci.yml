@@ -1,65 +1,66 @@
 name: ckanext-datagovuk ci
-# on: [push, pull_request_target]
+on: [push, pull_request_target]
 
-# jobs:
-#   test:
-#     name: test
-#     runs-on: ubuntu-latest
-#     container:
-#       image: governmentdigitalservice/ckan-dev:2.9
-#     services:
-#       solr:
-#         image: governmentdigitalservice/solr:6.6.2
-#       postgres:
-#         image: postgres:13.8-alpine
-#         env:
-#           POSTGRES_USER: postgres
-#           POSTGRES_PASSWORD: postgres
-#           POSTGRES_DB: postgres
-#         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#       redis:
-#         image: redis:3
-#     env:
-#       CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@postgres/ckan_test
-#       CKAN_SOLR_URL: http://solr:8983/solr/ckan
-#       CKAN_REDIS_URL: redis://redis:6379/1
-#       CKAN_SITE_URL: http://test.ckan.net
-#       PGPASSWORD: postgres
-#       CRYPTOGRAPHY_DONT_BUILD_RUST: 1
-#       TZ: UTC
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    container:
+      image: governmentdigitalservice/ckan-main:2.9.3
+    services:
+      solr:
+        image: governmentdigitalservice/ckan-solr:6.6.2
+      postgres:
+        image: postgis/postgis:13-3.1-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:3
+    env:
+      CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@postgres/ckan_test
+      CKAN_SOLR_URL: http://solr:8983/solr/ckan
+      CKAN_REDIS_URL: redis://redis:6379/1
+      CKAN_SITE_URL: http://test.ckan.net
+      PGPASSWORD: postgres
+      CRYPTOGRAPHY_DONT_BUILD_RUST: 1
+      TZ: UTC
 
-#     steps:
-#     - uses: actions/checkout@v2
-#     - name: Create Database
-#       run: |
-#         psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
-#         createdb --encoding=utf-8 --host=postgres --username=postgres --owner=ckan_default ckan_test
-#     - name: pip cache
-#       uses: actions/cache@v2
-#       with:
-#         path: ~/.cache/pip
-#         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-#         restore-keys: |
-#           ${{ runner.os }}-pip-
-#     - name: Install harvester
-#       run: |
-#         git clone --depth 1 https://github.com/ckan/ckanext-harvest
-#         cd ckanext-harvest
-#         pip install -r pip-requirements.txt
-#         pip install -r dev-requirements.txt
-#         pip install -e .
-#     - name: Install requirements (ckanext-datagovuk)
-#       run: |
-#         pip install -r requirements.txt
-#         pip install -e .
-#     - name: Update config
-#       run: |
-#         # Replace default path to CKAN core config file with the one on the container
-#         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
-#         # set the i18n directory
-#         sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
-#     - name: Init Database
-#       run: |
-#         ckan db init
-#     - name: Run tests
-#       run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create Database
+      run: |
+        psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
+        createdb --encoding=utf-8 --host=postgres --username=postgres --owner=ckan_default ckan_test
+        psql --host=postgres --username=postgres -d ckan_test -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
+    - name: pip cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Install harvester
+      run: |
+        git clone --depth 1 https://github.com/ckan/ckanext-harvest
+        cd ckanext-harvest
+        pip install -r pip-requirements.txt
+        pip install -r dev-requirements.txt
+        pip install -e .
+    - name: Install requirements (ckanext-datagovuk)
+      run: |
+        pip install -r requirements.txt
+        pip install -e .
+    - name: Update config
+      run: |
+        # Replace default path to CKAN core config file with the one on the container
+        sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
+        # set the i18n directory
+        sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
+    - name: Init Database
+      run: |
+        ckan db init
+    - name: Run tests
+      run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
