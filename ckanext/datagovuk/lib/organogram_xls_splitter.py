@@ -390,12 +390,6 @@ def verify_graph(senior, junior, errors):
             boss_ref = reports_to[ref]
         except KeyError:
             known_refs = list(set(reports_to.keys()))
-            # convert known_refs to int if poss, so it sorts better
-            for i, ref_ in enumerate(known_refs):
-                try:
-                    known_refs[i] = int(ref_)
-                except:
-                    pass
             raise PostReportsToUnknownPostError(
                 'Post reports to unknown post ref:"%s". '
                 'Known post refs:"%s"' %
