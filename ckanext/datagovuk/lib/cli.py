@@ -94,19 +94,10 @@ def create_dgu_test_data(context):
     if not model.Package.by_name(u"example-harvest-1"):
         print('=== Creating harvest source')
 
-        version = ''
-        if "ckan@db" in tk.config.get('sqlalchemy.url'):
-            if '5001' in tk.config.get('ckan.site_url'):
-                version = '-2.8'
-            elif '5002' in tk.config.get('ckan.site_url'):
-                version = '-2.9'
-
         source_dict = {
             "title": "Example Harvest #1",
             "name": "example-harvest-1",
-            "url": "http://static-mock-harvest-source{}:11088/".format(version)\
-                if "ckan@db" in tk.config.get('sqlalchemy.url') else \
-                "https://ckan-static-mock-harvest-source.cloudapps.digital/",
+            "url": tk.config.get('ckan.mock_harvest_source'),
             "source_type": "ckan",
             'owner_org': publisher.id,
             "notes": "An example harvest source",
