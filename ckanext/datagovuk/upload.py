@@ -32,10 +32,13 @@ def setup_s3_bucket():
     aws_secret_access_key = config.get('ckan.datagovuk.s3_aws_secret_access_key')
     aws_region_name = config.get('ckan.datagovuk.s3_aws_region_name')
 
-    kwargs = {
-      "aws_access_key_id": aws_access_key_id,
-      "aws_secret_access_key": aws_secret_access_key,
-    }
+    kwargs = {}
+
+    if aws_access_key_id and aws_secret_access_key:
+      kwargs = {
+        "aws_access_key_id": aws_access_key_id,
+        "aws_secret_access_key": aws_secret_access_key,
+      }
 
     if aws_region_name:
         kwargs["region_name"] = aws_region_name
