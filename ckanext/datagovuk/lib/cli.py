@@ -242,6 +242,35 @@ def remove_dgu_test_data(context):
     print("====== DGU test data removed")
 
 
+@datagovuk.command()
+@pass_context
+def remove_ckan_admin(context):
+    '''Removes the CKAN_SYSADMIN_NAME user 
+       WARNING - This should be only executed on a dev stack
+
+        Set your environment varibales:
+            CKAN_INI - location of CKAN ini file 
+            CKAN_SYSADMIN_NAME
+
+        ckan -c $CKAN_INI datagovuk remove-ckan-admin
+    '''
+    if not all(os.environ.get(i) for i in ('CKAN_SYSADMIN_NAME', 'CKAN_INI')):
+        print('CKAN_SYSADMIN_NAME or CKAN_INI env var not set')
+        return
+
+    print('====== Removing CKAN_SYSADMIN_NAME user')
+
+    engine = sqlalchemy.create_engine(tk.config.get('sqlalchemy.url'))
+    model.init_model(engine)
+
+    sql = '''
+    DELETE FROM "user" WHERE name = :ckan_admin_name;
+    '''
+
+    model.Session.execute(sql, {"ckan_admin_name": os.environ.get('CKAN_SYSADMIN_NAME')})
+    model.repo.commit_and_remove()
+
+
 def run_command(command):
     try:
         print("=== Running %s" % command)
