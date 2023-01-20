@@ -19,4 +19,12 @@ if [ ! -z $CREATE_CKAN_ADMIN ]; then
     fi
 fi
 
+if [ ! -z $SETUP_DGU_TEST_DATA ]; then
+    echo "===== removing old DGU test data ====="
+    ckan datagovuk remove-dgu-test-data
+
+    echo "===== creating DGU test data ====="
+    ckan datagovuk create-dgu-test-data
+fi
+
 exec "$@"
