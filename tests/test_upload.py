@@ -52,6 +52,8 @@ class TestUpload:
         assert config.get("ckan.datagovuk.s3_url_prefix") in resource["url"]
         assert resource["url"].endswith("organogram-senior.csv")
         assert mock_update_timestamp.called
+        args, kwargs = mock_resource.call_args
+        assert set(['aws_access_key_id', 'aws_secret_access_key']).issubset(set(kwargs.keys()))
 
     @patch("ckanext.datagovuk.upload.update_timestamp")
     @patch("boto3.resource")
@@ -77,3 +79,37 @@ class TestUpload:
         with pytest.raises(ClientError):
             upload_resource_to_s3({}, resource)
         assert config.get("ckan.datagovuk.s3_url_prefix") not in resource["url"]
+
+
+@pytest.mark.ckan_config("ckan.datagovuk.s3_bucket_name", "test-bucket")
+@pytest.mark.ckan_config("ckan.datagovuk.s3_url_prefix", "https://s3.amazonaws.com/test/")
+@pytest.mark.ckan_config("ckan.datagovuk.s3_aws_region_name", "eu-west-1")
+class TestUpload:
+    upload = cgi.FieldStorage()
+    upload.file = StringIO("hello world")
+    resource = {
+        "package_id": u"some-pointless-data-1",
+        "clear_upload": u"",
+        "url": "organogram-senior.csv",
+        "timestamp": "2020-01-09T12-11-41Z",
+        "datafile-date": u"",
+        "upload": upload,
+        "name": "2020-01-09 Organogram (Senior)",
+    }
+
+    @patch("ckanext.datagovuk.upload.update_timestamp")
+    @patch("boto3.resource")
+    @patch("ckanext.datagovuk.upload.toolkit.abort")
+    @patch("ckanext.datagovuk.upload.toolkit")
+    def test_upload_without_key_id_or_access_key(self, mock_toolkit, mock_abort, mock_resource, mock_update_timestamp):
+        mock_toolkit.get_action = MockAction
+
+        resource = self.resource.copy()
+
+        upload_resource_to_s3({}, resource)
+        assert not mock_abort.called
+        assert config.get("ckan.datagovuk.s3_url_prefix") in resource["url"]
+        assert resource["url"].endswith("organogram-senior.csv")
+        assert mock_update_timestamp.called
+        args, kwargs = mock_resource.call_args
+        assert not set(['aws_access_key_id', 'aws_secret_access_key']).issubset(set(kwargs.keys()))

@@ -47,3 +47,4 @@ docs/_build/
 *.log
 environment.sh
 .DS_Store
+.env*
