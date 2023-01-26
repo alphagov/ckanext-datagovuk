@@ -8,6 +8,7 @@ while ! pg_isready -h $CKAN_DB_HOST -U ckan; do
 done
 
 ckan db init
+ckan harvester initdb
 
 if [ ! -z $CREATE_CKAN_ADMIN ]; then
     if (ckan user show ckan_admin | grep -q "User: None"); then
