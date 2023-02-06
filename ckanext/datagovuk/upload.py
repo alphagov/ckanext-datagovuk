@@ -146,4 +146,7 @@ def config_exists():
     bucket_name = config.get('ckan.datagovuk.s3_bucket_name')
     url = config.get('ckan.datagovuk.s3_url_prefix')
 
-    return all([access_key, secret_key, bucket_name, url])
+    s3_config = [access_key, secret_key, bucket_name, url] if (access_key and secret_key) else\
+        [bucket_name, url]
+
+    return all(s3_config)
