@@ -73,7 +73,7 @@ def create_dgu_test_data(context):
         model.Session.add(sysadmin_user)
         model.repo.commit_and_remove()
 
-    publisher = model.Group.get('Example Publisher #1')
+    publisher = model.Group.get('example-publisher-1')
     if not publisher:
         print('=== Creating example publisher 1')
         model.Session.flush()
@@ -89,6 +89,43 @@ def create_dgu_test_data(context):
 
         category = model.GroupExtra(group_id=publisher.id, key="category", value="charity-ngo")
         model.Session.add(category)
+        model.repo.commit_and_remove()
+
+        print('=== Creating example publisher 1 member')
+        model.Session.flush()
+
+        default = model.User.get('default')
+        if not default:
+            default = model.User(
+                name="default",
+                password="test1234"
+            )
+            model.Session.add(default)
+            model.repo.commit_and_remove()
+
+        member = model.Member(
+            group=publisher,
+            group_id=publisher.id,
+            table_id=default.id,
+            table_name="user",
+            capacity="editor",
+            state="active"
+        )
+        model.Session.add(member)
+        model.repo.commit_and_remove()
+
+        print('=== Creating default dataset')
+        model.Session.flush()
+
+        dataset = model.Package(
+            name=u"test-dataset",
+            title=u"Test dataset",
+            notes=u"Test dataset for default user",
+            owner_org=publisher.id,
+            creator_user_id=default.id,
+            state="active"
+        )
+        model.Session.add(dataset)
         model.repo.commit_and_remove()
 
     if not model.Package.by_name(u"example-harvest-1"):
@@ -167,7 +204,7 @@ def create_dgu_test_data(context):
             command = 'ckan search-index rebuild %s' % dataset.name
             run_command(command)
 
-    publisher2 = model.Group.get('Example Publisher #2')
+    publisher2 = model.Group.get('example-publisher-2')
     if not publisher2:
         print('=== Creating example publisher 2')
         model.Session.flush()
@@ -227,6 +264,7 @@ def remove_dgu_test_data(context):
     DELETE FROM "group" WHERE name = 'example-publisher-1';
     DELETE FROM group_revision WHERE name = 'example-publisher-2';
     DELETE FROM "group" WHERE name = 'example-publisher-2';
+    DELETE FROM "user" WHERE name = 'default';
     DELETE FROM "user" WHERE name = :testadmin_name;
     '''
 
