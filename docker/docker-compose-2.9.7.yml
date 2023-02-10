@@ -3,7 +3,7 @@ version: "3"
 services:
   ckan-2.9.7:
     container_name: ckan-2.9.7
-    image: localhost:30000/ckan:2.9.7
+    image: localhost:53492/ckan:2.9.7
     build:
       context: ../
       args:
@@ -26,6 +26,23 @@ services:
       - static-mock-harvest-source-2.9.7
     # command: bash -c "tail -f /dev/null"
     command: bash -c "ckan run --host 0.0.0.0"
+    networks:
+      - ckan-2.9.7
+
+  pycsw-2.9.7:
+    container_name: pycsw-2.9.7
+    image: localhost:53492/pycsw:2.6.1
+    links:
+      - db-2.9.7:db
+      - solr-2.9.7:solr
+      - redis-2.9.7:redis
+      - ckan-2.9.7:ckan
+    ports:
+      - "0.0.0.0:8003:8000"
+    depends_on: 
+      - db-2.9.7
+    # command: bash -c "tail -f /dev/null"
+    command: bash -c "python $CKAN_VENV/src/pycsw/pycsw/wsgi.py"
     networks:
       - ckan-2.9.7
 
@@ -68,7 +85,7 @@ services:
       context: nginx/2.9.7/
       dockerfile: Dockerfile
     links:
-      - ckan-2.9.7
+      - ckan-2.9.7:ckan
     ports:
       - 0.0.0.0:5001:80
     volumes:
