@@ -1,0 +1,40 @@
+name: Build and push images
+
+on:
+  workflow_dispatch:
+    inputs:
+      noPushToRegistry:
+        description: Build only, skip pushing to registry
+        required: true
+        type: boolean
+        default: false
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  build_and_push:
+    name: Build CKAN image and push to GHCR
+    runs-on: ubuntu-22.04
+    permissions:
+      packages: write
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.gitRef }}
+      - name: Build images (without pushing to registry)
+        if: ${{ inputs.noPushToRegistry }}
+        env:
+          DRY_RUN: "1"
+        run: ./docker/build-ckan.sh
+      - name: Build and push images
+        if: ${{ !inputs.noPushToRegistry }}
+        run: ./docker/build-ckan.sh
