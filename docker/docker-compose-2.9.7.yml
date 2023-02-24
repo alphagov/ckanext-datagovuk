@@ -6,6 +6,7 @@ services:
     image: localhost:53492/ckan:2.9.7
     build:
       context: ../
+      dockerfile: docker/ckan/Dockerfile
       args:
         - START_CKAN=1
     env_file:
@@ -51,8 +52,8 @@ services:
     env_file:
       - .env-2.9.7
     build:
-      context: postgresql/
-      dockerfile: Dockerfile.13
+      context: ../
+      dockerfile: docker/postgis/Dockerfile
     volumes:
       - pg_data-2.9.7:/var/lib/postgresql/data
     networks:
@@ -62,7 +63,8 @@ services:
     container_name: solr-2.9.7
     # image: ckan/ckan-solr:2.9-solr8
     build:
-      context: solr/
+      context: ../
+      dockerfile: docker/solr/Dockerfile
       # dockerfile: Dockerfile.solr8
     ports:
       - "8983:8983"

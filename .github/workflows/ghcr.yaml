@@ -16,8 +16,17 @@ on:
 
 jobs:
   build_and_push:
-    name: Build CKAN image and push to GHCR
+    name: Build ${{ matrix.app.name }} image and push to GHCR
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        app:
+          - name: ckan
+            version: 2.9.7
+          - name: pycsw
+            version: 2.6.1
+          - name: postgis
+            version: 13-3.1
     permissions:
       packages: write
     steps:
@@ -34,7 +43,12 @@ jobs:
         if: ${{ inputs.noPushToRegistry }}
         env:
           DRY_RUN: "1"
-        run: ./docker/build-ckan.sh
+          APP: ${{ matrix.app.name }}
+          VERSION: ${{ matrix.app.version }}
+        run: ./docker/build-image.sh
       - name: Build and push images
         if: ${{ !inputs.noPushToRegistry }}
-        run: ./docker/build-ckan.sh
+        env:
+          APP: ${{ matrix.app.name }}
+          VERSION: ${{ matrix.app.version }}
+        run: ./docker/build-image.sh
