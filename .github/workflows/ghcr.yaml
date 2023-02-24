@@ -16,7 +16,7 @@ on:
 
 jobs:
   build_and_push:
-    name: Build ${{ matrix.app.name }} image and push to GHCR
+    name: ${{ matrix.app.name }} (${{ matrix.arch }})
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -27,6 +27,7 @@ jobs:
             version: 2.6.1
           - name: postgis
             version: 13-3.1
+        arch: [ amd64 ]
     permissions:
       packages: write
     steps:
@@ -45,10 +46,12 @@ jobs:
           DRY_RUN: "1"
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push images
         if: ${{ !inputs.noPushToRegistry }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
