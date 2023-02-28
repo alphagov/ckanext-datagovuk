@@ -4,11 +4,15 @@ import os
 import subprocess
 import sys
 import sqlalchemy
+from datetime import datetime, timedelta
+import json
 
 from functools import wraps
 
+from ckan import logic
 from ckan import model
 from ckan.lib.mailer import create_reset_key
+from ckan.lib.search.index import PackageSearchIndex
 import ckan.plugins.toolkit as tk
 
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
@@ -253,6 +257,7 @@ def remove_dgu_test_data(context):
     DELETE FROM package_extra WHERE package_id IN (SELECT id FROM package WHERE name='example-harvest-1');
     DELETE FROM package_revision WHERE name = 'example-harvest-1';
     DELETE FROM package WHERE name = 'example-harvest-1';
+    DELETE FROM package WHERE name = 'test-dataset';
     DELETE FROM harvest_object WHERE harvest_source_id IN (SELECT id FROM harvest_source WHERE title = 'Example Harvest #1');
     DELETE FROM harvest_job WHERE source_id IN (SELECT id FROM harvest_source WHERE title = 'Example Harvest #1');
     DELETE FROM harvest_source WHERE title = 'Example Harvest #1';
@@ -307,6 +312,59 @@ def remove_ckan_admin(context):
 
     model.Session.execute(sql, {"ckan_admin_name": os.environ.get('CKAN_SYSADMIN_NAME')})
     model.repo.commit_and_remove()
+
+
+@datagovuk.command()
+@pass_context
+def reindex_recent(context):
+    '''
+        Reindexes recent datasets with the latest status
+    '''
+    REINDEX_MINUTES_BEFORE = os.environ.get('CKAN_REINDEX_MINUTES_BEFORE', 24*60)
+
+    engine = sqlalchemy.create_engine(tk.config.get('sqlalchemy.url'))
+    model.init_model(engine)
+
+    context = {'model': model, 'session': model.Session,
+                        'user': os.environ.get('CKAN_SYSADMIN_NAME')}
+
+    reindex_start = (datetime.now() - timedelta(minutes=REINDEX_MINUTES_BEFORE)).strftime('%Y-%m-%d %H:%M')
+
+    print(f'Reindexing recent datasets from {reindex_start}')
+
+    packages = model.Session.query(model.Package) \
+                            .filter(model.Package.type == 'dataset') \
+                            .filter(model.Package.state == u'active') \
+                            .filter(model.Package.metadata_modified > reindex_start) \
+                            .all()
+    
+    if not packages:
+        print(f'No datasets to reindex since {reindex_start}')
+        return
+
+    package_index = PackageSearchIndex()
+
+    defer_commit = {'defer_commit': True}
+    for package in packages:
+        context.update({'ignore_auth': True})
+        package_dict = logic.get_action('package_show')(context, {'id': package.id})
+        print('Updating search index:', package_dict.get('name'))
+
+        # Remove configuration values
+        new_dict = {}
+
+        try:
+            config = json.loads(package_dict.get('config', ''))
+        except ValueError:
+            config = {}
+        for key, value in package_dict.items():
+            if key not in config:
+                new_dict[key] = value
+
+        package_index = PackageSearchIndex()
+        package_index.index_package(new_dict, defer_commit=defer_commit)
+
+    package_index.commit()
 
 
 def run_command(command):
