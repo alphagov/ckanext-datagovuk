@@ -5,7 +5,7 @@
 # export POSTGRES_URL=<sqlalchemy.url from ckan.ini>
 #
 # Execute script like this -
-# python solr_reindex_target_date.py yyyy-mm-dd <optional command: show, reindex>
+# python solr_reindex_target_date.py yyyy-mm-dd <optional command: show, reindex> <optional state: (default is active)>
 #
 
 import os
@@ -40,22 +40,22 @@ def is_dev():
     return '@db' in POSTGRES_URL
 
 
-def get_datasets_with_target_date(target_date):
+def get_datasets_with_target_date(target_date, state):
     cursor = connection.cursor()
     sql = """
-    SELECT name FROM package WHERE metadata_modified = '%s' and state='active';
-    """ % (target_date)
+    SELECT name FROM package WHERE metadata_modified = '%s' and state='%s';
+    """ % (target_date, state)
 
     cursor.execute(sql)
 
     return cursor
 
 
-def get_datasets_with_resource_target_date(target_date):
+def get_datasets_with_resource_target_date(target_date, state):
     cursor = connection.cursor()
     sql = """
-    SELECT name FROM package WHERE id IN (SELECT package_id FROM resource WHERE last_modified = '%s')  and state='active';
-    """ % (target_date)
+    SELECT name FROM package WHERE id IN (SELECT package_id FROM resource WHERE last_modified = '%s')  and state='%s';
+    """ % (target_date, state)
 
     cursor.execute(sql)
 
@@ -88,7 +88,7 @@ def reindex_solr(target_date, is_resource):
                 logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
 
-def main(target_date=None, command=None):
+def main(target_date=None, command=None, state='active'):
     while not target_date:
         target_date = raw_input('Dataset target date (yyyy-mm-dd)? ')
 
@@ -119,7 +119,7 @@ def main(target_date=None, command=None):
     txt_rows = ''
 
     logger.info('Reindex datasets')
-    for i, dataset in enumerate(get_datasets(target_date)):
+    for i, dataset in enumerate(get_datasets(target_date, state)):
         logger.info('%d - %s', i, dataset)
         if reindex:
             txt_rows += ','.join(dataset) + '\n'
@@ -131,4 +131,8 @@ def main(target_date=None, command=None):
     logger.info('Processing complete')
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else None, sys.argv[2] if len(sys.argv) > 2 else None)
+    main(
+        sys.argv[1] if len(sys.argv) > 1 else None,
+        sys.argv[2] if len(sys.argv) > 2 else None,
+        sys.argv[3] if len(sys.argv) > 3 else None
+    )
