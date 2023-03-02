@@ -330,14 +330,14 @@ def reindex_recent(context):
 
     reindex_start = (datetime.now() - timedelta(minutes=REINDEX_MINUTES_BEFORE)).strftime('%Y-%m-%d %H:%M')
 
-    print(f'Reindexing recent datasets from {reindex_start}')
-
     packages = model.Session.query(model.Package) \
                             .filter(model.Package.type == 'dataset') \
                             .filter(model.Package.state == u'active') \
                             .filter(model.Package.metadata_modified > reindex_start) \
                             .all()
-    
+
+    print(f'Reindexing recent datasets from {reindex_start}, {len(packages)} found')
+
     if not packages:
         print(f'No datasets to reindex since {reindex_start}')
         return
@@ -345,10 +345,10 @@ def reindex_recent(context):
     package_index = PackageSearchIndex()
 
     defer_commit = {'defer_commit': True}
-    for package in packages:
+    for i, package in enumerate(packages):
         context.update({'ignore_auth': True})
         package_dict = logic.get_action('package_show')(context, {'id': package.id})
-        print('Updating search index:', package_dict.get('name'))
+        print(f'{i+1}/{len(packages)} - Updating search index:', package_dict.get('name'))
 
         # Remove configuration values
         new_dict = {}
