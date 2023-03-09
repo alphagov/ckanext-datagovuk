@@ -25,6 +25,8 @@ $pip uninstall -y enum34
 
 # needed for harvester run-test to target harvest sources
 $pip install $pipopt -U factory-boy==2.12.0 mock==2.0.0 pytest==4.6.5
+# needs to be installed before CKAN for web assets to work
+$pip install $pipopt -U prometheus-flask-exporter==0.20.3
 
 $pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt)
 $pip install $pipopt -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt
