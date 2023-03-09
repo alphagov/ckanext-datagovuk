@@ -1,7 +1,7 @@
 import logging
 import re
-from ckan.plugins.toolkit import config
 
+from ckan.plugins.toolkit import config
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import model
@@ -20,6 +20,8 @@ from ckanext.datagovuk.logic.theme_validator import valid_theme
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 from flask import Blueprint
+
+from prometheus_flask_exporter import PrometheusMetrics
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -214,6 +216,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def get_blueprint(self):
         from ckanext.datagovuk.views.dataset import dataset_search, dataset_search_v3
         from ckanext.datagovuk.views.healthcheck import healthcheck
+        from ckanext.datagovuk.views.metrics import metrics
         from ckanext.datagovuk.views.accessibility import accessibility
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
@@ -226,6 +229,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         bp.template_folder = u'templates'
 
         bp.add_url_rule(u"/healthcheck", view_func=healthcheck)
+        bp.add_url_rule(u"/metrics", view_func=metrics)
         bp.add_url_rule(u"/accessibility", view_func=accessibility)
         bp.add_url_rule(u"/api/search/dataset", view_func=dataset_search)
         bp.add_url_rule(u"/api/3/search/dataset", view_func=dataset_search_v3)
@@ -313,6 +317,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     def make_middleware(self, app, config):
         sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
+
+        if not hasattr(app, '_metrics'):
+            metrics = PrometheusMetrics(app, excluded_paths=['/metrics'])
+            app._metrics = metrics
         return app
 
     # IResourceController
