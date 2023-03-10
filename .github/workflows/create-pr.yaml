@@ -16,12 +16,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: alphagov/ckanext-datagovuk
-          path: charts
-      - name: Checkout charts repo
-        uses: actions/checkout@v3
-        with:
-          repository: alphagov/govuk-ckan-chart
           path: ckanext
       - run: bash ./ckanext/docker/create-pr.sh
         env:
-          GITHUB_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}

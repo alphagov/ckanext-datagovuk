@@ -3,14 +3,15 @@
 set -eux
 
 export IMAGE_TAG=$(gh api repos/alphagov/ckanext-datagovuk/branches/main | jq .commit.sha -r)
+BRANCH="ci/${IMAGE_TAG}"
 
-cd charts/charts/ckan/images
-
-git checkout -b ci/${IMAGE_TAG}
 git config --global user.email "govuk-ci@users.noreply.github.com"
 git config --global user.name "govuk-ci"
 
-gh auth setup-git
+git clone https://${GH_TOKEN}@github.com/alphagov/govuk-ckan-charts.git charts
+
+cd charts/charts/ckan/images
+git checkout -b ${BRANCH}
 
 for ENV in integration; do
   (
@@ -20,6 +21,7 @@ for ENV in integration; do
       git add "${APP}.yaml"
     done
     git commit -m "Update image tags for ${ENV} to ${IMAGE_TAG}"
-    gh pr create --title "Update image tags for ${ENV} (${IMAGE_TAG})" --base main --head "ci/${IMAGE_TAG}" --fill
+    git push --set-upstream origin "${BRANCH}"
+    gh pr create --title "Update image tags for ${ENV} (${IMAGE_TAG})" --base main --head "${BRANCH}" --fill
   )
 done
