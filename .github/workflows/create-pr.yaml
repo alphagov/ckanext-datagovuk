@@ -1,0 +1,27 @@
+name: Create charts PR
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [ "Build and push images" ]
+    types:
+      - completed
+
+jobs:
+  create_pr:
+    name: Create charts PR
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout ckanext-datagovuk repository
+        uses: actions/checkout@v3
+        with:
+          repository: alphagov/ckanext-datagovuk
+          path: charts
+      - name: Checkout charts repo
+        uses: actions/checkout@v3
+        with:
+          repository: alphagov/govuk-ckan-chart
+          path: ckanext
+      - run: bash ./ckanext/docker/create-pr.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
