@@ -71,9 +71,10 @@ ENV CKAN_INI $CKAN_CONFIG/production.ini
 ENV ckan_sha='0d714b258668ee78a0b19182c53b34689629df37'
 ENV ckan_fork='ckan'
 
-# Setup CKAN
+# Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
 
 RUN pip install -U pip && \
+    pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
     pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
