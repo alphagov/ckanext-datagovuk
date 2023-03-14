@@ -9,5 +9,5 @@ done
 
 ckan ckan-pycsw setup -p $CKAN_CONFIG/pycsw.cfg
 
-echo "Update pycsw abstract index to allow for larger records"
-PGPASSWORD=ckan psql pycsw -h $CKAN_DB_HOST -U ckan -c "DROP INDEX ix_records_abstract;CREATE INDEX ix_records_abstract ON records((md5(abstract)));"
+echo "Drop ix_records_abstract if exists and create pycsw abstract index to allow for larger records"
+PGPASSWORD=ckan psql ckan -h $CKAN_DB_HOST -U ckan -c "DROP INDEX IF EXISTS ix_records_abstract;CREATE INDEX ix_records_abstract ON records((md5(abstract)));"
