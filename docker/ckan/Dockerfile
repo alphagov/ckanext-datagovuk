@@ -122,3 +122,6 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U pyyaml==5.3.1
 
 RUN ckan config-tool $CKAN_INI "ckan.i18n_directory=$CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk"
+
+# to run the CKAN wsgi set the WORKDIR to CKAN
+WORKDIR $CKAN_VENV/src/ckan/
