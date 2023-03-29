@@ -9,7 +9,7 @@ ckan_dcat_fork='alphagov'
 ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='ee6c67f6a28dbe524e0ffac068a3087ede3afbb5'
+ckan_spatial_sha='bac67ccb236b718d226ef5ac7844723222d3b5c5'
 
 # ckan 2.9.3 - alphagov/ckan/commits/fix-user-security
 ckan_sha='885f9e0b668e3496a8f2c0c0a9f1cb59bf810e16'
