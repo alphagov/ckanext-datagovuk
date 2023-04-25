@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:focal AS base
+FROM governmentdigitalservice/ckan-python:3.6.12 AS base
 MAINTAINER Open Knowledge
 
 # Set timezone
@@ -52,11 +52,13 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
     python3 -m venv $CKAN_VENV && \
+    # ln -s $CKAN_VENV/bin/pip3 /usr/local/bin/ckan-pip3 &&\
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # Virtual environment binaries/scripts to be used first
 ENV PATH=${CKAN_VENV}/bin:${PATH}  
 
+# copy setup_pycsw.sh, pycsw.cfg & production.ini
 COPY bin/setup_pycsw.sh /pycsw-entrypoint.sh
 COPY docker/pycsw/pycsw.cfg $CKAN_CONFIG/pycsw.cfg
 COPY production.ini $CKAN_CONFIG/production.ini
@@ -67,19 +69,17 @@ ENV CKAN_INI $CKAN_CONFIG/production.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST db
 
-# ckan 2.10
-ENV ckan_sha='70bec6611003b96ec7a02abb9605afdfb0964ad9'
-ENV ckan_fork='ckan'
+# alphagov 2.9.3
+
+ENV ckan_sha='885f9e0b668e3496a8f2c0c0a9f1cb59bf810e16'
+ENV ckan_fork='alphagov'
 
 # Setup CKAN
 
 RUN pip install -U pip && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
-    # pin zope to 5.0.0 as causing issues - github.com/pypa/setuptools/issues/2017
-    curl "https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt" > requirements.txt && \
-    sed -i 's/zope.interface==4.3.2/zope.interface==5.0.0/g' ./requirements.txt && \
-    pip install --upgrade --no-cache-dir -r requirements.txt && \
+    pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini && \
     chmod +x /pycsw-entrypoint.sh && \
@@ -94,30 +94,29 @@ ENTRYPOINT ["/pycsw-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='32b22e6a0a86e5df95229fd7455676350877ce5e'
+ENV ckan_spatial_sha='433c7f2a4ba0b05871fe8bbc9b0518aa594f392d'
 ENV ckan_spatial_fork='alphagov'
 
-ENV ckan_harvest_fork='ckan'
-ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
+ENV ckan_harvest_fork='alphagov'
+ENV ckan_harvest_sha='f52605c9a4f8ccaa0f5e83937c59ce9bf58cbc06'
 
 RUN echo "pip install spatial extension..." && \
 
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \
 
-    # save spatial-requirements.txt locally before installing dependencies to work around pip error
-    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
-    pip install $pipopt -r spatial-requirements.txt && \
+    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
-## 3.0.0 pycsw
-ENV pycsw_sha='14d22a37ad0c76697fba57ccacca3f6053fc9bd0'
+# 2.6.1 pycsw
+ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
 RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
-    (cd pycsw && python setup.py build)
+    pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")" && \
+    (cd $pycsw_src && /usr/bin/env python setup.py build)
 
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions
-RUN pip install $pipopt -U pyyaml==5.3.1 sqlalchemy==1.3.23
+RUN pip install $pipopt -U pyyaml==5.4 sqlalchemy==1.3.23
     
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"

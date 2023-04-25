@@ -12,6 +12,15 @@ body {
   margin-bottom: 0;
 }
 
+.p-2, .masthead {
+  background-color: rgb(11, 12, 12);
+}
+
+.masthead .main-navbar ul li a {
+  background-color: #003647;
+  border-radius: 4px;
+}
+
 .masthead .navigation .nav-pills li a,
 .masthead .navigation .nav-pills li.active a {
 

@@ -60,7 +60,7 @@ ENV PATH=${CKAN_VENV}/bin:${PATH}
 
 # copy production.ini
 ADD . $CKAN_VENV/src/ckanext-datagovuk/
-RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini
+RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/ckan.ini $CKAN_CONFIG/production.ini
 
 # Setup additional env vars
 ENV pipopt='--exists-action=b --force-reinstall'
@@ -96,13 +96,17 @@ USER ckan
 EXPOSE 5000
 
 ENV ckan_harvest_fork='ckan'
-ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
+# ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
+ENV ckan_harvest_sha='eb73bed1739ac8656d892a609b5ee303e34251ca'
 
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
 ENV ckan_spatial_sha='09e64db545ac1c79e0230a056a2351c33afa2a70'
 ENV ckan_spatial_fork='alphagov'
+
+# ENV ckan_spatial_sha='1205d3aa408e994439fc231ccb5d1cff06d644c6'
+# ENV ckan_spatial_fork='ckan'
 
 RUN echo "pip install DGU extensions..." && \
 
@@ -124,7 +128,9 @@ RUN echo "pip install DGU extensions..." && \
     # need these dependencies for harvester run-test to target harvest sources
     pip install $pipopt -U factory-boy==2.12.0 mock==2.0.0 pytest==4.6.5 && \
     # need to pin pyyaml to correctly pick up config settings
-    pip install $pipopt -U pyyaml==5.3.1
+    pip install $pipopt -U pyyaml==5.4 && \
+    # fix dependency bug
+    pip install $pipopt -U sqlalchemy[mypy]==1.4.41
 
 RUN ckan config-tool $CKAN_INI "ckan.i18n_directory=$CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk"
 
