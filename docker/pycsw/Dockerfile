@@ -52,13 +52,11 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
     python3 -m venv $CKAN_VENV && \
-    # ln -s $CKAN_VENV/bin/pip3 /usr/local/bin/ckan-pip3 &&\
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # Virtual environment binaries/scripts to be used first
 ENV PATH=${CKAN_VENV}/bin:${PATH}  
 
-# copy setup_pycsw.sh, pycsw.cfg & production.ini
 COPY bin/setup_pycsw.sh /pycsw-entrypoint.sh
 COPY docker/pycsw/pycsw.cfg $CKAN_CONFIG/pycsw.cfg
 COPY production.ini $CKAN_CONFIG/production.ini
@@ -69,9 +67,8 @@ ENV CKAN_INI $CKAN_CONFIG/production.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST db
 
-# ckan 2.9.7
-
-ENV ckan_sha='0d714b258668ee78a0b19182c53b34689629df37'
+# ckan 2.10
+ENV ckan_sha='70bec6611003b96ec7a02abb9605afdfb0964ad9'
 ENV ckan_fork='ckan'
 
 # Setup CKAN
@@ -94,7 +91,7 @@ ENTRYPOINT ["/pycsw-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='9f9a418c103b697e3ebef309802b7fb62cbf6344'
+ENV ckan_spatial_sha='32b22e6a0a86e5df95229fd7455676350877ce5e'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='ckan'
@@ -108,8 +105,8 @@ RUN echo "pip install spatial extension..." && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
-## 2.6.1 pycsw
-ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
+## 3.0.0 pycsw
+ENV pycsw_sha='14d22a37ad0c76697fba57ccacca3f6053fc9bd0'
 RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
     pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")" && \

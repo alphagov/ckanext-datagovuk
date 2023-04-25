@@ -19,11 +19,11 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
         schema = group_form_schema()
         for mandatory_extra in ['category']:
             schema.update({mandatory_extra: [toolkit.get_converter('convert_to_extras'),
-                                         str]})
+                                         toolkit.get_validator('unicode_safe')]})
         for optional_extra in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({optional_extra: [toolkit.get_validator('ignore_missing'),
                                          toolkit.get_converter('convert_to_extras'),
-                                         str]})
+                                         toolkit.get_validator('unicode_safe')]})
         return schema
 
     def db_to_form_schema(self, package_type=None):
@@ -32,7 +32,7 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
         for optional_extra in ['category', 'contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({optional_extra: [toolkit.get_converter('convert_from_extras'),
                                          toolkit.get_validator('ignore_missing'),
-                                         str]})
+                                         toolkit.get_validator('unicode_safe')]})
         schema['num_followers'] = []
         schema['created'] = []
         schema['display_name'] = []
