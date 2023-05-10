@@ -54,4 +54,5 @@ jobs:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
+          GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
         run: ./docker/build-image.sh
