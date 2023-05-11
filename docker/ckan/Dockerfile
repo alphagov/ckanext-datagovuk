@@ -66,9 +66,9 @@ RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/productio
 ENV pipopt='--exists-action=b --force-reinstall'
 ENV CKAN_INI $CKAN_CONFIG/production.ini
 
-# ckan 2.9.7
+# ckan 2.9.8
 
-ENV ckan_sha='0d714b258668ee78a0b19182c53b34689629df37'
+ENV ckan_sha='483d528d1e6a5e8cb35586e7ee8cab68c431a4ea'
 ENV ckan_fork='ckan'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
@@ -76,7 +76,10 @@ ENV ckan_fork='ckan'
 RUN pip install -U pip && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
-    pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
+    # pin zope to 5.0.0 as causing issues - github.com/pypa/setuptools/issues/2017
+    curl "https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt" > requirements.txt && \
+    sed -i 's/zope.interface==4.3.2/zope.interface==5.0.0/g' ./requirements.txt && \
+    pip install --upgrade --no-cache-dir -r requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini && \
     cp -v $CKAN_VENV/src/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
