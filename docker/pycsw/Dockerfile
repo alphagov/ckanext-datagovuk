@@ -59,11 +59,11 @@ ENV PATH=${CKAN_VENV}/bin:${PATH}
 
 COPY bin/setup_pycsw.sh /pycsw-entrypoint.sh
 COPY docker/pycsw/pycsw.cfg $CKAN_CONFIG/pycsw.cfg
-COPY production.ini $CKAN_CONFIG/production.ini
+COPY ckan.ini $CKAN_CONFIG/ckan.ini
 
 # Setup additional env vars
 ENV pipopt='--exists-action=b --force-reinstall'
-ENV CKAN_INI $CKAN_CONFIG/production.ini
+ENV CKAN_INI $CKAN_CONFIG/ckan.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST db
 
@@ -76,7 +76,10 @@ ENV ckan_fork='ckan'
 RUN pip install -U pip && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
-    pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
+    # pin zope to 5.0.0 as causing issues - github.com/pypa/setuptools/issues/2017
+    curl "https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt" > requirements.txt && \
+    sed -i 's/zope.interface==4.3.2/zope.interface==5.0.0/g' ./requirements.txt && \
+    pip install --upgrade --no-cache-dir -r requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini && \
     chmod +x /pycsw-entrypoint.sh && \
@@ -86,7 +89,7 @@ FROM base AS prod
 
 WORKDIR $CKAN_VENV/src
 
-ENTRYPOINT ["/pycsw-entrypoint.sh"]
+# ENTRYPOINT ["/pycsw-entrypoint.sh"]
 
 USER ckan
 EXPOSE 5000
@@ -109,11 +112,10 @@ RUN echo "pip install spatial extension..." && \
 ENV pycsw_sha='14d22a37ad0c76697fba57ccacca3f6053fc9bd0'
 RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
-    pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")" && \
-    (cd $pycsw_src && /usr/bin/env python setup.py build)
+    (cd pycsw && python setup.py build)
 
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions
-RUN pip install $pipopt -U pyyaml==5.3.1 sqlalchemy==1.3.23
+RUN pip install $pipopt -U pyyaml==5.4 sqlalchemy[mypy]==1.4.41
     
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"
