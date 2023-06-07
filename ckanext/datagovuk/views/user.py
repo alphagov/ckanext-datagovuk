@@ -43,12 +43,3 @@ class DGUUserRegisterView(_UserBeforeRequestMixin, RegisterView):
     """
     def post(self, *args, **kwargs):
         abort(403)
-
-
-def me():
-    """
-    A slight variation on the default me() which prefers `dashboard.datasets`
-    over `dashboard.index`
-    """
-    route = u'dashboard.datasets' if g.user else u'user.login'
-    return redirect_to(route)
