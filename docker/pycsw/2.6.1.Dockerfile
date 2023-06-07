@@ -59,11 +59,11 @@ ENV PATH=${CKAN_VENV}/bin:${PATH}
 
 COPY bin/setup_pycsw.sh /pycsw-entrypoint.sh
 COPY docker/pycsw/pycsw.cfg $CKAN_CONFIG/pycsw.cfg
-COPY production.ini $CKAN_CONFIG/production.ini
+COPY ckan.ini $CKAN_CONFIG/ckan.ini
 
 # Setup additional env vars
 ENV pipopt='--exists-action=b --force-reinstall'
-ENV CKAN_INI $CKAN_CONFIG/production.ini
+ENV CKAN_INI $CKAN_CONFIG/ckan.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST db
 
@@ -89,7 +89,7 @@ FROM base AS prod
 
 WORKDIR $CKAN_VENV/src
 
-ENTRYPOINT ["/pycsw-entrypoint.sh"]
+# ENTRYPOINT ["/pycsw-entrypoint.sh"]
 
 USER ckan
 EXPOSE 5000
@@ -118,6 +118,6 @@ RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython
 
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions
-RUN pip install $pipopt -U pyyaml==5.3.1 sqlalchemy==1.3.23
+RUN pip install $pipopt -U pyyaml==5.4 sqlalchemy[mypy]==1.4.41
     
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"
