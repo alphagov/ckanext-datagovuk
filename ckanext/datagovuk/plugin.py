@@ -219,7 +219,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
             DGUUserRegisterView,
-            me,
         )
         from ckanext.datagovuk.schema import user_new_form_schema, user_edit_form_schema
 
@@ -251,13 +250,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
         bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
 
-        bp.add_url_rule(u'/user/me', view_func=me)
         # also monkeypatch occurrence in original module as some views
         # call it directly instead of redirecting externally
         import ckan.views.user as ckan_user_views
         ckan_user_views._edit_form_to_db_schema = user_edit_form_schema
         ckan_user_views._new_form_to_db_schema = user_new_form_schema
-        ckan_user_views.me = me
 
         return bp
 
