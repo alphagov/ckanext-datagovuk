@@ -96,16 +96,13 @@ USER ckan
 EXPOSE 5000
 
 ENV ckan_harvest_fork='ckan'
-ENV ckan_harvest_sha='eb73bed1739ac8656d892a609b5ee303e34251ca'
+ENV ckan_harvest_sha='b24421676be23ab627cb0307f4c7dd64cdf49e5e'
 
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='9f9a418c103b697e3ebef309802b7fb62cbf6344'
+ENV ckan_spatial_sha='99b0f03bf50df65cd72caab44336d9632cc38885'
 ENV ckan_spatial_fork='alphagov'
-
-# ENV ckan_spatial_sha='1205d3aa408e994439fc231ccb5d1cff06d644c6'
-# ENV ckan_spatial_fork='ckan'
 
 RUN echo "pip install DGU extensions..." && \
 
