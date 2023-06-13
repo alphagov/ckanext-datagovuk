@@ -3,7 +3,7 @@ version: "3"
 services:
   ckan-2.10:
     container_name: ckan-2.10
-    image: localhost:53492/ckan:2.10
+    image: localhost:61020/ckan:2.10
     build:
       context: ../
       dockerfile: docker/ckan/Dockerfile
@@ -15,6 +15,7 @@ services:
       - db-2.10:db
       - solr-2.10:solr
       - redis-2.10:redis
+      - static-mock-harvest-source-2.10:static-mock-harvest-source
     ports:
       - "0.0.0.0:3003:3000"
     volumes:
@@ -25,14 +26,19 @@ services:
       - solr-2.10
       - redis-2.10
       - static-mock-harvest-source-2.10
-    command: bash -c "tail -f /dev/null"
-    # command: bash -c "ckan run --host 0.0.0.0"
+    # command: bash -c "tail -f /dev/null"
+    command: bash -c "ckan run --host 0.0.0.0"
     networks:
       - ckan-2.10
 
   pycsw-2.10:
     container_name: pycsw-2.10
-    image: localhost:53492/pycsw:2.6.1
+    image: localhost:61020/pycsw:3.0.0
+    build:
+      context: ../
+      dockerfile: docker/pycsw/Dockerfile
+    env_file:
+      - .env-2.10
     links:
       - db-2.10:db
       - solr-2.10:solr
@@ -61,11 +67,9 @@ services:
 
   solr-2.10:
     container_name: solr-2.10
-    image: ckan/ckan-solr:2.9-solr8
-    # build:
-    #   context: ../
-    #   # dockerfile: docker/solr/Dockerfile
-    #   dockerfile: docker/solr/Dockerfile.solr8
+    build:
+      context: ../
+      dockerfile: docker/solr/2.10.Dockerfile
     ports:
       - "8983:8983"
     volumes:
@@ -89,7 +93,7 @@ services:
     links:
       - ckan-2.10:ckan
     ports:
-      - 0.0.0.0:5001:80
+      - 0.0.0.0:5003:80
     volumes:
       - ./logs/2.10:/var/log/nginx
     networks:
