@@ -11,6 +11,8 @@
       </span>
   {% endcall %}
 
+  {{ h.csrf_input() if 'csrf_input' in h }}
+
   {{ form.input('title', id='field-title', label=_('Title'), value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
 
   {% set prefix = 'harvest' %}
