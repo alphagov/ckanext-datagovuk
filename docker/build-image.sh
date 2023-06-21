@@ -5,9 +5,9 @@ set -eux
 DOCKER_TAG="${GITHUB_SHA}"
 
 if [ "${ARCH}" = "amd64" ]; then
-  docker build . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/Dockerfile
+  docker build . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/${VERSION}.Dockerfile
 else
-  docker buildx build --platform linux/${ARCH} . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/Dockerfile
+  docker buildx build --platform linux/${ARCH} . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/${VERSION}.Dockerfile
 fi
 
 if [[ -n ${DRY_RUN:-} ]]; then

@@ -79,7 +79,10 @@ ENV ckan_fork='ckan'
 RUN pip install -U pip && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
-    pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
+    # pin zope to 5.0.0 as causing issues - github.com/pypa/setuptools/issues/2017
+    curl "https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt" > requirements.txt && \
+    sed -i 's/zope.interface==4.3.2/zope.interface==5.0.0/g' ./requirements.txt && \
+    pip install --upgrade --no-cache-dir -r requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini && \
     chmod +x /pycsw-entrypoint.sh && \
@@ -112,8 +115,7 @@ RUN echo "pip install spatial extension..." && \
 ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
 RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
-    pycsw_src="$(/usr/bin/env python -m site | grep pycsw | sed "s:[ |,|']::g")" && \
-    (cd $pycsw_src && /usr/bin/env python setup.py build)
+    (cd pycsw && python setup.py build)
 
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions

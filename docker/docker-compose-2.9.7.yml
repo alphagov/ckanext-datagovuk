@@ -6,7 +6,7 @@ services:
     image: localhost:53492/ckan:2.9.7
     build:
       context: ../
-      dockerfile: docker/ckan/Dockerfile
+      dockerfile: docker/ckan/2.9.7.Dockerfile
       args:
         - START_CKAN=1
     env_file:
@@ -33,6 +33,9 @@ services:
   pycsw-2.9.7:
     container_name: pycsw-2.9.7
     image: localhost:53492/pycsw:2.6.1
+    build:
+      context: ../
+      dockerfile: docker/pycsw/2.6.1.Dockerfile
     links:
       - db-2.9.7:db
       - solr-2.9.7:solr
@@ -53,7 +56,7 @@ services:
       - .env-2.9.7
     build:
       context: ../
-      dockerfile: docker/postgis/Dockerfile
+      dockerfile: docker/postgis/13-3.1.Dockerfile
     volumes:
       - pg_data-2.9.7:/var/lib/postgresql/data
     networks:
@@ -61,11 +64,10 @@ services:
 
   solr-2.9.7:
     container_name: solr-2.9.7
-    # image: ckan/ckan-solr:2.9-solr8
+    image: localhost:53492/solr:8
     build:
       context: ../
-      dockerfile: docker/solr/Dockerfile
-      # dockerfile: Dockerfile.solr8
+      dockerfile: docker/solr/8.Dockerfile
     ports:
       - "8983:8983"
     volumes:
