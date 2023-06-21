@@ -28,7 +28,7 @@ jobs:
           - name: postgis
             version: 13-3.1
           - name: solr
-            version: 6.6.2
+            version: 8
         arch: [ amd64 ]
     permissions:
       packages: write

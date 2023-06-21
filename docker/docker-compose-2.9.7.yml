@@ -67,7 +67,7 @@ services:
     image: ckan-solr:2.9
     build:
       context: ../
-      dockerfile: docker/solr/2.9-solr8.Dockerfile
+      dockerfile: docker/solr/Dockerfile
     ports:
       - "8983:8983"
     volumes:
