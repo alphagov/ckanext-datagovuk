@@ -1,0 +1,18 @@
+beautifulsoup4==4.9.3
+blinker>=1.6.2
+boto3==1.18.34
+Flask-Login==0.6.2
+Flask-WTF~=1.1.1
+gunicorn
+jinja2>=3.1.2
+lxml>=2.3
+numpy==1.16.4
+pandas==1.1.4
+#prometheus-flask-exporter==0.20.3 # installed in Dockerfile before CKAN
+psycopg2==2.8.6
+python-slugify==5.0.2
+sentry-sdk==0.17.6
+Shapely>=1.2.13
+six==1.15.0
+sqlalchemy==1.4
+xlrd==1.2.0
