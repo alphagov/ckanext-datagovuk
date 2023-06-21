@@ -100,7 +100,7 @@ ENV ckan_harvest_sha='b24421676be23ab627cb0307f4c7dd64cdf49e5e'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='99b0f03bf50df65cd72caab44336d9632cc38885'
+ENV ckan_spatial_sha='e5622830bac7c9b4c989d6719defdc55b535be34'
 ENV ckan_spatial_fork='alphagov'
 
 RUN echo "pip install DGU extensions..." && \
@@ -108,7 +108,9 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat" && \
 
-    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
+    # save spatial-requirements.txt locally before installing dependencies to work around pip error
+    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
+    pip install $pipopt -r spatial-requirements.txt && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
 
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \
@@ -122,9 +124,13 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U factory-boy==2.12.0 mock==2.0.0 pytest==4.6.5 && \
     # need to pin pyyaml to correctly pick up config settings
     pip install $pipopt -U pyyaml==5.4 && \
+    # fix watchdog dependency
+    # pip install $pipopt -U watchdog==3.0.0 && \
+    pip install $pipopt -U watchdog==2.3.1 && \
     # fix dependency bug
-    pip install $pipopt -U sqlalchemy[mypy]==1.4.41
+    pip install $pipopt -U sqlalchemy[mypy]==1.4.47
 
+RUN pip install $pipopt -U Flask-Login==0.6.2 Flask-WTF~=1.1.1 sqlalchemy[mypy]==1.4.47
 RUN ckan config-tool $CKAN_INI "ckan.i18n_directory=$CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk"
 
 # to run the CKAN wsgi set the WORKDIR to CKAN

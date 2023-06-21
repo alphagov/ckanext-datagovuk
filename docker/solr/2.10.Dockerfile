@@ -1,4 +1,4 @@
-FROM ckan/ckan-solr:2.10
+FROM ckan/ckan-solr:2.10-spatial
 
 # Enviroment
 ENV SOLR_CORE ckan
