@@ -3,7 +3,7 @@ version: "3"
 services:
   ckan-2.10:
     container_name: ckan-2.10
-    image: localhost:61020/ckan:2.10
+    image: localhost:64517/ckan:2.10
     build:
       context: ../
       dockerfile: docker/ckan/Dockerfile
@@ -26,14 +26,14 @@ services:
       - solr-2.10
       - redis-2.10
       - static-mock-harvest-source-2.10
-    # command: bash -c "tail -f /dev/null"
-    command: bash -c "ckan run --host 0.0.0.0"
+    command: bash -c "tail -f /dev/null"
+    # command: bash -c "ckan run --host 0.0.0.0"
     networks:
       - ckan-2.10
 
   pycsw-2.10:
     container_name: pycsw-2.10
-    image: localhost:61020/pycsw:3.0.0
+    image: localhost:64517/pycsw:3.0.0
     build:
       context: ../
       dockerfile: docker/pycsw/Dockerfile
