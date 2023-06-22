@@ -2,7 +2,7 @@
 
 set -eux
 
-export IMAGE_TAG=$(gh api repos/alphagov/ckanext-datagovuk/branches/main | jq .commit.sha -r)
+export IMAGE_TAG=$(gh api repos/alphagov/ckanext-datagovuk/branches/${GH_REF} | jq .commit.sha -r)
 BRANCH="ci/${IMAGE_TAG}"
 
 git config --global user.email "govuk-ci@users.noreply.github.com"
