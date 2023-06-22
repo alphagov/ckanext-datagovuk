@@ -18,7 +18,7 @@ for ENV in integration; do
     cd "${ENV}"
     for APP in ckan pycsw solr; do
       yq -i '.tag = env(IMAGE_TAG)' "${APP}.yaml"
-      yq -i ".branch = ${GH_REF}" "${APP}.yaml"
+      yq -i ".branch = '${GH_REF}'" "${APP}.yaml"
       git add "${APP}.yaml"
     done
     git commit -m "Update image tags for ${ENV} to ${IMAGE_TAG}"
