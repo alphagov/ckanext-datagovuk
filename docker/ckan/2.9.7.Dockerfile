@@ -66,9 +66,9 @@ RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/productio
 ENV pipopt='--exists-action=b --force-reinstall'
 ENV CKAN_INI $CKAN_CONFIG/production.ini
 
-# ckan 2.9.8
+# ckan 2.9.7
 
-ENV ckan_sha='483d528d1e6a5e8cb35586e7ee8cab68c431a4ea'
+ENV ckan_sha='0d714b258668ee78a0b19182c53b34689629df37'
 ENV ckan_fork='ckan'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
@@ -101,7 +101,7 @@ ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='73fa9c6df90628d0938ad6f48c58459e466d191f'
+ENV ckan_spatial_sha='696ee3d33d231fd3094cb82f5ace21a15cc17f57'
 ENV ckan_spatial_fork='alphagov'
 
 RUN echo "pip install DGU extensions..." && \
@@ -109,7 +109,12 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat" && \
 
-    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
+    # pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
+    # pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
+
+    # save spatial-requirements.txt locally before installing dependencies to work around pip error
+    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
+    pip install $pipopt -r spatial-requirements.txt && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
 
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \

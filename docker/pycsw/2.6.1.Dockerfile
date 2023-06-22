@@ -97,7 +97,7 @@ ENTRYPOINT ["/pycsw-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='73fa9c6df90628d0938ad6f48c58459e466d191f'
+ENV ckan_spatial_sha='696ee3d33d231fd3094cb82f5ace21a15cc17f57'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='ckan'
@@ -108,7 +108,12 @@ RUN echo "pip install spatial extension..." && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \
 
-    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
+    # pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
+    # pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
+
+    # save spatial-requirements.txt locally before installing dependencies to work around pip error
+    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
+    pip install $pipopt -r spatial-requirements.txt && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
 ## 2.6.1 pycsw
