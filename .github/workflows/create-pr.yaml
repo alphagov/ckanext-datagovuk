@@ -6,6 +6,8 @@ on:
     workflows: [ "Build and push images" ]
     types:
       - completed
+    branches:
+      - main
 
 jobs:
   create_pr:
