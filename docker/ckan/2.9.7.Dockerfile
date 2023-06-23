@@ -101,7 +101,7 @@ ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='696ee3d33d231fd3094cb82f5ace21a15cc17f57'
+ENV ckan_spatial_sha='c4cf2bb072989326ad914e11d3b1a2e14f323869'
 ENV ckan_spatial_fork='alphagov'
 
 RUN echo "pip install DGU extensions..." && \
