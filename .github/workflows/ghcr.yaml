@@ -56,7 +56,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push images
-        if: ${{ (!inputs.noPushToRegistry && !inputs.buildTestCIImage) || (!inputs.noPushToRegistry && inputs.buildTestCIImage && matrix.app.name == "ckan" ) }}
+        if: ${{ (!inputs.noPushToRegistry && !inputs.buildTestCIImage) || (!inputs.noPushToRegistry && inputs.buildTestCIImage && matrix.app.name == 'ckan' ) }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
