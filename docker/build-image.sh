@@ -2,7 +2,11 @@
 
 set -eux
 
-DOCKER_TAG="${GITHUB_SHA}"
+if [ ${BUILD_CI} ]; then
+  DOCKER_TAG="${VERSION}"
+else
+  DOCKER_TAG="${GITHUB_SHA}"
+fi
 
 if [ "${ARCH}" = "amd64" ]; then
   docker build . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/${VERSION}.Dockerfile
