@@ -34,7 +34,8 @@ jobs:
       PGPASSWORD: postgres
       CRYPTOGRAPHY_DONT_BUILD_RUST: 1
       TZ: UTC
-
+    permissions:
+      packages: write
     steps:
     - name: Login to GHCR
       uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
