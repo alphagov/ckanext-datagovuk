@@ -8,8 +8,8 @@ on:
         required: true
         type: boolean
         default: false
-      buildTestCIImage:
-        description: Build CKAN image for CI
+      buildTestCIImages:
+        description: Build images for CI
         required: true
         type: boolean
         default: false
@@ -56,10 +56,10 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push images
-        if: ${{ (!inputs.noPushToRegistry && !inputs.buildTestCIImage) || (!inputs.noPushToRegistry && inputs.buildTestCIImage && matrix.app.name == 'ckan' ) }}
+        if: ${{ (!inputs.noPushToRegistry && !inputs.buildTestCIImages) || (!inputs.noPushToRegistry && inputs.buildTestCIImages && (matrix.app.name == 'ckan' || matrix.app.name == 'solr') ) }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          BUILD_CI: ${{ inputs.buildTestCIImage }}
+          BUILD_CI: ${{ inputs.buildTestCIImages }}
         run: ./docker/build-image.sh
