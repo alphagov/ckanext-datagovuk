@@ -8,12 +8,14 @@ jobs:
         version:
           - ckan: 2.9.3
             solr: 6.6.2
+            registry: governmentdigitalservice/ckan-main
           - ckan: 2.9.9
             solr: 2.9-solr8
+            registry: ghcr.io/alphagov/ckan
     name: test
     runs-on: ubuntu-latest
     container:
-      image: governmentdigitalservice/ckan-main:${{ matrix.version.ckan }}
+      image: ${{ matrix.version.registry }}:${{ matrix.version.ckan }}
     services:
       solr:
         image: governmentdigitalservice/ckan-solr:${{ matrix.version.solr }}
