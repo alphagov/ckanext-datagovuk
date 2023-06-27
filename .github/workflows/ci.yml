@@ -7,16 +7,16 @@ jobs:
       matrix:
         version:
           - ckan: governmentdigitalservice/ckan-main:2.9.3
-            solr: 6.6.2
+            solr: governmentdigitalservice/ckan-solr:6.6.2
           - ckan: ghcr.io/alphagov/ckan:2.9.9
-            solr: 2.9-solr8
+            solr: ghcr.io/alphagov/solr:8
     name: test
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.version.ckan }}
     services:
       solr:
-        image: governmentdigitalservice/ckan-solr:${{ matrix.version.solr }}
+        image: ${{ matrix.version.solr }}
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
