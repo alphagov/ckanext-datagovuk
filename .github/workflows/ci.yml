@@ -3,13 +3,20 @@ on: [push, pull_request_target]
 
 jobs:
   test:
+    strategy:
+      matrix:
+        version:
+          - ckan: 2.9.3
+            solr: 6.6.2
+          - ckan: 2.9.9
+            solr: 2.9-solr8
     name: test
     runs-on: ubuntu-latest
     container:
-      image: governmentdigitalservice/ckan-main:2.9.3
+      image: governmentdigitalservice/ckan-main:${{ matrix.version.ckan }}
     services:
       solr:
-        image: governmentdigitalservice/ckan-solr:6.6.2
+        image: governmentdigitalservice/ckan-solr:${{ matrix.version.solr }}
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
