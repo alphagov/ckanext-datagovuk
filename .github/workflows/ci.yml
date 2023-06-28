@@ -72,7 +72,7 @@ jobs:
       if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.9-base' }}
       run: |
         # Replace default path to CKAN core config file with the one on the container
-        sed -i -e 's|use = config:.*/use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
+        sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
         # set the i18n directory
         sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/../ckanext-datagovuk/ckanext/datagovuk/i18n|" /config/production.ini
     - name: Init Database
