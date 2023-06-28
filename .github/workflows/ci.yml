@@ -50,7 +50,8 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install flask prometheus exporter
       run: pip install prometheus-flask-exporter==0.20.3
-    - name: Install harvester
+    - name: Install harvester for CKAN 2.9.3
+      if: ${{ matrix.version.ckan == 'governmentdigitalservice/ckan-main:2.9.3' }}
       run: |
         git clone --depth 1 https://github.com/ckan/ckanext-harvest
         cd ckanext-harvest
