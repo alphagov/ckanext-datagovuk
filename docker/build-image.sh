@@ -3,6 +3,9 @@
 set -eux
 
 if [ ${BUILD_CI} ]; then
+  if [ "${APP}" = "ckan" ]; then
+    VERSION="${VERSION}-base"
+  fi
   DOCKER_TAG="${VERSION}"
 else
   DOCKER_TAG="${GITHUB_SHA}"
