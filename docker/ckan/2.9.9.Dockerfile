@@ -1,4 +1,4 @@
-FROM ghcr.io/alphagov/ckan-base:2.9.9
+FROM ghcr.io/alphagov/ckan:2.9.9-base
 
 WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
 
