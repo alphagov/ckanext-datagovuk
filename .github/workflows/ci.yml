@@ -61,12 +61,20 @@ jobs:
       run: |
         pip install -r requirements.txt
         pip install -e .
-    - name: Update config
+    - name: Update config for CKAN 2.9.3
+      if: ${{ matrix.version.ckan == 'governmentdigitalservice/ckan-main:2.9.3' }}
       run: |
         # Replace default path to CKAN core config file with the one on the container
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
         # set the i18n directory
         sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
+    - name: Update config
+      if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.9-base' }}
+      run: |
+        # Replace default path to CKAN core config file with the one on the container
+        sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
+        # set the i18n directory
+        sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" ${CKAN_CONFIG}/production.ini
     - name: Init Database
       run: |
         ckan db init
