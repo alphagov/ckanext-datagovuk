@@ -5,7 +5,7 @@ gunicorn
 jinja2<3.1.0
 lxml>=2.3
 numpy==1.16.4
-pandas==1.1.4
+pandas==2.0.3
 #prometheus-flask-exporter==0.20.3 # installed in Dockerfile before CKAN
 psycopg2==2.8.6
 python-slugify==5.0.2
