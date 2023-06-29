@@ -1,6 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
 FROM ubuntu:focal
-MAINTAINER Government Digital Service
 
 # Set timezone
 ENV TZ=UTC
@@ -8,11 +7,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Setting the locale
 ENV LC_ALL=en_US.UTF-8       
-RUN apt-get update
-RUN apt-get install --no-install-recommends -y locales
-RUN sed -i "/$LC_ALL/s/^# //g" /etc/locale.gen
-RUN dpkg-reconfigure --frontend=noninteractive locales 
-RUN update-locale LANG=${LC_ALL}
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y locales && \
+    sed -i "/$LC_ALL/s/^# //g" /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=${LC_ALL}
 
 # Install required system packages
 RUN apt-get -q -y update \
