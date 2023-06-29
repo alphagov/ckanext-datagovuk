@@ -1,4 +1,5 @@
 FROM ghcr.io/alphagov/ckan:2.9.9-base
+MAINTAINER Government Digital Service
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
 
