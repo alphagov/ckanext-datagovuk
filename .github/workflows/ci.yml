@@ -35,44 +35,44 @@ jobs:
       CRYPTOGRAPHY_DONT_BUILD_RUST: 1
       TZ: UTC
     steps:
-    - uses: actions/checkout@v2
-    - name: Create Database
-      run: |
-        psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
-        createdb --encoding=utf-8 --host=postgres --username=postgres --owner=ckan_default ckan_test
-        psql --host=postgres --username=postgres -d ckan_test -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
-    - name: pip cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    - name: Install flask prometheus exporter
-      run: pip install prometheus-flask-exporter==0.20.3
-    - name: Install requirements (ckanext-datagovuk)
-      run: |
-        pip install -r requirements.txt
-        pip install -e .
-    - name: Install dev requirements
-      run: |
-        pip install factory-boy==2.12.0 pytest-ckan==0.0.12 pytest-cov==4.0.0 mock==2.0.0
-    - name: Update config for CKAN 2.9.3
-      if: ${{ matrix.version.ckan == 'governmentdigitalservice/ckan-main:2.9.3' }}
-      run: |
-        # Replace default path to CKAN core config file with the one on the container
-        sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
-        # set the i18n directory
-        sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
-    - name: Update config
-      if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.9-base' }}
-      run: |
-        # Replace default path to CKAN core config file with the one on the container
-        sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
-        # set the i18n directory
-        sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" ${CKAN_CONFIG}/production.ini
-    - name: Init Database
-      run: |
-        ckan db init
-    - name: Run tests
-      run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+      - uses: actions/checkout@v3
+      - name: Create Database
+        run: |
+          psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
+          createdb --encoding=utf-8 --host=postgres --username=postgres --owner=ckan_default ckan_test
+          psql --host=postgres --username=postgres -d ckan_test -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
+      - name: pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install flask prometheus exporter
+        run: pip install prometheus-flask-exporter==0.20.3
+      - name: Install requirements (ckanext-datagovuk)
+        run: |
+          pip install -r requirements.txt
+          pip install -e .
+      - name: Install dev requirements
+        run: |
+          pip install factory-boy==2.12.0 pytest-ckan==0.0.12 pytest-cov==4.0.0 mock==2.0.0
+      - name: Update config for CKAN 2.9.3
+        if: ${{ matrix.version.ckan == 'governmentdigitalservice/ckan-main:2.9.3' }}
+        run: |
+          # Replace default path to CKAN core config file with the one on the container
+          sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
+          # set the i18n directory
+          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
+      - name: Update config
+        if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.9-base' }}
+        run: |
+          # Replace default path to CKAN core config file with the one on the container
+          sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
+          # set the i18n directory
+          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" ${CKAN_CONFIG}/production.ini
+      - name: Init Database
+        run: |
+          ckan db init
+      - name: Run tests
+        run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
