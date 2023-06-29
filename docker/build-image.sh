@@ -4,13 +4,13 @@ set -eux
 
 build () {
   if [ "${ARCH}" = "amd64" ]; then
-    docker build . -t ghcr.io/alphagov/${APP}:${1} -f docker/${APP}/${1}.Dockerfile
+    docker build . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${1}.Dockerfile"
   else
-    docker buildx build --platform linux/${ARCH} . -t ghcr.io/alphagov/${APP}:${1} -f docker/${APP}/${1}.Dockerfile
+    docker buildx build --platform "linux/${ARCH}" . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${1}.Dockerfile"
   fi
 }
 
-if [ -n ${BUILD_BASE:-} ]; then
+if [[ -n ${BUILD_BASE:-} ]]; then
   if [ "${APP}" = "ckan" ]; then
     build "${VERSION}-core"
     build "${VERSION}-base"
@@ -29,9 +29,9 @@ if [[ -n ${DRY_RUN:-} ]]; then
   echo "Dry run; not pushing to registry"
 else
   if [[ -n ${DOCKER_TAG:-} ]]; then
-    docker push ghcr.io/alphagov/${APP}:${DOCKER_TAG}
+    docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}"
   else
-    docker push ghcr.io/alphagov/${APP}:"${VERSION}-core"
-    docker push ghcr.io/alphagov/${APP}:"${VERSION}-base"
+    docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
+    docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
   fi
 fi
