@@ -6,6 +6,8 @@ on:
     workflows: [ "Build and push images" ]
     types:
       - completed
+    branches:
+      - main
 
 jobs:
   create_pr:
@@ -20,3 +22,4 @@ jobs:
       - run: bash ./ckanext/docker/create-pr.sh
         env:
           GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
+          GH_REF: ${{ github.ref_name }}

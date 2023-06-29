@@ -2,16 +2,36 @@
 
 set -eux
 
-DOCKER_TAG="${GITHUB_SHA}"
+build () {
+  if [ "${ARCH}" = "amd64" ]; then
+    docker build . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${1}.Dockerfile"
+  else
+    docker buildx build --platform "linux/${ARCH}" . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${1}.Dockerfile"
+  fi
+}
 
-if [ "${ARCH}" = "amd64" ]; then
-  docker build . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/${VERSION}.Dockerfile
+if [[ -n ${BUILD_BASE:-} ]]; then
+  if [ "${APP}" = "ckan" ]; then
+    build "${VERSION}-core"
+    build "${VERSION}-base"
+  else
+    DOCKER_TAG="${VERSION}"
+  fi
 else
-  docker buildx build --platform linux/${ARCH} . -t ghcr.io/alphagov/${APP}:${DOCKER_TAG} -f docker/${APP}/${VERSION}.Dockerfile
+  DOCKER_TAG="${GITHUB_SHA}"
+fi
+
+if [[ -n ${DOCKER_TAG:-} ]]; then
+  build "${DOCKER_TAG}"
 fi
 
 if [[ -n ${DRY_RUN:-} ]]; then
   echo "Dry run; not pushing to registry"
 else
-  docker push ghcr.io/alphagov/${APP}:${DOCKER_TAG}
+  if [[ -n ${DOCKER_TAG:-} ]]; then
+    docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}"
+  else
+    docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
+    docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
+  fi
 fi

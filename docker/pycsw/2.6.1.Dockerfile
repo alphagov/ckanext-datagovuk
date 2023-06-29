@@ -69,9 +69,9 @@ ENV CKAN_INI $CKAN_CONFIG/production.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST db
 
-# ckan 2.9.7
+# ckan 2.9.9
 
-ENV ckan_sha='0d714b258668ee78a0b19182c53b34689629df37'
+ENV ckan_sha='6eeac01b8989e8ab48b261937dd0f948324c2a86'
 ENV ckan_fork='ckan'
 
 # Setup CKAN
@@ -97,7 +97,7 @@ ENTRYPOINT ["/pycsw-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='9f9a418c103b697e3ebef309802b7fb62cbf6344'
+ENV ckan_spatial_sha='09e64db545ac1c79e0230a056a2351c33afa2a70'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='ckan'
@@ -108,7 +108,9 @@ RUN echo "pip install spatial extension..." && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \
 
-    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt) && \
+    # save spatial-requirements.txt locally before installing dependencies to work around pip error
+    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
+    pip install $pipopt -r spatial-requirements.txt && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
 ## 2.6.1 pycsw

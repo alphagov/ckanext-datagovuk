@@ -8,6 +8,11 @@ on:
         required: true
         type: boolean
         default: false
+      buildBaseImages:
+        description: Build base images
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -22,7 +27,7 @@ jobs:
       matrix:
         app:
           - name: ckan
-            version: 2.9.7
+            version: 2.9.9
           - name: pycsw
             version: 2.6.1
           - name: postgis
@@ -51,9 +56,10 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push images
-        if: ${{ !inputs.noPushToRegistry }}
+        if: ${{ (!inputs.noPushToRegistry && !inputs.buildBaseImages) || (!inputs.noPushToRegistry && inputs.buildBaseImages && (matrix.app.name == 'ckan' || matrix.app.name == 'solr') ) }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
+          BUILD_BASE: ${{ inputs.buildBaseImages }}
         run: ./docker/build-image.sh
