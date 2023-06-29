@@ -86,6 +86,11 @@ RUN pip install -U pip && \
     chmod +x /ckan-entrypoint.sh && \
     chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
+WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
+
+USER ckan
+EXPOSE 5000
+
 ENV ckan_harvest_fork='ckan'
 ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
 
