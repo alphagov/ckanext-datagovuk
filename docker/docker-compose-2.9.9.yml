@@ -1,0 +1,119 @@
+version: "3"
+
+services:
+  ckan-2.9.9:
+    container_name: ckan-2.9.9
+    image: ghcr.io/alphagov/ckan:2.9.9
+    build:
+      context: ../
+      dockerfile: docker/ckan/2.9.9.Dockerfile
+    env_file:
+      - .env-2.9.9
+    links:
+      - db-2.9.9:db
+      - solr-2.9.9:solr
+      - redis-2.9.9:redis
+      - static-mock-harvest-source-2.9.9:static-mock-harvest-source
+    ports:
+      - "0.0.0.0:3003:3000"
+    volumes:
+      - ckan_storage-2.9.9:/var/lib/ckan
+      - ./logs/2.9.9:/var/log/ckan
+    depends_on: 
+      - db-2.9.9
+      - solr-2.9.9
+      - redis-2.9.9
+      - static-mock-harvest-source-2.9.9
+    # command: bash -c "tail -f /dev/null"
+    command: bash -c "ckan run --host 0.0.0.0"
+    networks:
+      - ckan-2.9.9
+
+  pycsw-2.9.9:
+    container_name: pycsw-2.9.9
+    image: ghcr.io/alphagov/pycsw:2.6.1
+    build:
+      context: ../
+      dockerfile: docker/pycsw/2.6.1.Dockerfile
+    links:
+      - db-2.9.9:db
+      - solr-2.9.9:solr
+      - redis-2.9.9:redis
+      - ckan-2.9.9:ckan
+    ports:
+      - "0.0.0.0:8003:8000"
+    depends_on: 
+      - db-2.9.9
+    # command: bash -c "tail -f /dev/null"
+    command: bash -c "python /usr/lib/ckan/venv/src/pycsw/pycsw/wsgi.py"
+    networks:
+      - ckan-2.9.9
+
+  db-2.9.9:
+    container_name: db-2.9.9
+    env_file:
+      - .env-2.9.9
+    build:
+      context: ../
+      dockerfile: docker/postgis/13-3.1.Dockerfile
+    volumes:
+      - pg_data-2.9.9:/var/lib/postgresql/data
+    networks:
+      - ckan-2.9.9
+
+  solr-2.9.9:
+    container_name: solr-2.9.9
+    image: ghcr.io/alphagov/solr:8
+    build:
+      context: ../
+      dockerfile: docker/solr/8.Dockerfile
+    ports:
+      - "8983:8983"
+    volumes:
+      - solr_data-2.9.9:/opt/solr/server/solr/ckan/data
+    networks:
+      - ckan-2.9.9
+  
+  redis-2.9.9:
+    container_name: redis-2.9.9
+    image: redis:6.2.5-alpine3.14
+    networks:
+      - ckan-2.9.9
+    volumes:
+      - redis_data-2.9.9:/data
+
+  nginx-2.9.9:
+    container_name: nginx-2.9.9
+    build:
+      context: nginx/2.9.9/
+      dockerfile: Dockerfile
+    links:
+      - ckan-2.9.9:ckan
+    ports:
+      - 0.0.0.0:5001:80
+    volumes:
+      - ./logs/2.9.9:/var/log/nginx
+    networks:
+      - ckan-2.9.9
+
+  static-mock-harvest-source-2.9.9:
+    container_name: static-mock-harvest-source-2.9.9
+    build:
+      context: docker/src/2.9.9/ckan-mock-harvest-sources/static/
+    ports:
+      - "11091:11088"
+    volumes:
+      - ./src/2.9.9/ckan-mock-harvest-sources/static/responses:/srv/responses
+      - ./src/2.9.9/ckan-mock-harvest-sources/static/mock-third-party:/src/mock-third-party
+    networks:
+      - ckan-2.9.9
+
+volumes:
+  ckan_storage-2.9.9:
+  pg_data-2.9.9:
+  solr_data-2.9.9:
+  redis_data-2.9.9:
+
+networks:
+  ckan-2.9.9:
+      driver: bridge
