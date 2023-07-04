@@ -4,16 +4,16 @@ set -eux
 
 build () {
   if [ "${ARCH}" = "amd64" ]; then
-    docker build . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${VERSION}.Dockerfile"
+    docker build . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${2}.Dockerfile"
   else
-    docker buildx build --platform "linux/${ARCH}" . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${VERSION}.Dockerfile"
+    docker buildx build --platform "linux/${ARCH}" . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${2}.Dockerfile"
   fi
 }
 
 if [[ -n ${BUILD_BASE:-} ]]; then
   if [ "${APP}" = "ckan" ]; then
-    build "${VERSION}-core"
-    build "${VERSION}-base"
+    build "${VERSION}-core" "${VERSION}-core"
+    build "${VERSION}-base" "${VERSION}-base"
   else
     DOCKER_TAG="${VERSION}"
   fi
@@ -22,7 +22,7 @@ else
 fi
 
 if [[ -n ${DOCKER_TAG:-} ]]; then
-  build "${DOCKER_TAG}"
+  build "${DOCKER_TAG}" "${VERSION}"
 fi
 
 if [[ -n ${DRY_RUN:-} ]]; then
