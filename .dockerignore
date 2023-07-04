@@ -1,0 +1,4 @@
+.github
+.pytest_cache
+docker
+venv
