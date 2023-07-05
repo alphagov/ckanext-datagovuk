@@ -10,7 +10,7 @@ build () {
   fi
 }
 
-if [[ -n ${BUILD_BASE:-} ]]; then
+if [[ ${BUILD_BASE:-} = "true" ]]; then
   if [ "${APP}" = "ckan" ]; then
     build "${VERSION}-core" "${VERSION}-core"
     build "${VERSION}-base" "${VERSION}-base"
