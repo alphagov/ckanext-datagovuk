@@ -61,7 +61,7 @@ ENV pipopt='--exists-action=b --force-reinstall'
 
 # ckan 2.9.9
 
-ENV ckan_sha='6eeac01b8989e8ab48b261937dd0f948324c2a86'
+ENV ckan_sha='13c6d752e86f0e3501f953a9fdde15d038bad87b'
 ENV ckan_fork='ckan'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
