@@ -52,7 +52,7 @@ RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
 ENV PATH=${CKAN_VENV}/bin:${PATH}  
 
 # copy production.ini
-ADD . $CKAN_VENV/src/ckanext-datagovuk/
+COPY . $CKAN_VENV/src/ckanext-datagovuk/
 RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini
 
 # Setup additional env vars
