@@ -44,6 +44,12 @@ jobs:
           psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
           createdb --encoding=utf-8 --host=postgres --username=postgres --owner=ckan_default ckan_test
           psql --host=postgres --username=postgres -d ckan_test -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
+      - name: Enable pip cache
+        run: |
+          echo "PIP version: $(pip --version)"
+          mkdir -p ~/.cache/pip
+          pip install -U pip --cache-dir ~/.cache/pip
+          chown -R $(whoami) ~/.cache/pip
       - name: pip cache
         uses: actions/cache@v2
         with:
