@@ -10,8 +10,15 @@ build () {
   fi
 }
 
+if [ "${APP}" = "ckan" ]; then
+  FILE="docker/ckan/${VERSION}-core.Dockerfile"
+  if [ -f "$FILE" ]; then
+      CORE_EXISTS=true
+  fi
+fi
+
 if [[ ${BUILD_BASE:-} = "true" ]]; then
-  if [ "${APP}" = "ckan" ]; then
+  if [[ ${CORE_EXISTS:-} = "true" ]]; then
     build "${VERSION}-core" "${VERSION}-core"
     build "${VERSION}-base" "${VERSION}-base"
   else
