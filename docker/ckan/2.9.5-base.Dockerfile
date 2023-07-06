@@ -1,0 +1,77 @@
+# See CKAN docs on installation from Docker Compose on usage
+FROM governmentdigitalservice/ckan-python:3.6.12 AS base
+MAINTAINER Open Knowledge
+
+# Set timezone
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Setting the locale
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+# Install required system packages
+RUN apt-get -q -y update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
+    && apt-get -q -y install \
+        python3-dev \
+        python3-pip \
+        python3-wheel \
+        libpq-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libgeos-dev \
+        libssl-dev \
+        libffi-dev \
+        postgresql-client \
+        build-essential \
+        git-core \
+        vim \
+        wget \
+        curl \
+        proj-bin \
+        libproj-dev \
+    && apt-get -q clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Define environment variables
+ENV CKAN_HOME /usr/lib/ckan
+ENV CKAN_VENV $CKAN_HOME/venv
+ENV CKAN_CONFIG /etc/ckan
+ENV CKAN_STORAGE_PATH=/var/lib/ckan
+
+# Create ckan user
+RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
+
+# Setup virtual environment for CKAN
+RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
+    python3.6 -m venv $CKAN_VENV && \
+    ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
+
+# Virtual environment binaries/scripts to be used first
+ENV PATH=${CKAN_VENV}/bin:${PATH}  
+
+# copy production.ini
+COPY . $CKAN_VENV/src/ckanext-datagovuk/
+RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini
+
+# Setup additional env vars
+ENV pipopt='--exists-action=b --force-reinstall'
+ENV CKAN_INI $CKAN_CONFIG/production.ini
+
+# alphagov 2.9.5
+
+ENV ckan_sha='750bce8ec05b8695604e04c065525dfe9eb8a84c'
+ENV ckan_fork='alphagov'
+
+# Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
+
+RUN pip install -U pip && \
+    pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
+    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
+    pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
+    pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
+    ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini && \
+    cp -v $CKAN_VENV/src/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
+    chmod +x /ckan-entrypoint.sh && \
+    chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH

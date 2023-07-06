@@ -17,10 +17,11 @@ if [[ ${BUILD_BASE:-} = "true" ]]; then
     if [ -f "$FILE" ]; then
         CORE_EXISTS=true
     fi
-  fi
 
-  if [[ ${CORE_EXISTS:-} = "true" ]]; then
-    build "${VERSION}-core" "${VERSION}-core"
+    if [[ ${CORE_EXISTS:-} = "true" ]]; then
+      build "${VERSION}-core" "${VERSION}-core"
+    fi
+
     build "${VERSION}-base" "${VERSION}-base"
   else
     DOCKER_TAG="${VERSION}"
@@ -44,7 +45,9 @@ else
   if [[ -n ${DOCKER_TAG:-} ]]; then
     docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}"
   else
-    docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
+    if [[ ${CORE_EXISTS:-} = "true" ]]; then
+      docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
+    fi
     docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
   fi
 fi
