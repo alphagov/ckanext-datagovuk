@@ -8,6 +8,8 @@ jobs:
         version:
           - ckan: governmentdigitalservice/ckan-main:2.9.3
             solr: governmentdigitalservice/ckan-solr:6.6.2
+          - ckan: ghcr.io/alphagov/ckan:2.9.5-base
+            solr: ghcr.io/alphagov/solr:6.6.2
           - ckan: ghcr.io/alphagov/ckan:2.9.9-base
             solr: ghcr.io/alphagov/solr:8
     name: test

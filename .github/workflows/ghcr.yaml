@@ -28,12 +28,16 @@ jobs:
         app:
           - name: ckan
             version: 2.9.9
+          - name: ckan
+            version: 2.9.5
           - name: pycsw
             version: 2.6.1
           - name: postgis
             version: 13-3.1
           - name: solr
             version: 8
+          - name: solr
+            version: 6.6.2
         arch: [ amd64 ]
     permissions:
       packages: write
