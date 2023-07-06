@@ -10,14 +10,15 @@ build () {
   fi
 }
 
-if [ "${APP}" = "ckan" ]; then
-  FILE="docker/ckan/${VERSION}-core.Dockerfile"
-  if [ -f "$FILE" ]; then
-      CORE_EXISTS=true
-  fi
-fi
-
 if [[ ${BUILD_BASE:-} = "true" ]]; then
+
+  if [ "${APP}" = "ckan" ]; then
+    FILE="docker/ckan/${VERSION}-core.Dockerfile"
+    if [ -f "$FILE" ]; then
+        CORE_EXISTS=true
+    fi
+  fi
+
   if [[ ${CORE_EXISTS:-} = "true" ]]; then
     build "${VERSION}-core" "${VERSION}-core"
     build "${VERSION}-base" "${VERSION}-base"
@@ -25,6 +26,11 @@ if [[ ${BUILD_BASE:-} = "true" ]]; then
     DOCKER_TAG="${VERSION}"
   fi
 else
+  # Do not create docker images for ec2
+  if [[ ${TARGET:-} = "ec2" ]]; then
+    echo "Not creating images for ec2 targets"
+    exit 0
+  fi
   DOCKER_TAG="${GITHUB_SHA}"
 fi
 

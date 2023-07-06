@@ -28,16 +28,22 @@ jobs:
         app:
           - name: ckan
             version: 2.9.9
+            target: eks
           - name: ckan
             version: 2.9.5
+            target: ec2
           - name: pycsw
             version: 2.6.1
+            target: all
           - name: postgis
             version: 13-3.1
+            target: all
           - name: solr
             version: 8
+            target: eks
           - name: solr
             version: 6.6.2
+            target: ec2
         arch: [ amd64 ]
     permissions:
       packages: write
@@ -64,6 +70,7 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          TARGET: ${{ matrix.app.target }}
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: ${{ inputs.buildBaseImages }}
         run: ./docker/build-image.sh
