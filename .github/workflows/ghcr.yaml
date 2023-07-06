@@ -21,7 +21,7 @@ on:
 
 jobs:
   build_and_push:
-    name: ${{ matrix.app.name }} (${{ matrix.arch }})
+    name: ${{ matrix.app.name }} ${{ matrix.app.version }} (${{ matrix.app.target }})
     runs-on: ubuntu-22.04
     strategy:
       matrix:
