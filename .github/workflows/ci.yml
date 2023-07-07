@@ -66,22 +66,24 @@ jobs:
       - name: Install dev requirements
         run: |
           pip install factory-boy==2.12.0 pytest-ckan==0.0.12 pytest-cov==4.0.0 mock==2.0.0
+      - name: Install dev requirements for 2.9.5
+        if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.5-base' }}
+        run: |
+          pip install $pipopt -U pyOpenSSL==23.1.0 cryptography==38.0.0
       - name: Update config for CKAN 2.9.3
         if: ${{ matrix.version.ckan == 'governmentdigitalservice/ckan-main:2.9.3' }}
         run: |
           # Replace default path to CKAN core config file with the one on the container
           sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
-          # set the i18n directory
-          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
       - name: Update config
-        if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.9-base' }}
+        if: ${{ matrix.version.ckan != 'governmentdigitalservice/ckan-main:2.9.3' }}
         run: |
           # Replace default path to CKAN core config file with the one on the container
           sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
-          # set the i18n directory
-          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" ${CKAN_CONFIG}/production.ini
       - name: Init Database
         run: |
+          # set the i18n directory
+          ckan config-tool $CKAN_INI "ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n"
           ckan db init
       - name: Run tests
         run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
