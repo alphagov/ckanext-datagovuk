@@ -61,7 +61,7 @@ ENV CKAN_INI $CKAN_CONFIG/production.ini
 
 # alphagov 2.9.3
 
-ENV ckan_sha='885f9e0b668e3496a8f2c0c0a9f1cb59bf810e16'
+ENV ckan_sha='22613024e9a7303cb85438bd64ca67d168db5436'
 ENV ckan_fork='alphagov'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
