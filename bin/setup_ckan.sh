@@ -7,7 +7,9 @@ while ! pg_isready -h $CKAN_DB_HOST -U ckan; do
   sleep 1;
 done
 
-ckan db init
+if [[ ${CKAN_DB_INIT:-} = "true" ]]; then
+    ckan db init
+fi
 
 if [ ! -z $CREATE_CKAN_ADMIN ]; then
     if (ckan user show ckan_admin | grep -q "User: None"); then
