@@ -14,7 +14,7 @@ git clone https://${GH_TOKEN}@github.com/alphagov/govuk-ckan-charts.git charts
 cd charts/charts/ckan/images
 git checkout -b ${BRANCH}
 
-for ENV in ${ENVS}; do
+for ENV in $(echo $ENVS | tr "," " "); do
   (
     cd "${ENV}"
     for APP in ckan pycsw solr; do
