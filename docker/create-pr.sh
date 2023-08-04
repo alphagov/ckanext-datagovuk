@@ -29,6 +29,6 @@ for ENV in $(echo $ENVS | tr "," " "); do
     done
     git commit -m "Update image tags for ${ENV} to ${IMAGE_TAG}"
     git push --set-upstream origin "${BRANCH}"
-    gh pr create --title "Update image tags for ${ENV} (${IMAGE_TAG})" --base main --head "${BRANCH}" --fill
+    gh pr create --title "Update image tags for ${ENV} (${IMAGE_TAG})" --base main --head "${BRANCH}-${ENV}" --fill
   )
 done
