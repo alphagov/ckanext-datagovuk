@@ -3,7 +3,7 @@
 set -eux
 
 if [[ ${IS_TAG:-} = "true" ]]; then
-  export IMAGE_TAG=${GH_REF}
+  export IMAGE_TAG="${GH_REF}"
   export SOURCE_BRANCH="main"
 else
   export IMAGE_TAG=$(gh api repos/alphagov/ckanext-datagovuk/branches/${GH_REF} | jq .commit.sha -r)
