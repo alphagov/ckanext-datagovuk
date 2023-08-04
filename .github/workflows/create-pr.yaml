@@ -23,4 +23,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
           GH_REF: ${{ github.ref_name }}
+          IS_TAG: "false"
           ENVS: "integration"
