@@ -3,6 +3,8 @@
 set -eux
 
 GH_REF=test-0
+ENVS=staging,production
+IS_TAG=true
 
 if [[ ${IS_TAG:-} = "true" ]]; then
   export IMAGE_TAG="${GH_REF}"
