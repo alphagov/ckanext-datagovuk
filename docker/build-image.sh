@@ -18,7 +18,11 @@ if [[ ${BUILD_BASE:-} = "true" ]]; then
     DOCKER_TAG="${VERSION}"
   fi
 else
-  DOCKER_TAG="${GITHUB_SHA}"
+  if [[ -n ${GH_REF:-} ]]; then  
+    DOCKER_TAG="${GH_REF}"
+  else
+    DOCKER_TAG="${GITHUB_SHA}"
+  fi
 fi
 
 if [[ -n ${DOCKER_TAG:-} ]]; then
