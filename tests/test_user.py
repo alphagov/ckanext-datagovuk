@@ -168,42 +168,6 @@ class TestEditUser:
         assert 'Please enter both passwords' in response.get_data(as_text=True)
 
 
-@pytest.mark.usefixtures("clean_db")
-class TestUserMe:
-    def test_user_me_logged_in(self, app):
-        user = factories.User()
-        env = {'REMOTE_USER': user['name'].encode('ascii')}
-        response = app.get(
-            url=url_for("user.me"),
-            follow_redirects=False,
-            extra_environ=env,
-            status=302,
-        )
-
-        assert response.location == urljoin(config.get('ckan.site_url'), url_for("dashboard.datasets"))
-
-    def test_user_me_not_logged_in(self, app):
-        response = app.get(
-            url=url_for("user.me"),
-            follow_redirects=False,
-            status=302,
-        )
-
-        assert response.location == urljoin(config.get('ckan.site_url'), url_for("user.login"))
-
-    def test_use_from_logged_in(self, app):
-        user = factories.User()
-        env = {'REMOTE_USER': user['name'].encode('ascii')}
-        response = app.get(
-            url=url_for("user.logged_in"),
-            follow_redirects=False,
-            extra_environ=env,
-            status=302,
-        )
-
-        assert response.location == urljoin(config.get('ckan.site_url'), url_for("dashboard.datasets"))
-
-
 class TestRegisterUser:
     def test_register_a_user_blocked(self):
         app = helpers._get_test_app()

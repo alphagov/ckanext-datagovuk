@@ -25,8 +25,8 @@ services:
       - solr-2.9.7
       - redis-2.9.7
       - static-mock-harvest-source-2.9.7
-    # command: bash -c "tail -f /dev/null"
-    command: bash -c "ckan run --host 0.0.0.0"
+    command: bash -c "tail -f /dev/null"
+    # command: bash -c "ckan run --host 0.0.0.0"
     networks:
       - ckan-2.9.7
 
@@ -43,7 +43,7 @@ services:
     depends_on: 
       - db-2.9.7
     # command: bash -c "tail -f /dev/null"
-    command: bash -c "python $CKAN_VENV/src/pycsw/pycsw/wsgi.py"
+    command: bash -c "python /usr/lib/ckan/venv/src/pycsw/pycsw/wsgi.py"
     networks:
       - ckan-2.9.7
 
@@ -64,8 +64,8 @@ services:
     # image: ckan/ckan-solr:2.9-solr8
     build:
       context: ../
-      dockerfile: docker/solr/Dockerfile
-      # dockerfile: Dockerfile.solr8
+      # dockerfile: docker/solr/Dockerfile
+      dockerfile: docker/solr/Dockerfile.solr8
     ports:
       - "8983:8983"
     volumes:

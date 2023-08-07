@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:focal AS base
+FROM governmentdigitalservice/ckan-python:3.6.12 AS base
 MAINTAINER Open Knowledge
 
 # Set timezone
@@ -7,21 +7,15 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Setting the locale
-ENV LC_ALL=en_US.UTF-8       
-RUN apt-get update
-RUN apt-get install --no-install-recommends -y locales
-RUN sed -i "/$LC_ALL/s/^# //g" /etc/locale.gen
-RUN dpkg-reconfigure --frontend=noninteractive locales 
-RUN update-locale LANG=${LC_ALL}
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 # Install required system packages
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
     && apt-get -q -y install \
-        python3.8 \
         python3-dev \
         python3-pip \
-        python3-venv \
         python3-wheel \
         libpq-dev \
         libxml2-dev \
@@ -51,34 +45,31 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
-    python3 -m venv $CKAN_VENV && \
+    python3.6 -m venv $CKAN_VENV && \
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # Virtual environment binaries/scripts to be used first
 ENV PATH=${CKAN_VENV}/bin:${PATH}  
 
-# copy ckan.ini
+# copy production.ini
 ADD . $CKAN_VENV/src/ckanext-datagovuk/
-RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/ckan.ini $CKAN_CONFIG/ckan.ini
+RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini
 
 # Setup additional env vars
 ENV pipopt='--exists-action=b --force-reinstall'
-ENV CKAN_INI $CKAN_CONFIG/ckan.ini
+ENV CKAN_INI $CKAN_CONFIG/production.ini
 
-# ckan 2.10.0
+# alphagov 2.9.3
 
-ENV ckan_sha='70bec6611003b96ec7a02abb9605afdfb0964ad9'
-ENV ckan_fork='ckan'
+ENV ckan_sha='885f9e0b668e3496a8f2c0c0a9f1cb59bf810e16'
+ENV ckan_fork='alphagov'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
 
 RUN pip install -U pip && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
-    # pin zope to 5.0.0 as causing issues - github.com/pypa/setuptools/issues/2017
-    curl "https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt" > requirements.txt && \
-    sed -i 's/zope.interface==4.3.2/zope.interface==5.0.0/g' ./requirements.txt && \
-    pip install --upgrade --no-cache-dir -r requirements.txt && \
+    pip install --upgrade --no-cache-dir -r https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini && \
     cp -v $CKAN_VENV/src/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
@@ -94,13 +85,13 @@ ENTRYPOINT ["/ckan-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_harvest_fork='ckan'
-ENV ckan_harvest_sha='b24421676be23ab627cb0307f4c7dd64cdf49e5e'
+ENV ckan_harvest_fork='alphagov'
+ENV ckan_harvest_sha='f52605c9a4f8ccaa0f5e83937c59ce9bf58cbc06'
 
-ENV ckan_dcat_fork='ckan'
-ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
+ENV ckan_dcat_fork='alphagov'
+ENV ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 
-ENV ckan_spatial_sha='e5622830bac7c9b4c989d6719defdc55b535be34'
+ENV ckan_spatial_sha='bac67ccb236b718d226ef5ac7844723222d3b5c5'
 ENV ckan_spatial_fork='alphagov'
 
 RUN echo "pip install DGU extensions..." && \
@@ -108,12 +99,10 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat" && \
 
-    # save spatial-requirements.txt locally before installing dependencies to work around pip error
-    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
-    pip install $pipopt -r spatial-requirements.txt && \
+    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
 
-    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \
+    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/pip-requirements.txt) && \
     pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \
 
     # install ckanext-datagovuk
@@ -123,14 +112,9 @@ RUN echo "pip install DGU extensions..." && \
     # need these dependencies for harvester run-test to target harvest sources
     pip install $pipopt -U factory-boy==2.12.0 mock==2.0.0 pytest==4.6.5 && \
     # need to pin pyyaml to correctly pick up config settings
-    pip install $pipopt -U pyyaml==5.4 && \
-    # fix watchdog dependency
-    # pip install $pipopt -U watchdog==3.0.0 && \
-    pip install $pipopt -U watchdog==2.3.1 && \
-    # fix dependency bug
-    pip install $pipopt -U sqlalchemy[mypy]==1.4.47
+    # install pyOpenSSL to work with certs
+    pip install $pipopt -U pyyaml==5.3.1 pyOpenSSL==23.1.0
 
-RUN pip install $pipopt -U Flask-Login==0.6.2 Flask-WTF~=1.1.1 sqlalchemy[mypy]==1.4.47
 RUN ckan config-tool $CKAN_INI "ckan.i18n_directory=$CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk"
 
 # to run the CKAN wsgi set the WORKDIR to CKAN

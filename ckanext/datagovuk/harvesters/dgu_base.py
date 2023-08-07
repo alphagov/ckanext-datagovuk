@@ -253,9 +253,8 @@ class DguHarvesterBase(HarvesterBase):
             # Defer constraints and flush so the dataset can be indexed with
             # the harvest object id (on the after_show hook from the harvester
             # plugin)
-            if model.engine_is_pg():
-                model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
-                model.Session.flush()
+            model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+            model.Session.flush()
 
             if source_config.get('private_datasets', False):
                 package_dict['private'] = True

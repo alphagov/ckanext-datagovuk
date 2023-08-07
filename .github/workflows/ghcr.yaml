@@ -10,7 +10,7 @@ on:
         default: false
   push:
     branches:
-      - main
+      - main-2.10
   schedule:
     - cron: '0 3 * * 0'
 
