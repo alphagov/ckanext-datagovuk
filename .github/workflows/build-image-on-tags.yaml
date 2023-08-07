@@ -38,6 +38,5 @@ jobs:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          BUILD_BASE: ${{ inputs.buildBaseImages }}
           GH_REF: ${{ github.ref_name }}
         run: ./docker/build-image.sh
