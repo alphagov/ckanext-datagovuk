@@ -2,7 +2,7 @@
 
 set -eux
 
-GH_REF=test-0
+GH_REF=test-1
 ENVS=staging,production
 IS_TAG=true
 
