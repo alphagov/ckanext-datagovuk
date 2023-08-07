@@ -26,7 +26,7 @@ for ENV in $(echo $ENVS | tr "," " "); do
     BRANCH="ci/${IMAGE_TAG}-${ENV}"
     git checkout -b ${BRANCH}
 
-    pushd "${ENV}"
+    cd "${ENV}"
     for APP in ckan pycsw solr; do
       yq -i '.tag = env(IMAGE_TAG)' "${APP}.yaml"
       yq -i '.branch = env(SOURCE_BRANCH)' "${APP}.yaml"
@@ -35,6 +35,5 @@ for ENV in $(echo $ENVS | tr "," " "); do
     git commit -m "Update image tags for ${ENV} to ${IMAGE_TAG}"
     git push --set-upstream origin "${BRANCH}"
     gh pr create --title "Update image tags for ${ENV} (${IMAGE_TAG})" --base main --head "${BRANCH}" --fill
-    popd
   )
 done
