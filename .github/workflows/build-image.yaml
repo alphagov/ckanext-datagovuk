@@ -40,7 +40,7 @@ jobs:
           - name: postgis
             version: 13-3.1
           - name: solr
-            version: 8
+            version: 8-2.9f
         arch: [ amd64 ]
     permissions:
       packages: write
