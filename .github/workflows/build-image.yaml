@@ -71,7 +71,7 @@ jobs:
           BUILD_BASE: ${{ inputs.buildBaseImages }}
         run: ./docker/build-image.sh
       - name: Build and push pycsw 2.4.0 image
-        if: ${{ (!inputs.buildPycsw240Images && matrix.app.name == 'pycsw' && matrix.app.version == '2.4.0') }}
+        if: ${{ (inputs.buildPycsw240Images && matrix.app.name == 'pycsw' && matrix.app.version == '2.4.0') }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
