@@ -76,5 +76,5 @@ jobs:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          BUILD_BASE: ${{ inputs.buildBaseImages }}
+          BUILD_BASE: true
         run: ./docker/build-image.sh
