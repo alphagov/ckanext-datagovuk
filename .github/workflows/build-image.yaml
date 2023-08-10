@@ -36,7 +36,7 @@ jobs:
           - name: pycsw
             version: 2.6.1
           - name: pycsw
-            version: 2.4.0
+            version: 2.4.0f
           - name: postgis
             version: 13-3.1
           - name: solr
@@ -71,7 +71,7 @@ jobs:
           BUILD_BASE: ${{ inputs.buildBaseImages }}
         run: ./docker/build-image.sh
       - name: Build and push pycsw 2.4.0 image
-        if: ${{ (inputs.buildPycsw240Images && matrix.app.name == 'pycsw' && matrix.app.version == '2.4.0') }}
+        if: ${{ (inputs.buildPycsw240Images && matrix.app.name == 'pycsw' && matrix.app.version == '2.4.0f') }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
