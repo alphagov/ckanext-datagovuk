@@ -98,8 +98,8 @@ WORKDIR $CKAN_VENV/src
 
 ENTRYPOINT ["/pycsw-entrypoint.sh"]
 
-# USER ckan
-# EXPOSE 5000
+USER ckan
+EXPOSE 5000
 
 ENV ckan_spatial_sha='bac67ccb236b718d226ef5ac7844723222d3b5c5'
 ENV ckan_spatial_fork='alphagov'
@@ -129,5 +129,8 @@ RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions
 RUN pip install $pipopt -U pyyaml==5.3.1 sqlalchemy==1.3.23
-    
+
+# upgrade pyopenssl
+RUN pip install pyopenssl --upgrade
+
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"
