@@ -5,22 +5,16 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Setting the locale
-# ENV LC_ALL=en_US.UTF-8       
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y locales
 RUN echo "LANG=en_US.utf8" > /etc/default/locale 
-# RUN sed -i "/$LC_ALL/s/^# //g" /etc/locale.gen
-# RUN dpkg-reconfigure --frontend=noninteractive locales 
-# RUN update-locale LANG=${LC_ALL}
 
 # Install required system packages
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
     && apt-get -q -y install \
-#         python3.8 \
         python3-dev \
         python3-pip \
-        # python3-venv \
         python3-wheel \
         libpq-dev \
         libxml2-dev \
@@ -36,9 +30,6 @@ RUN apt-get -q -y update \
         curl \
         proj-bin \
         libproj-dev \
-        # libcurl4-openssl-dev \
-        # zlib1g-dev \
-        # libkrb5-dev \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -54,7 +45,6 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
     python3.7 -m venv $CKAN_VENV && \
-    # ln -s $CKAN_VENV/bin/pip3 /usr/local/bin/ckan-pip3 &&\
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # Virtual environment binaries/scripts to be used first
