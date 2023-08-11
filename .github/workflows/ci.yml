@@ -9,7 +9,7 @@ jobs:
           - ckan: governmentdigitalservice/ckan-main:2.9.3
             solr: governmentdigitalservice/ckan-solr:6.6.2
           - ckan: ghcr.io/alphagov/ckan:2.9.9-base
-            solr: ghcr.io/alphagov/solr:8
+            solr: ghcr.io/alphagov/solr:8-2.9f
     name: test
     runs-on: ubuntu-latest
     container:
