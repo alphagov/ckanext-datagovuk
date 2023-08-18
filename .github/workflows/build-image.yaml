@@ -38,8 +38,6 @@ jobs:
             skip: true
           - name: pycsw
             version: 2.4.0g
-          - name: postgis
-            version: 13-3.1
           - name: solr
             version: 8-2.9f
         arch: [ amd64 ]
