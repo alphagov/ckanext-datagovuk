@@ -91,7 +91,7 @@ ENTRYPOINT ["/pycsw-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='4a26f3bdb02c34e5dbb23658de2b5b05bc8b34a7'
+ENV ckan_spatial_sha='233b8511cf38b14e675380b281e133f26530d54e'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='alphagov'
