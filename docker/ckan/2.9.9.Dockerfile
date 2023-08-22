@@ -9,7 +9,7 @@ RUN echo "pip install ckanext-datagovuk..." && \
     # force reinstall of spatial
     curl -s "https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt" > spatial-requirements.txt && \
     pip install $pipopt -r spatial-requirements.txt && \
-    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
+    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
 
     # need to pin pyyaml to correctly pick up config settings
     pip install $pipopt -U pyyaml==5.4 && \
