@@ -86,7 +86,8 @@ jobs:
         if: ${{ inputs.buildType == 'build_push_test_ckan' && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
-          VERSION: '2.9.9-test'
+          VERSION: '2.9.9'
+          TAG: '2.9.9-test'
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
         run: ./docker/build-image.sh
