@@ -18,6 +18,11 @@ on:
         required: true
         type: boolean
         default: false
+      buildCKANTestImage:
+        description: Build CKAN test image
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -75,6 +80,14 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
+          BUILD_BASE: true
+        run: ./docker/build-image.sh
+      - name: Build and push CKAN test image only
+        if: ${{ (inputs.buildCKANTestImage && matrix.app.name == 'ckan') }}
+        env:
+          APP: ${{ matrix.app.name }}
+          VERSION: '2.9.9-test'
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
         run: ./docker/build-image.sh
