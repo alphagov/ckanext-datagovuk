@@ -62,7 +62,6 @@ jobs:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          BUILD_BASE: ${{ inputs.buildBaseImages }}
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
       - name: Build and push base images
@@ -71,7 +70,7 @@ jobs:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          BUILD_BASE: ${{ inputs.buildBaseImages }}
+          BUILD_BASE: true
         run: ./docker/build-image.sh
       - name: Build and push pycsw 2.4.0 image only
         if: ${{ inputs.buildType == 'build_push_pycsw' && matrix.app.name == 'pycsw' }}
