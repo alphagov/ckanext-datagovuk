@@ -86,7 +86,7 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: '2.9.9'
-          TAG: '2.9.9-test-b'
+          TAG: '2.9.9-test-c'
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
         run: ./docker/build-image.sh
