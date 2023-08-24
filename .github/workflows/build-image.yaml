@@ -64,7 +64,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
-      - name: Build and push base images
+      - name: Build and push CKAN base image
         if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
@@ -72,7 +72,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
         run: ./docker/build-image.sh
-      - name: Build and push pycsw 2.4.0 image only
+      - name: Build and push pycsw image
         if: ${{ inputs.buildType == 'build_push_pycsw' && matrix.app.name == 'pycsw' }}
         env:
           APP: ${{ matrix.app.name }}
@@ -81,7 +81,7 @@ jobs:
           BUILD_BASE: true
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
-      - name: Build and push CKAN test image only
+      - name: Build and push CKAN test image
         if: ${{ inputs.buildType == 'build_push_test_ckan' && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
