@@ -1,18 +1,20 @@
 FROM ghcr.io/alphagov/ckan:2.9.9-base
 
+# copy source files and copy production.ini & setup_ckan.sh
+COPY . $CKAN_VENV/src/ckanext-datagovuk/
+RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini && \
+    cp -v $CKAN_VENV/src/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
+    chmod +x /ckan-entrypoint.sh && \
+    chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
+
+# Set CKAN_INI
+ENV CKAN_INI $CKAN_CONFIG/production.ini
+
 ENTRYPOINT ["/ckan-entrypoint.sh"]
 
-ENV ckan_spatial_sha='91953714aad5ae993c9f5a5690bb8d51df1a10b1'
+WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
 
 RUN echo "pip install ckanext-datagovuk..." && \
-
-    # force reinstall of spatial
-    curl -s "https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt" > spatial-requirements.txt && \
-    pip install $pipopt -r spatial-requirements.txt && \
-    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
-
-    # need to pin pyyaml to correctly pick up config settings
-    pip install $pipopt -U pyyaml==5.4 && \
 
     # install ckanext-datagovuk
     pip install $pipopt -U -r requirements.txt && \
