@@ -7,6 +7,7 @@ COPY . $CKAN_VENV/src/ckanext-datagovuk/
 RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini && \
     cp -v $CKAN_VENV/src/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
     chmod +x /ckan-entrypoint.sh
+RUN chown -R ckan:ckan $CKAN_VENV
 
 USER ckan
 
