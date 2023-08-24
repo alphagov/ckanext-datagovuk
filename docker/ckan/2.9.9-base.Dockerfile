@@ -1,5 +1,7 @@
 FROM ghcr.io/alphagov/ckan:2.9.9-core
 
+RUN chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
+
 USER ckan
 EXPOSE 5000
 
@@ -11,6 +13,8 @@ ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
 ENV ckan_spatial_sha='28a9dd77a2b39fb0eb7a66133507cea9223df9aa'
 ENV ckan_spatial_fork='alphagov'
+
+WORKDIR $CKAN_VENV
 
 RUN echo "pip install DGU extensions..." && \
 
