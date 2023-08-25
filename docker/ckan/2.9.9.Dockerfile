@@ -11,9 +11,6 @@ RUN chown -R ckan:ckan $CKAN_VENV
 
 USER ckan
 
-# Set CKAN_INI
-ENV CKAN_INI $CKAN_CONFIG/production.ini
-
 ENTRYPOINT ["/ckan-entrypoint.sh"]
 
 WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
