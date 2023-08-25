@@ -13,7 +13,7 @@ ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='28a9dd77a2b39fb0eb7a66133507cea9223df9aa'
+ENV ckan_spatial_sha='b552ae20fa546f7c6a8d17249c1cb33b12883d32'
 ENV ckan_spatial_fork='alphagov'
 
 WORKDIR $CKAN_VENV
