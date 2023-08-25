@@ -9,7 +9,7 @@ ckan_dcat_fork='alphagov'
 ckan_dcat_sha='be3b809fa7431c8d81508c01853e81ce6a5dfd84'
 
 ckan_spatial_fork='alphagov'
-ckan_spatial_sha='bac67ccb236b718d226ef5ac7844723222d3b5c5'
+ckan_spatial_sha='3004c0f191831a66cb6b5d1ec6f521e3ff35353c'
 
 # ckan 2.9.3 - alphagov/ckan/commits/fix-existing-email-validation
 ckan_sha='22613024e9a7303cb85438bd64ca67d168db5436'
