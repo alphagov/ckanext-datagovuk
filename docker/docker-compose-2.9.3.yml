@@ -35,7 +35,7 @@ services:
     image: localhost:53492/pycsw:2.6.1
     build:
       context: ../
-      dockerfile: docker/pycsw/2.9.3.Dockerfile
+      dockerfile: docker/pycsw/2.4.0g.Dockerfile
 
     links:
       - db-2.9.3:db
@@ -57,7 +57,7 @@ services:
       - .env-2.9.3
     build:
       context: ../
-      dockerfile: docker/postgis/Dockerfile
+      dockerfile: docker/postgis/13-3.1.Dockerfile
     volumes:
       - pg_data-2.9.3:/var/lib/postgresql/data
     networks:
@@ -65,11 +65,9 @@ services:
 
   solr-2.9.3:
     container_name: solr-2.9.3
-    # image: ckan/ckan-solr:2.9-solr8
     build:
       context: ../
-      dockerfile: docker/solr/Dockerfile
-      # dockerfile: Dockerfile.solr8
+      dockerfile: docker/solr/6.6.2.Dockerfile
     ports:
       - "8983:8983"
     volumes:
@@ -88,8 +86,8 @@ services:
   nginx-2.9.3:
     container_name: nginx-2.9.3
     build:
-      context: nginx/2.9.3/
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/nginx/Dockerfile
     links:
       - ckan-2.9.3:ckan
     ports:
