@@ -1,5 +1,7 @@
 FROM ghcr.io/alphagov/ckan:2.9.9-core
 
+COPY production.ini $CKAN_CONFIG/production.ini
+
 RUN chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 USER ckan
