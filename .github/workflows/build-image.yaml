@@ -3,21 +3,16 @@ name: Build and push images
 on:
   workflow_dispatch:
     inputs:
-      noPushToRegistry:
-        description: Build only, skip pushing to registry
+      buildType:
+        description: Decide on what to build
         required: true
-        type: boolean
-        default: false
-      buildBaseImages:
-        description: Build base images
-        required: true
-        type: boolean
-        default: false
-      buildPycsw240Images:
-        description: Build pycsw 2.4.0 image
-        required: true
-        type: boolean
-        default: false
+        type: choice
+        options:
+          - build_push
+          - build_only
+          - build_push_base
+          - build_push_pycsw
+          - build_push_test_ckan
   push:
     branches:
       - main
@@ -54,7 +49,7 @@ jobs:
         with:
           ref: ${{ inputs.gitRef }}
       - name: Build images (without pushing to registry)
-        if: ${{ inputs.noPushToRegistry }}
+        if: ${{ inputs.buildType == 'build_only' }}
         env:
           DRY_RUN: "1"
           APP: ${{ matrix.app.name }}
@@ -62,19 +57,36 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push images
-        if: ${{ (!inputs.buildPycsw240Images && !inputs.noPushToRegistry && !inputs.buildBaseImages) || (!inputs.buildPycsw240Images && !inputs.noPushToRegistry && inputs.buildBaseImages && (matrix.app.name == 'ckan' || matrix.app.name == 'solr') ) }}
+        if: ${{ inputs.buildType == 'build_push' }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          BUILD_BASE: ${{ inputs.buildBaseImages }}
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
-      - name: Build and push pycsw 2.4.0 image only
-        if: ${{ (inputs.buildPycsw240Images && matrix.app.name == 'pycsw' && matrix.app.version == '2.4.0g') }}
+      - name: Build and push CKAN base image
+        if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
+          BUILD_BASE: true
+        run: ./docker/build-image.sh
+      - name: Build and push pycsw image
+        if: ${{ inputs.buildType == 'build_push_pycsw' && matrix.app.name == 'pycsw' }}
+        env:
+          APP: ${{ matrix.app.name }}
+          VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
+          BUILD_BASE: true
+          SKIP: ${{ matrix.app.skip }}
+        run: ./docker/build-image.sh
+      - name: Build and push CKAN test image
+        if: ${{ inputs.buildType == 'build_push_test_ckan' && matrix.app.name == 'ckan' }}
+        env:
+          APP: ${{ matrix.app.name }}
+          VERSION: '2.9.9'
+          TAG: '2.9.9-test-d'
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
         run: ./docker/build-image.sh

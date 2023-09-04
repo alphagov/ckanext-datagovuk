@@ -41,5 +41,12 @@ else
   else
     docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
     docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
+
+    # tags only used for test images
+    if [[ -n ${TAG:-} ]]; then
+      build "${TAG}" "${VERSION}"
+      docker push "ghcr.io/alphagov/${APP}:${TAG}"
+    fi
+
   fi
 fi

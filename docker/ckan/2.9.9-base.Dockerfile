@@ -1,16 +1,10 @@
 FROM ghcr.io/alphagov/ckan:2.9.9-core
 
-# copy source files and copy production.ini & setup_ckan.sh
-COPY . $CKAN_VENV/src/ckanext-datagovuk/
-RUN cp -v $CKAN_VENV/src/ckanext-datagovuk/production.ini $CKAN_CONFIG/production.ini && \
-    cp -v $CKAN_VENV/src/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
-    chmod +x /ckan-entrypoint.sh && \
-    chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
-
+COPY production.ini $CKAN_CONFIG/production.ini
 # Set CKAN_INI
 ENV CKAN_INI $CKAN_CONFIG/production.ini
 
-WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
+RUN chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 USER ckan
 EXPOSE 5000
@@ -21,8 +15,10 @@ ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='de1f67cb7535d9b73079be6da56bf1b5d919a641'
+ENV ckan_spatial_sha='b552ae20fa546f7c6a8d17249c1cb33b12883d32'
 ENV ckan_spatial_fork='alphagov'
+
+WORKDIR $CKAN_VENV
 
 RUN echo "pip install DGU extensions..." && \
 
