@@ -57,7 +57,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push images
-        if: ${{ inputs.buildType == 'build_push' }}
+        if: ${{ inputs.buildType == 'build_push' || github.ref == 'refs/heads/main' }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
