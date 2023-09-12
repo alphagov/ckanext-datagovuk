@@ -32,7 +32,7 @@ jobs:
             version: 2.6.1
             skip: true
           - name: pycsw
-            version: 2.4.0g
+            version: 2.4.0h
           - name: solr
             version: 8-2.9f
         arch: [ amd64 ]

@@ -118,9 +118,12 @@ RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython
 
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions
-RUN pip install $pipopt -U pyyaml==5.3.1 sqlalchemy==1.3.24 Shapely==1.8.5
+RUN pip install $pipopt -U pyyaml==5.3.1 sqlalchemy==1.3.24 Shapely==1.8.5 gunicorn==21.2.0
 
 # upgrade pyopenssl
 RUN pip install pyopenssl --upgrade
 
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"
+
+# to run the PyCSW wsgi set the WORKDIR to pycsw/pycsw
+WORKDIR "$CKAN_VENV/src/pycsw/pycsw"
