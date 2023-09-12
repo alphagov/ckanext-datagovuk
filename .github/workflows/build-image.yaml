@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # remember to update versions on build-image-on-tags.yaml
         app:
           - name: ckan
             version: 2.9.9
