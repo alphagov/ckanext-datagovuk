@@ -6,11 +6,10 @@ ENV SOLR_CORE ckan
 # Giving ownership to Solr
 USER root
 
-# replace the ckan-2.10 schema with the 2.9 schema to make it compatible with CSW
-RUN sed -z 's/<schema name="ckan-2.10" version="1.6">/<schema name="ckan" version="2.9">/' -i $SOLR_HOME/ckan/conf/managed-schema
-
-# Add harvest field to schema
-RUN sed -z 's/<field name="urls" type="text" indexed="true" stored="false" multiValued="true"\/>/<field name="urls" type="text" indexed="true" stored="false" multiValued="true"\/>\n    <field name="harvest" type="text" indexed="true" stored="true" multiValued="true"\/>/' -i /opt/solr/server/solr/configsets/ckan/conf/managed-schema
+# used a modified ckan-2.10 schema to work with CKAN 2.9 to make it compatible with CSW
+COPY docker/solr/schema.solr8.xml /opt/solr/server/solr/configsets/ckan/conf/managed-schema
+RUN mkdir -p /var/solr/data/ckan/conf/ && chown -R $SOLR_USER:$SOLR_USER /var/solr/data/ckan/conf/
+COPY docker/solr/schema.solr8.xml /var/solr/data/ckan/conf/managed-schema
 
 # Set to restricted User
 USER $SOLR_USER:$SOLR_USER

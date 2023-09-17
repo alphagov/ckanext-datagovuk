@@ -25,7 +25,7 @@
 schema. We used to use the `version` attribute for this but this is an internal
 attribute that should not be used so starting from CKAN 2.10 we use the `name`
 attribute with the form `ckan-X.Y` -->
-<schema name="ckan-2.10" version="1.6">
+<schema name="ckan" version="2.9">
 
 <types>
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
@@ -139,6 +139,7 @@ attribute with the form `ckan-X.Y` -->
          via copyField further on in this schema  -->
     <field name="text" type="text" indexed="true" stored="false" multiValued="true"/>
     <field name="urls" type="text" indexed="true" stored="false" multiValued="true"/>
+    <field name="harvest" type="text" indexed="true" stored="true" multiValued="true"/>
 
     <field name="depends_on" type="text" indexed="true" stored="false" multiValued="true"/>
     <field name="dependency_of" type="text" indexed="true" stored="false" multiValued="true"/>
