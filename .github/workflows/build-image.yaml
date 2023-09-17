@@ -36,7 +36,7 @@ jobs:
           - name: pycsw
             version: 2.4.0h
           - name: solr
-            version: 8-2.9g
+            version: 8-2.9h
         arch: [ amd64 ]
     permissions:
       packages: write
