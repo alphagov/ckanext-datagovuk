@@ -12,6 +12,7 @@ on:
           - build_only
           - build_push_base
           - build_push_pycsw
+          - build_push_solr
           - build_push_test_ckan
   push:
     branches:
@@ -67,6 +68,14 @@ jobs:
         run: ./docker/build-image.sh
       - name: Build and push CKAN base image
         if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
+        env:
+          APP: ${{ matrix.app.name }}
+          VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
+          BUILD_BASE: true
+        run: ./docker/build-image.sh
+      - name: Build and push Solr image
+        if: ${{ inputs.buildType == 'build_push_solr' && matrix.app.name == 'solr' }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
