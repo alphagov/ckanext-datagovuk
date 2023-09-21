@@ -59,10 +59,10 @@ ENV PATH=${CKAN_VENV}/bin:${PATH}
 # Set pip args
 ENV pipopt='--exists-action=b --force-reinstall'
 
-# ckan 2.9.9
+# alphagov 2.9.9-fix-email_login
 
-ENV ckan_sha='13c6d752e86f0e3501f953a9fdde15d038bad87b'
-ENV ckan_fork='ckan'
+ENV ckan_sha='b6414dc6374c322e2748dad2464bbc872c8de162'
+ENV ckan_fork='alphagov'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
 
