@@ -1,13 +1,18 @@
 name: ckanext-datagovuk ci
-on: [push, pull_request_target]
+on:
+  push:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - closed
+
 
 jobs:
   test:
     strategy:
       matrix:
         version:
-          - ckan: governmentdigitalservice/ckan-main:2.9.3
-            solr: governmentdigitalservice/ckan-solr:6.6.2
           - ckan: ghcr.io/alphagov/ckan:2.9.9-base
             solr: ghcr.io/alphagov/solr:8-2.9f
     name: test
@@ -58,15 +63,7 @@ jobs:
       - name: Install dev requirements
         run: |
           pip install factory-boy==2.12.0 pytest-ckan==0.0.12 pytest-cov==4.0.0 mock==2.0.0
-      - name: Update config for CKAN 2.9.3
-        if: ${{ matrix.version.ckan == 'governmentdigitalservice/ckan-main:2.9.3' }}
-        run: |
-          # Replace default path to CKAN core config file with the one on the container
-          sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
-          # set the i18n directory
-          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $(pwd)/ckanext/datagovuk/i18n|" /srv/app/production.ini
       - name: Update config
-        if: ${{ matrix.version.ckan == 'ghcr.io/alphagov/ckan:2.9.9-base' }}
         run: |
           # Replace default path to CKAN core config file with the one on the container
           sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
