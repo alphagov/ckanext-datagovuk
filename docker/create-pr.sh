@@ -21,7 +21,9 @@ for ENV in $(echo $ENVS | tr "," " "); do
   (
     BRANCH="ci/${IMAGE_TAG}-${ENV}"
 
-    if git show-ref --quiet refs/heads/${BRANCH}; then
+    if [[ $(git status | grep "nothing to commit") ]]; then
+      echo "Nothing to commit"
+    elif git show-ref --quiet refs/heads/${BRANCH}; then
       echo "Branch ${BRANCH} already exists on govuk-ckan-charts"
     else
       git checkout -b ${BRANCH}
