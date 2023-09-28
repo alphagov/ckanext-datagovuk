@@ -91,7 +91,7 @@ ENTRYPOINT ["/pycsw-entrypoint.sh"]
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='233b8511cf38b14e675380b281e133f26530d54e'
+ENV ckan_spatial_sha='1dcaad0e0709c7534fdd50ab85e508a3c0681a2a'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='alphagov'
@@ -106,9 +106,9 @@ RUN echo "pip install spatial extension..." && \
     pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \
 
     # save spatial-requirements.txt locally before installing dependencies to work around pip error
-    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/pip-requirements.txt > spatial-requirements.txt && \
+    curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial-datagovuk/$ckan_spatial_sha/pip-requirements.txt > spatial-requirements.txt && \
     pip install $pipopt -r spatial-requirements.txt && \
-    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
+    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial-datagovuk.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
 ## 2.4.0 pycsw
 ENV pycsw_sha='64464c817248d8ff948d957dd11b955cb8cdd490'
