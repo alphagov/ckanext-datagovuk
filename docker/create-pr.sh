@@ -34,6 +34,7 @@ for ENV in $(echo $ENVS | tr "," " "); do
       done
       git commit -m "Update image tags for ${ENV} to ${IMAGE_TAG}"
       git push --set-upstream origin "${BRANCH}"
+      git status
 
       if [[ $(git status | grep "nothing to commit") ]]; then
         echo "Nothing to commit"
