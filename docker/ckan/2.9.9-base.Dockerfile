@@ -15,7 +15,7 @@ ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='b552ae20fa546f7c6a8d17249c1cb33b12883d32'
+ENV ckan_spatial_sha='651a3b1af746192f76eab2900cbd00e5e3e87a72'
 ENV ckan_spatial_fork='alphagov'
 
 WORKDIR $CKAN_VENV
@@ -26,9 +26,9 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat" && \
 
     # save spatial-requirements.txt locally before installing dependencies to work around pip error
-    curl -s "https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt" > spatial-requirements.txt && \
+    curl -s "https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial-datagovuk/$ckan_spatial_sha/requirements.txt" > spatial-requirements.txt && \
     pip install $pipopt -r spatial-requirements.txt && \
-    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
+    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial-datagovuk.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
 
     pip install $pipopt -U $(curl -s "https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt") && \
     pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \

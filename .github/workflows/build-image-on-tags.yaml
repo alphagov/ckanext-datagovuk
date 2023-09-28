@@ -15,7 +15,7 @@ jobs:
           - name: ckan
             version: 2.9.9
           - name: pycsw
-            version: 2.4.0h
+            version: 2.4.0i
           - name: solr
             version: 8-2.9f
         arch: [ amd64 ]
