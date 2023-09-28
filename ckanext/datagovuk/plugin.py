@@ -319,7 +319,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
 
         if not hasattr(app, '_metrics'):
-            metrics = PrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'])
+            metrics = PrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'], group_by='url_rule')
             app._metrics = metrics
         return app
 
