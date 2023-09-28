@@ -10,19 +10,14 @@ on:
 
 jobs:
   test:
-    strategy:
-      matrix:
-        version:
-          - ckan: ghcr.io/alphagov/ckan:2.9.9-base
-            solr: ghcr.io/alphagov/solr:8-2.9f
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ${{ matrix.version.ckan }}
+      image: ghcr.io/alphagov/ckan:2.9.9-base
       options: --user root
     services:
       solr:
-        image: ${{ matrix.version.solr }}
+        image: ghcr.io/alphagov/solr:8-2.9f
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
