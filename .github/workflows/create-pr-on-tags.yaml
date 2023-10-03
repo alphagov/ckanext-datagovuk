@@ -1,9 +1,13 @@
 name: Create charts PR on tags creation
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+  workflow_run:
+    workflows: [ "Build and push images on tags" ]
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
   create_pr:
@@ -15,9 +19,12 @@ jobs:
         with:
           repository: alphagov/ckanext-datagovuk
           path: ckanext
+      - name: Set latest tag
+        id: vars
+        run: echo "tag=$(git tag | sort --version-sort | tail -n1)" >> $GITHUB_OUTPUT
       - run: bash ./ckanext/docker/create-pr.sh
         env:
           GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
-          GH_REF: ${{ github.ref_name }}
+          GH_REF: ${{ steps.vars.output.tag }}
           IS_TAG: "true"
           ENVS: "staging,production"
