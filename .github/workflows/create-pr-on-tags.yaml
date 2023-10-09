@@ -6,25 +6,17 @@ on:
     workflows: [ "Build and push images on tags" ]
     types:
       - completed
-    branches:
-      - main
 
 jobs:
   create_pr:
-    name: Create charts PR
+    name: Create charts PR on tags creation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout ckanext-datagovuk repository
-        uses: actions/checkout@v3
-        with:
-          repository: alphagov/ckanext-datagovuk
-          path: ckanext
-      - name: Set latest tag
-        id: vars
-        run: echo "tag=$(git tag | sort --version-sort | tail -n1)" >> $GITHUB_OUTPUT
-      - run: bash ./ckanext/docker/create-pr.sh
+      - uses: actions/checkout@v3
+      - name: Set GH_REF
+        run: echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
+      - run: bash ./docker/create-pr.sh
         env:
           GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
-          GH_REF: ${{ steps.vars.output.tag }}
           IS_TAG: "true"
           ENVS: "staging,production"
