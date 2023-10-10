@@ -7,7 +7,7 @@ while ! pg_isready -h $CKAN_DB_HOST -U ckan; do
   sleep 1;
 done
 
-if [[ ${CKAN_DB_INIT:-} = "true" ]]; then
+if [ ${CKAN_DB_INIT:-} = "true" ]; then
     ckan db init
 fi
 
