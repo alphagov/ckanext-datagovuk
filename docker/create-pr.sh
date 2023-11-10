@@ -13,7 +13,7 @@ fi
 git config --global user.email "govuk-ci@users.noreply.github.com"
 git config --global user.name "govuk-ci"
 
-git clone https://${GH_TOKEN}@github.com/alphagov/govuk-ckan-charts.git charts
+git clone https://${GH_TOKEN}@github.com/alphagov/govuk-dgu-charts.git charts
 
 cd charts/charts/ckan/images
 
@@ -22,7 +22,7 @@ for ENV in $(echo $ENVS | tr "," " "); do
     BRANCH="ci/${IMAGE_TAG}-${ENV}"
 
     if git show-ref --quiet refs/heads/${BRANCH}; then
-      echo "Branch ${BRANCH} already exists on govuk-ckan-charts"
+      echo "Branch ${BRANCH} already exists on govuk-dgu-charts"
     else
       git checkout -b ${BRANCH}
 
