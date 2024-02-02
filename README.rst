@@ -95,3 +95,31 @@ Then run the paster command:
 In order to remove the test data:
 
    ckan datagovuk remove-dgu-test-data
+
+-----------------
+Deploying CKAN core and base images
+-----------------
+
+The CKAN core, base and Solr images can be built on Github actions by selecting the `Build base images` under actions, Build and push images workflow. If you are releasing a change to the base image, which handles the extension versions or a change to the CKAN version, tests might fail until the images are built and pushed into GHCR.
+
+-----------------
+Running the docker stack locally
+-----------------
+
+The docker stack has been migrated to this repo from docker-ckan. 
+
+In order to run the stack please ensure that you have copied .env.example to a matching version e.g. .env-2.9.9 and updated it with the correct settings, you should be able to run it with the default settings.
+
+The command to run the docker stack should look something like this -
+
+`docker-compose -f docker/docker-compose.yml up`
+
+You should then be able to access the stack by browsing to `http://localhost:5001`
+
+For further guidance on using docker please read about (docker)[https://docs.docker.com/get-started/docker_cheatsheet.pdf]
+
+-----------------
+Deploying test branches to integration
+-----------------
+
+To deploy test branches to integration you will need to run the `Build and push images` workflow from your test branch, and then once that has finished run the `Create chars PR`  also from your test branch.
