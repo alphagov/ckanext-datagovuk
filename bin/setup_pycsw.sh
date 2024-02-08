@@ -9,6 +9,7 @@ done
 
 # only run the setup script if the records table has not been created
 if !(psql $CKAN_SQLALCHEMY_URL -c "select exists (SELECT * FROM information_schema.tables where table_name = 'records');" | tr -d '\n' | grep -q "exists -------- t"); then 
+  sed "s|database=\${CKAN_SQLALCHEMY_URL}|database=$CKAN_SQLALCHEMY_URL|g" -i /config/pycsw.cfg
   ckan ckan-pycsw setup -p $CKAN_CONFIG/pycsw.cfg
 
   echo "Drop ix_records_abstract if exists and create pycsw abstract index to allow for larger records"
