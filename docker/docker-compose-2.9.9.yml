@@ -99,7 +99,8 @@ services:
   static-mock-harvest-source-2.9.9:
     container_name: static-mock-harvest-source-2.9.9
     build:
-      context: docker/src/2.9.9/ckan-mock-harvest-sources/static/
+      context: ../
+      dockerfile: docker/src/2.9.9/ckan-mock-harvest-sources/static/Dockerfile
     ports:
       - "11091:11088"
     volumes:
