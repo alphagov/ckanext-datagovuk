@@ -18,7 +18,7 @@ RUN update-locale LANG=${LC_ALL}
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
     && apt-get -q -y install \
-        python3.8 \
+        # python3.8 \
         python3-dev \
         python3-pip \
         python3-venv \
@@ -40,6 +40,11 @@ RUN apt-get -q -y update \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt update && apt install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt update \ 
+    && apt install -y python3.10 python3.10-venv python3.10-dev 
+
 # Define environment variables
 ENV CKAN_HOME /usr/lib/ckan
 ENV CKAN_VENV $CKAN_HOME/venv
@@ -51,7 +56,8 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
-    python3 -m venv $CKAN_VENV && \
+    python3.10 -m venv $CKAN_VENV && \
+    # ln -s $CKAN_VENV/bin/pip3 /usr/local/bin/ckan-pip3 &&\
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # Virtual environment binaries/scripts to be used first
@@ -68,12 +74,14 @@ ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST db
 
 # ckan 2.10
-ENV ckan_sha='70bec6611003b96ec7a02abb9605afdfb0964ad9'
+
+ENV ckan_sha='ac558d6d1751054247ad2bfbb9e531e4b138b457'
 ENV ckan_fork='ckan'
 
 # Setup CKAN
 
 RUN pip install -U pip && \
+    pip install $pipopt -U cython && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
     # pin zope to 5.0.0 as causing issues - github.com/pypa/setuptools/issues/2017
@@ -89,16 +97,14 @@ FROM base AS prod
 
 WORKDIR $CKAN_VENV/src
 
-# ENTRYPOINT ["/pycsw-entrypoint.sh"]
-
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='32b22e6a0a86e5df95229fd7455676350877ce5e'
+ENV ckan_spatial_sha='ba28143e37d2eb5af6d6e7b8cb04cd56e4c00efd'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='ckan'
-ENV ckan_harvest_sha='cb0a7034410f217b2274585cb61783582832c8d5'
+ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 
 RUN echo "pip install spatial extension..." && \
 
@@ -118,6 +124,9 @@ RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython
 
 # need to pin pyyaml to correctly pick up config settings
 # pin sqlalchemy to use SessionExtensions
-RUN pip install $pipopt -U pyyaml==5.4 sqlalchemy[mypy]==1.4.41
+# RUN pip install $pipopt -U pyyaml==5.4 sqlalchemy[mypy]==1.4.41
+# RUN pip install $pipopt -U pyyaml==6.0.1 sqlalchemy==1.3.23
     
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"
+
+ENTRYPOINT ["/pycsw-entrypoint.sh"]
