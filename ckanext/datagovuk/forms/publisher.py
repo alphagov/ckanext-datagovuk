@@ -2,6 +2,7 @@ import os
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
+
 class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
     plugins.implements(plugins.IGroupForm, inherit=True)
     plugins.implements(plugins.IConfigurer, inherit=True)
@@ -43,7 +44,7 @@ class PublisherForm(plugins.SingletonPlugin, toolkit.DefaultOrganizationForm):
         return schema
 
     def group_types(self):
-       return ['organization']
+        return ['organization']
 
     def group_controller(self):
         return 'organization'
