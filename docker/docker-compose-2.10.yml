@@ -3,12 +3,11 @@ version: "3"
 services:
   ckan-2.10:
     container_name: ckan-2.10
-    image: localhost:61020/ckan:2.10
-    build:
-      context: ../
-      dockerfile: docker/ckan/Dockerfile
-      args:
-        - START_CKAN=1
+    # image: ghcr.io/alphagov/ckan:2.10
+    image: localhost:61511/ckan:2.10
+    # build:
+    #   context: ../
+    #   dockerfile: docker/ckan/2.10.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -33,10 +32,11 @@ services:
 
   pycsw-2.10:
     container_name: pycsw-2.10
-    image: localhost:61020/pycsw:3.0.0
-    build:
-      context: ../
-      dockerfile: docker/pycsw/Dockerfile
+    # image: ghcr.io/alphagov/pycsw:2.6.1
+    image: localhost:61511/pycsw:2.6.1
+    # build:
+    #   context: ../
+    #   dockerfile: docker/pycsw/2.6.1.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -59,7 +59,7 @@ services:
       - .env-2.10
     build:
       context: ../
-      dockerfile: docker/postgis/Dockerfile
+      dockerfile: docker/postgis/13-3.1.Dockerfile
     volumes:
       - pg_data-2.10:/var/lib/postgresql/data
     networks:
@@ -67,6 +67,7 @@ services:
 
   solr-2.10:
     container_name: solr-2.10
+    # image: ghcr.io/alphagov/solr:8
     build:
       context: ../
       dockerfile: docker/solr/2.10.Dockerfile
@@ -88,12 +89,12 @@ services:
   nginx-2.10:
     container_name: nginx-2.10
     build:
-      context: nginx/2.10/
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/nginx/Dockerfile
     links:
       - ckan-2.10:ckan
     ports:
-      - 0.0.0.0:5003:80
+      - 0.0.0.0:5001:80
     volumes:
       - ./logs/2.10:/var/log/nginx
     networks:
@@ -101,8 +102,10 @@ services:
 
   static-mock-harvest-source-2.10:
     container_name: static-mock-harvest-source-2.10
-    build:
-      context: src/2.10/ckan-mock-harvest-sources/static/
+    image: localhost:61511/static-mock-harvest-source:2.10
+    # build:
+    #   context: ../
+    #   dockerfile: docker/src/2.10/ckan-mock-harvest-sources/static/Dockerfile
     ports:
       - "11091:11088"
     volumes:
