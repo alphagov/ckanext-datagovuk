@@ -16,14 +16,15 @@ body {
   background-color: rgb(11, 12, 12);
 }
 
-.masthead .main-navbar ul li a {
-  background-color: #003647;
+.masthead a {
+  color: #FFF;
   border-radius: 4px;
 }
 
 .masthead .navigation .nav-pills li a,
 .masthead .navigation .nav-pills li.active a {
   color: #FFF;
+  border-radius: 4px;
 }
 
 .masthead .navbar li a,
