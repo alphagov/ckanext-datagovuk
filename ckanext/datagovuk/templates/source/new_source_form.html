@@ -84,7 +84,7 @@
     <div class="form-group control-group">
       <label for="field-state" class="control-label col-md-3">{{ _('State') }}</label>
       <div class="controls col-md-9">
-        <select id="field-state" class="form-control" name="state">
+        <select id="field-state" class="form-control form-select" name="state">
           <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
           <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
         </select>
