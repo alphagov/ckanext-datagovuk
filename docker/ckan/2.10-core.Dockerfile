@@ -28,21 +28,21 @@ RUN apt-get -q -y update \
         postgresql-client \
         build-essential \
         git-core \
-        vim \
         wget \
-        curl \
         proj-bin \
         libproj-dev \
         libgeos++-dev \ 
         libgeos-3.8.0 \
         libgeos-c1v5 \
+        curl \
+        vim \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt update && apt install -y software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt update \ 
-    && apt install -y python3.10 python3.10-venv python3.10-dev 
+RUN apt-get update && apt-get install -y software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \ 
+    && apt-get install -y python3.10 python3.10-venv python3.10-dev 
 
 # Define environment variables
 ENV CKAN_HOME /usr/lib/ckan
