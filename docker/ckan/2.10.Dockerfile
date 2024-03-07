@@ -1,4 +1,4 @@
-FROM localhost:50579/ckan:2.10-base
+FROM ghcr.io/alphagov/ckan:2.10-base
 
 USER root
 
