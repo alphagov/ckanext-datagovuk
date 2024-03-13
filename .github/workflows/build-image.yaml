@@ -89,6 +89,7 @@ jobs:
           APP: solr
           VERSION: '2.10'
           ARCH: amd64
+          GH_REF: '2.10'
           BUILD_BASE: false
         run: ./docker/build-image.sh
       - name: Build and push CKAN test image
