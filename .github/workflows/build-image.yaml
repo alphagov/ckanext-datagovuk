@@ -29,14 +29,14 @@ jobs:
         # remember to update versions on build-image-on-tags.yaml
         app:
           - name: ckan
-            version: 2.9.9
+            version: "2.10"
           - name: pycsw
             version: 2.6.1
-            skip: true
           - name: pycsw
             version: 2.4.2
+            skip: true
           - name: solr
-            version: 8-2.9f
+            version: "2.10"
         arch: [ amd64 ]
     permissions:
       packages: write
@@ -77,7 +77,7 @@ jobs:
       - name: Build and push pycsw image
         if: ${{ inputs.buildType == 'build_push_pycsw' && matrix.app.name == 'pycsw' }}
         env:
-          APP: ${{ matrix.app.name && matrix.app.name == 'solr' }}
+          APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
