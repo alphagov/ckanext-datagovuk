@@ -84,7 +84,7 @@ jobs:
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
       - name: Build and push solr image
-        if: ${{ inputs.buildType == 'build_push_solr' && matrix.app.name == 'solr' }}
+        if: ${{ inputs.buildType == 'build_push_solr'  && matrix.app.name == 'solr' }}
         env:
           APP: solr
           VERSION: '2.10'

@@ -27,7 +27,7 @@ for ENV in $(echo $ENVS | tr "," " "); do
       git checkout -b ${BRANCH}
 
       cd "${ENV}"
-      for APP in ckan pycsw solr; do
+      for APP in ckan pycsw; do
         yq -i '.tag = env(IMAGE_TAG)' "${APP}.yaml"
         yq -i '.branch = env(SOURCE_BRANCH)' "${APP}.yaml"
         git add "${APP}.yaml"
