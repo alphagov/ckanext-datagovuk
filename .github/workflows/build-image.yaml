@@ -77,7 +77,7 @@ jobs:
       - name: Build and push pycsw image
         if: ${{ inputs.buildType == 'build_push_pycsw' && matrix.app.name == 'pycsw' }}
         env:
-          APP: ${{ matrix.app.name && matrix.app.name == 'solr' }}
+          APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
