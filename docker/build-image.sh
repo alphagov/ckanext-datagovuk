@@ -41,7 +41,11 @@ if [[ -n ${DRY_RUN:-} ]]; then
   echo "Dry run; not pushing to registry"
 else
   if [[ -n ${DOCKER_TAG:-} ]]; then
-    docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}"
+    if [[ -n ${PATCH:-} ]]; then
+      docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}-${PATCH}"
+    else
+      docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}"
+    fi
   else
     docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
     docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
