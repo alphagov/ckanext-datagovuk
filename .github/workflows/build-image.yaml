@@ -8,7 +8,7 @@ on:
         required: true
         type: choice
         options:
-          - build_push
+          - build_push_ckan
           - build_only
           - build_push_base
           - build_push_pycsw
@@ -59,7 +59,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push CKAN image
-        if: ${{ (inputs.buildType == 'build_push' || github.ref == 'refs/heads/main') && matrix.app.name == 'ckan' }}
+        if: ${{ (inputs.buildType == 'build_push_ckan' || github.ref == 'refs/heads/main') && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
