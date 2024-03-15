@@ -7,17 +7,16 @@ on:
     types:
       - closed
 
-
 jobs:
   test:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.9.9-base
+      image: ghcr.io/alphagov/ckan:2.10-base
       options: --user root
     services:
       solr:
-        image: ghcr.io/alphagov/solr:8-2.9f
+        image: ghcr.io/alphagov/solr:2.10
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
