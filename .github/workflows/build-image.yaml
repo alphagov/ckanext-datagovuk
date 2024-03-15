@@ -58,15 +58,15 @@ jobs:
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
-      - name: Build and push images
-        if: ${{ inputs.buildType == 'build_push' || github.ref == 'refs/heads/main' }}
+      - name: Build and push CKAN image
+        if: ${{ (inputs.buildType == 'build_push' || github.ref == 'refs/heads/main') && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
-      - name: Build and push CKAN base image
+      - name: Build and push CKAN base and core image
         if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
         env:
           APP: ${{ matrix.app.name }}
