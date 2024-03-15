@@ -32,6 +32,7 @@ RUN apt-get -q -y update \
         postgresql-client \
         build-essential \
         git-core \
+        gunicorn \
         wget \
         proj-bin \
         libproj-dev \
