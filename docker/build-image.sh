@@ -30,7 +30,11 @@ else
 fi
 
 if [[ -n ${DOCKER_TAG:-} ]]; then
-  build "${DOCKER_TAG}" "${VERSION}"
+  if [[ -n ${PATCH:-} ]]; then
+    build "${DOCKER_TAG}-${TAG_SUFFIX}" "${VERSION}"
+  else
+    build "${DOCKER_TAG}" "${VERSION}"
+  fi
 fi
 
 if [[ -n ${DRY_RUN:-} ]]; then
