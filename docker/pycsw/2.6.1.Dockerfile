@@ -6,6 +6,7 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Setting the locale
+ENV LC_CTYPE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y locales

@@ -32,6 +32,7 @@ jobs:
             version: "2.10"
           - name: pycsw
             version: 2.6.1
+            patch: a
           - name: pycsw
             version: 2.4.2
             skip: true
@@ -79,6 +80,7 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          PATCH: ${{ matrix.app.patch }}
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
           SKIP: ${{ matrix.app.skip }}
@@ -86,10 +88,10 @@ jobs:
       - name: Build and push solr image
         if: ${{ inputs.buildType == 'build_push_solr'  && matrix.app.name == 'solr' }}
         env:
-          APP: solr
-          VERSION: '2.10'
-          ARCH: amd64
-          GH_REF: '2.10'
+          APP: ${{ matrix.app.name }}
+          VERSION: ${{ matrix.app.version }}
+          ARCH: ${{ matrix.arch }}
+          GH_REF: ${{ matrix.app.version }}
           BUILD_BASE: false
         run: ./docker/build-image.sh
       - name: Build and push CKAN test image
