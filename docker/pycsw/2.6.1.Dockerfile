@@ -33,6 +33,7 @@ RUN apt-get -q -y update \
         postgresql-client \
         build-essential \
         git-core \
+        gunicorn \
         vim \
         wget \
         curl \
