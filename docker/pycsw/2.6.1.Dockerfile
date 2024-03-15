@@ -1,13 +1,12 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:focal AS base
-MAINTAINER Open Knowledge
+FROM ubuntu:jammy AS base
 
 # Set timezone
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Setting the locale
-ENV LC_ALL=en_US.UTF-8       
+ENV LC_ALL=en_US.UTF-8
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y locales
 RUN sed -i "/$LC_ALL/s/^# //g" /etc/locale.gen
@@ -18,15 +17,17 @@ RUN update-locale LANG=${LC_ALL}
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
     && apt-get -q -y install \
-        # python3.8 \
         python3-dev \
         python3-pip \
         python3-venv \
+        python3.10-venv \
+        python3.10-dev \
         python3-wheel \
         libpq-dev \
         libxml2-dev \
         libxslt-dev \
         libgeos-dev \
+        libmagic-dev \
         libssl-dev \
         libffi-dev \
         postgresql-client \
@@ -39,11 +40,6 @@ RUN apt-get -q -y update \
         libproj-dev \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
-
-RUN apt update && apt install -y software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt update \ 
-    && apt install -y python3.10 python3.10-venv python3.10-dev 
 
 # Define environment variables
 ENV CKAN_HOME /usr/lib/ckan
@@ -116,8 +112,8 @@ RUN echo "pip install spatial extension..." && \
     pip install $pipopt -r spatial-requirements.txt && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
 
-## 3.0.0 pycsw
-ENV pycsw_sha='14d22a37ad0c76697fba57ccacca3f6053fc9bd0'
+## 2.6.1 pycsw
+ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
 RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
     (cd pycsw && python setup.py build)
