@@ -35,6 +35,8 @@ jobs:
           - name: pycsw
             version: 2.4.2
             skip: true
+          - name: solr
+            version: "2.10"
         arch: [ amd64 ]
     permissions:
       packages: write
@@ -82,7 +84,7 @@ jobs:
           SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
       - name: Build and push solr image
-        if: ${{ inputs.buildType == 'build_push_solr' }}
+        if: ${{ inputs.buildType == 'build_push_solr'  && matrix.app.name == 'solr' }}
         env:
           APP: solr
           VERSION: '2.10'
