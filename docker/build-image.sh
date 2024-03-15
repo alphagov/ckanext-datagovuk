@@ -31,7 +31,7 @@ fi
 
 if [[ -n ${DOCKER_TAG:-} ]]; then
   if [[ -n ${PATCH:-} ]]; then
-    build "${DOCKER_TAG}-${TAG_SUFFIX}" "${VERSION}"
+    build "${DOCKER_TAG}-${PATCH}" "${VERSION}"
   else
     build "${DOCKER_TAG}" "${VERSION}"
   fi
