@@ -30,6 +30,7 @@ jobs:
         app:
           - name: ckan
             version: "2.10"
+            patch: a
           - name: pycsw
             version: 2.6.1
             patch: a
@@ -66,6 +67,7 @@ jobs:
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
           SKIP: ${{ matrix.app.skip }}
+          PATCH: ${{ matrix.app.patch }}
         run: ./docker/build-image.sh
       - name: Build and push CKAN base and core image
         if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
