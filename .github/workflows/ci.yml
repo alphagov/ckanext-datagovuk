@@ -68,4 +68,4 @@ jobs:
         run: |
           ckan db init
       - name: Run tests
-        run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+        run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
