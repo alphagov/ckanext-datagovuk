@@ -90,14 +90,14 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             })
 
         from ckan.logic.schema import default_extras_schema
-        from ckan.lib.navl.validators import ignore, not_empty
+        from ckan.lib.navl.validators import ignore, not_empty, unicode_safe
         from ckanext.datagovuk.logic.validators import extra_key_not_in_root_schema
 
         extras_schema = default_extras_schema()
         extras_schema['key'] = [
             not_empty,
             extra_key_not_in_root_schema,
-            str,
+            unicode_safe,
         ]
 
         schema['extras'] = extras_schema
