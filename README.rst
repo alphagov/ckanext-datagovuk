@@ -95,3 +95,11 @@ Then run the paster command:
 In order to remove the test data:
 
    ckan datagovuk remove-dgu-test-data
+
+-----------------
+Deploying CKAN, PyCSW and Solr
+-----------------
+
+By default merging a PR into main will trigger a build of the CKAN image and create PRs on the govuk-dgu-charts repo. 
+
+If you want to deploy updates to PyCSW or Solr then you will need to trigger the build manually via the github actions tab.
