@@ -32,7 +32,7 @@ jobs:
             version: "2.10"
           - name: pycsw
             version: 2.6.1
-            patch: b
+            patch: c
           - name: pycsw
             version: 2.4.2
             skip: true
