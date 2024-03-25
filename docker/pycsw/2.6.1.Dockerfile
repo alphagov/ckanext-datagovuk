@@ -120,11 +120,11 @@ RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
     (cd pycsw && python setup.py build)
 
-# need to pin pyyaml to correctly pick up config settings
-# pin sqlalchemy to use SessionExtensions
-# RUN pip install $pipopt -U pyyaml==5.4 sqlalchemy[mypy]==1.4.41
-# RUN pip install $pipopt -U pyyaml==6.0.1 sqlalchemy==1.3.23
+# install gunicorn to enable running it in the virtualenv
+RUN pip install $pipopt -U gunicorn==21.2.0
     
 RUN ckan config-tool $CKAN_INI "ckan.plugins = harvest ckan_harvester spatial_metadata spatial_query spatial_harvest_metadata_api gemini_csw_harvester gemini_waf_harvester gemini_doc_harvester"
 
 ENTRYPOINT ["/pycsw-entrypoint.sh"]
+
+WORKDIR $CKAN_VENV/src/pycsw/pycsw
