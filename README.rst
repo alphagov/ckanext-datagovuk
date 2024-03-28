@@ -100,6 +100,6 @@ In order to remove the test data:
 Deploying CKAN, PyCSW and Solr
 -----------------
 
-By default merging a PR into main will trigger a build of the CKAN image and create PRs on the govuk-dgu-charts repo. 
+By default merging a PR into main will trigger a build of the CKAN image and create PRs on the govuk-dgu-charts repo. Updating the tag will build and push a tagged image and create the PR for Staging and Production environments in the govuk-dgu-charts repo.
 
-If you want to deploy updates to PyCSW or Solr then you will need to trigger the build manually via the github actions tab.
+If you want to deploy updates to PyCSW or Solr then you will need to trigger the build manually via the github actions tab and manually update the pycsw or solr tag in govuk-dgu-charts repo for each environment.
