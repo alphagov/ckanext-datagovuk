@@ -33,9 +33,6 @@ jobs:
           - name: pycsw
             version: 2.6.1
             patch: c
-          - name: pycsw
-            version: 2.4.2
-            skip: true
           - name: solr
             version: "2.10"
         arch: [ amd64 ]
@@ -65,7 +62,6 @@ jobs:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
           ARCH: ${{ matrix.arch }}
-          SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
       - name: Build and push CKAN base and core image
         if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
@@ -83,7 +79,6 @@ jobs:
           PATCH: ${{ matrix.app.patch }}
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
-          SKIP: ${{ matrix.app.skip }}
         run: ./docker/build-image.sh
       - name: Build and push solr image
         if: ${{ inputs.buildType == 'build_push_solr'  && matrix.app.name == 'solr' }}
