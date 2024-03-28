@@ -95,7 +95,7 @@
     <div class="form-group control-medium">
       <label for="field-private" class="control-label">{{ _('Visibility') }}</label>
       <div class="controls">
-        <select id="field-private" name="private" class="form-control">
+        <select id="field-private" name="private" class="form-control form-select">
           {% for option in [('True', _('Private')), ('False', _('Public'))] %}
           <option value="{{ option[0] }}" {% if option[0] == data.private|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
           {% endfor %}
@@ -114,7 +114,7 @@
   <div class="form-group control-medium">
     <label for="field-state" class="control-label">{{ _('State') }}</label>
     <div class="controls">
-      <select class="form-control" id="field-state" name="state">
+      <select class="form-control form-select" id="field-state" name="state">
         <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
         <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
       </select>

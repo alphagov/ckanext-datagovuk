@@ -1,7 +1,7 @@
 import logging
 from io import BytesIO, StringIO
 import os
-from html.parser import HTMLParser
+from html import unescape
 import datetime
 
 import lxml.etree
@@ -115,8 +115,7 @@ class InventoryDocument(object):
             d['rights'] = 'http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2/'
 
         # Clean description to decode any encoded HTML
-        h = HTMLParser()
-        d['description'] = h.unescape(d.get('description', ''))
+        d['description'] = unescape(d.get('description', ''))
 
         services = []
         functions = []

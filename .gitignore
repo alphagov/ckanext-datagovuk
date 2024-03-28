@@ -48,3 +48,4 @@ docs/_build/
 environment.sh
 .DS_Store
 .env*
+docker/src
