@@ -34,7 +34,7 @@
     {% endif %}
     {% endblock %}
  
-    {% if is_sysadmin and current_user.name != data.name %}
+    {% if is_sysadmin and g.user.name != data.name %}
     {% block sysadmin_old_password %}
       <fieldset>
         <legend>{{ _('Change ' + data.name|capitalize + "'s" + ' password') }}</legend>
