@@ -1,12 +1,12 @@
 {% import 'macros/form.html' as form %}
 
-{% block form %}
+{% block core_fields %}
 
   <form id="user-edit-form" class="dataset-form" method="post" action="{{ action }}" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-    {{ form.errors(error_summary) }}
+    {% block form_errors %}{{ form.errors(error_summary) }}{% endblock %}
 
-    {% block core_fields %}
+    {% block sysadmin_password %}
       <fieldset>
         <legend>{{ _('Change details') }}</legend>
         {{ form.input('name', label=_('Username'), id='field-username', value=data.name, error=errors.name, classes=['control-medium'], is_required=true) }}
@@ -29,7 +29,7 @@
     {% endblock %}
  
     {% if is_sysadmin and current_user.name != data.name %}
-    {% block sysadmin_password %}
+    {% block sysadmin_old_password %}
       <fieldset>
         <legend>{{ _('Change ' + data.name|capitalize + "'s" + ' password') }}</legend>
         {{ form.input('password1', type='password', label=_('Password'), id='field-password', value=data.password1, error=errors.password1, classes=['control-medium'], attrs={'autocomplete': 'off', 'pattern': '.{8,}', 'title': 'Password must be a minimum of 8 characters'} ) }}
