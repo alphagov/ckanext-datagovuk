@@ -1,6 +1,7 @@
 {% import "macros/form.html" as form %}
 
-<form id="user-register-form" class="form-horizontal" action="" method="post">
+<form id="user-register-form" class="form-horizontal" action="" method="post" enctype="multipart/form-data">
+  {{ h.csrf_input() }}
   {{ form.errors(error_summary) }}
   {{ form.input("name", id="field-username", label=_("Username"), placeholder=_("username"), value=data.name, error=errors.name, classes=["control-medium"]) }}
   {{ form.input("fullname", id="field-fullname", label=_("Full Name"), placeholder=_("Joe Bloggs"), value=data.fullname, error=errors.fullname, classes=["control-medium"]) }}
@@ -9,6 +10,11 @@
   {{ form.input("password2", id="field-confirm-password", label=_("Confirm"), type="password", placeholder="••••••••", value=data.password2, error=errors.password2, classes=["control-medium"], attrs={'pattern': '.{8,}', 'title': 'Password must be a minimum of 8 characters'}) }}
 
   {% snippet "user/snippets/password_guidelines.html" %}
+
+  {% set is_upload = data.image_url and not data.image_url.startswith('http') %}
+  {% set is_url = data.image_url and data.image_url.startswith('http') %}
+
+  {{ form.image_upload(data, errors, is_upload_enabled=h.uploads_enabled(), is_url=is_url, is_upload=is_upload, upload_label=_('Profile picture'), url_label=_('Profile picture URL')) }}
 
   {% if g.recaptcha_publickey %}
     {% snippet "user/snippets/recaptcha.html", public_key=g.recaptcha_publickey %}
