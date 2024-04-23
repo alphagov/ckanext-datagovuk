@@ -4,6 +4,7 @@ import pytest
 import six
 from six.moves.urllib.parse import urlparse
 
+import ast
 from bs4 import BeautifulSoup
 import mock
 from ckantoolkit import url_for
@@ -180,7 +181,7 @@ class TestPackageController:
                 actual = mock_solr.return_value.add.mock_calls[0][2]["docs"][0]
                 # indexer adds a bunch of keys we don't care about and can't predict
                 actual_common = {
-                    k: v
+                    k: ast.literal_eval(v) if type(v) is str and v[0] == '{' else v
                     for k, v in actual.items()
                     if k in expected
                 }
