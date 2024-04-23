@@ -3,8 +3,7 @@ version: "3"
 services:
   ckan-2.10:
     container_name: ckan-2.10
-    # image: ghcr.io/alphagov/ckan:2.10
-    image: localhost:61511/ckan:2.10
+    image: ghcr.io/alphagov/ckan:2.10
     # build:
     #   context: ../
     #   dockerfile: docker/ckan/2.10.Dockerfile
@@ -32,8 +31,8 @@ services:
 
   pycsw-2.10:
     container_name: pycsw-2.10
-    # image: ghcr.io/alphagov/pycsw:2.6.1
-    image: localhost:61511/pycsw:2.6.1
+    image: ghcr.io/alphagov/pycsw:2.6.1
+    # image: localhost:61511/pycsw:2.6.1
     # build:
     #   context: ../
     #   dockerfile: docker/pycsw/2.6.1.Dockerfile
@@ -67,10 +66,10 @@ services:
 
   solr-2.10:
     container_name: solr-2.10
-    # image: ghcr.io/alphagov/solr:8
-    build:
-      context: ../
-      dockerfile: docker/solr/2.10.Dockerfile
+    image: ghcr.io/alphagov/solr:2.10
+    # build:
+    #   context: ../
+    #   dockerfile: docker/solr/2.10.Dockerfile
     ports:
       - "8983:8983"
     volumes:
@@ -102,7 +101,8 @@ services:
 
   static-mock-harvest-source-2.10:
     container_name: static-mock-harvest-source-2.10
-    image: localhost:61511/static-mock-harvest-source:2.10
+    image: ghcr.io/alphagov/static-mock-harvest-source:2.10
+    # image: localhost:61511/static-mock-harvest-source:2.10
     # build:
     #   context: ../
     #   dockerfile: docker/src/2.10/ckan-mock-harvest-sources/static/Dockerfile
