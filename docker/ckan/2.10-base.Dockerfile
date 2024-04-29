@@ -34,7 +34,6 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U factory-boy==3.3.0 mock==2.0.0 pytest==7.4.3 && \
 
     # need to pin pyyaml to correctly pick up config settings
-    # pip install $pipopt -U pyyaml==5.4
     pip install $pipopt -U pyyaml==6.0.1
 
 EXPOSE 5000
