@@ -29,7 +29,8 @@ jobs:
         # remember to update versions on build-image-on-tags.yaml
         app:
           - name: ckan
-            version: "2.10"
+            version: 2.10.3
+            patch: ""
           - name: pycsw
             version: 2.6.1
             patch: c
