@@ -33,7 +33,7 @@ jobs:
             patch: ""
           - name: pycsw
             version: 2.6.1
-            patch: c
+            patch: d
           - name: solr
             version: "2.10"
         arch: [ amd64 ]
