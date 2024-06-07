@@ -104,6 +104,13 @@ ENV ckan_spatial_fork='alphagov'
 ENV ckan_harvest_fork='ckan'
 ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 
+## 2.6.1 pycsw
+ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
+RUN echo "pip install pycsw..." && \
+    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
+    pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
+    (cd pycsw && python setup.py build)
+
 RUN echo "pip install spatial extension..." && \
 
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt) && \
@@ -113,12 +120,6 @@ RUN echo "pip install spatial extension..." && \
     curl -s https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt > spatial-requirements.txt && \
     pip install $pipopt -r spatial-requirements.txt && \
     pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial"
-
-## 2.6.1 pycsw
-ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
-RUN pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
-    pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
-    (cd pycsw && python setup.py build)
 
 # install gunicorn to enable running it in the virtualenv
 RUN pip install $pipopt -U gunicorn==21.2.0
