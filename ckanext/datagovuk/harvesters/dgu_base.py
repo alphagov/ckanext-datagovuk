@@ -6,7 +6,7 @@ from ckan.plugins.toolkit import config
 
 from ckan import model
 from ckan import logic
-from ckan.lib.navl.validators import not_empty
+from ckan.lib.navl.validators import not_empty, unicode_safe
 from ckan.lib.munge import munge_title_to_name
 from ckan.lib.helpers import json
 from ckan.plugins import toolkit as tk
@@ -236,7 +236,7 @@ class DguHarvesterBase(HarvesterBase):
         # Drop the validation restrictions on tags
         # (TODO: make this optional? get schema from config?)
         tag_schema = logic.schema.default_tags_schema()
-        tag_schema['name'] = [not_empty, str]
+        tag_schema['name'] = [not_empty, unicode_safe]
         package_schema['tags'] = tag_schema
         context['schema'] = package_schema
 
@@ -246,16 +246,15 @@ class DguHarvesterBase(HarvesterBase):
             # package.
             if not package_dict.get('id'):
                 package_dict['id'] = str(uuid.uuid4())
-            package_schema['id'] = [str]
+            package_schema['id'] = [unicode_safe]
 
             # Save reference to the package on the object
             harvest_object.package_id = package_dict['id']
             # Defer constraints and flush so the dataset can be indexed with
             # the harvest object id (on the after_show hook from the harvester
             # plugin)
-            if model.engine_is_pg():
-                model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
-                model.Session.flush()
+            model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+            model.Session.flush()
 
             if source_config.get('private_datasets', False):
                 package_dict['private'] = True

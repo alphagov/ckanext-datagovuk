@@ -1,12 +1,12 @@
 name: ckanext-datagovuk ci
 on:
+  workflow_dispatch:
   push:
   pull_request_target:
     branches:
       - main
     types:
       - closed
-
 
 jobs:
   codeql-sast:
@@ -23,11 +23,11 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.9.9-base
+      image: ghcr.io/alphagov/ckan:2.10-base
       options: --user root
     services:
       solr:
-        image: ghcr.io/alphagov/solr:8-2.9f
+        image: ghcr.io/alphagov/solr:2.10
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
@@ -67,7 +67,7 @@ jobs:
           pip install -e .
       - name: Install dev requirements
         run: |
-          pip install factory-boy==2.12.0 pytest-ckan==0.0.12 pytest-cov==4.0.0 mock==2.0.0
+          pip install -r dev-requirements.txt
       - name: Update config
         run: |
           # Replace default path to CKAN core config file with the one on the container
@@ -78,4 +78,4 @@ jobs:
         run: |
           ckan db init
       - name: Run tests
-        run: pytest --ckan-ini=test.ini tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+        run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v

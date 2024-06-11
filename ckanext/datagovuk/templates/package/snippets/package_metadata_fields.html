@@ -14,7 +14,7 @@
 <div class="form-group control-group">
   <label class="control-label col-md-3" for="theme-primary">{{ _("Theme") }}</label>
   <div class="controls col-md-4">
-    <select id="field-theme-primary" class="form-control" name="theme-primary">
+    <select id="field-theme-primary" class="form-control form-select" name="theme-primary">
       <option value></option>
       {% for theme in h.alphabetise_dict(h.themes()) %}
         <option value="{{ theme[0] }}" {% if data.get('theme-primary', '') == theme[0] %}selected="selected"{% endif %}>{{ theme[1] }}</option>
@@ -30,7 +30,7 @@
 <div class="form-group control-group">
   <label class="control-label col-md-3" for="schema-vocabulary">{{ _("Schema/Vocabulary") }}</label>
   <div class="controls col-md-9">
-    <select id="field-schema-vocabulary" class="form-control" name="schema-vocabulary">
+    <select id="field-schema-vocabulary" class="form-control form-select" name="schema-vocabulary">
       <option value></option>
       {% for schema in h.alphabetise_dict(h.schemas()) %}
         <option value="{{ schema[0] }}" {% if data.get('schema-vocabulary', '') == schema[0] %}selected="selected"{% endif %}>{{ schema[1] }}</option>
@@ -46,7 +46,7 @@
 <div class="form-group control-group">
   <label class="control-label col-md-3" for="codelist">{{ _("Code Lists") }}</label>
   <div class="controls col-md-9">
-    <select id="field-codelist" name="codelist" class="form-control">
+    <select id="field-codelist" name="codelist" class="form-control form-select">
       <option value></option>
       {% for codelist in h.alphabetise_dict(h.codelist()) %}
         <option value="{{ codelist[0] }}" {% if data.get('codelist', '') == codelist[0] %}selected="selected"{% endif %}>{{ codelist[1] }}</option>

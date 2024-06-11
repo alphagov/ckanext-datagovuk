@@ -82,7 +82,7 @@ options     - A list/tuple of fields to be used as <options>.
     {{ form.select('year', label=_('Year'), options=[{'name':2010, 'value': 2010},{'name': 2011, 'value': 2011}], selected=2011, error=errors.year) }}
 
     #}
-    {% macro select(name, id='', label='', options='', selected='', error='', classes=[], attrs={'class': 'form-control'}, is_required=false) %}
+    {% macro select(name, id='', label='', options='', selected='', error='', classes=[], attrs={'class': 'form-control form-select'}, is_required=false) %}
     {% set classes = (classes|list) %}
     {% do classes.append('control-select') %}
 

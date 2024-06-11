@@ -11,6 +11,8 @@
       </span>
   {% endcall %}
 
+  {{ h.csrf_input() if 'csrf_input' in h }}
+
   {{ form.input('title', id='field-title', label=_('Title'), value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
 
   {% set prefix = 'harvest' %}
@@ -82,7 +84,7 @@
     <div class="form-group control-group">
       <label for="field-state" class="control-label col-md-3">{{ _('State') }}</label>
       <div class="controls col-md-9">
-        <select id="field-state" class="form-control" name="state">
+        <select id="field-state" class="form-control form-select" name="state">
           <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
           <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
         </select>
@@ -96,18 +98,18 @@
         {% set locale_delete = h.dump_json({'content': _('This will flag the source as deleted but keep all its datasets and previous jobs. Are you sure you want to delete this harvest source?')}) %}
         {% set locale_clear = h.dump_json({'content': _('Warning: Apart from deleting this source, this command will remove all its datasets, as well as all previous job reports. Are you sure you want to continue?')}) %}
   <div class="dropdown btn-group">
-    <button class="btn btn-danger dropdown-toggle" data-toggle="dropdown">
+    <button class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" data-toggle="dropdown">
       {{ _('Delete') }}
       <span class="caret"></span>
     </button>
     <ul class="dropdown-menu">
       <li>
-        <a href="{% url_for 'harvest_delete', id=data.name %}" data-module="confirm-action" data-module-i18n="{{ locale_delete }}">
+        <a class="dropdown-item" href="{% url_for 'harvest_delete', id=data.name %}" data-module="confirm-action" data-module-i18n="{{ locale_delete }}">
           {{ _('Delete source') }}
         </a>
       </li>
       <li>
-        <a href="{% url_for 'harvest_delete', id=data.name %}?clear=True" data-module="confirm-action" data-module-i18n="{{ locale_clear }}">
+        <a class="dropdown-item" href="{% url_for 'harvest_delete', id=data.name %}?clear=True" data-module="confirm-action" data-module-i18n="{{ locale_clear }}">
           {{ _('Delete and clear source') }}
         </a>
       </li>

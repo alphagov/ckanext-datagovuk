@@ -1,4 +1,4 @@
-.account-masthead, .navbar, .site-footer, .module-search {
+.account-masthead, .masthead, .navbar, .site-footer, .module-search {
   background-color: rgb(11, 12, 12);
 }
 
@@ -12,17 +12,32 @@ body {
   margin-bottom: 0;
 }
 
+.p-2, .masthead {
+  background-color: rgb(11, 12, 12);
+}
+
+.masthead a {
+  color: #FFF;
+  border-radius: 4px;
+}
+
 .masthead .navigation .nav-pills li a,
 .masthead .navigation .nav-pills li.active a {
+  color: #FFF;
+  border-radius: 4px;
+}
+
+.masthead .navbar li a,
+.masthead .navbar li.active a {
 
   background-color: #003647;
 }
 
-.masthead .navigation .nav-pills li.active a,
-.dataset .masthead .navigation .nav-pills li a[href="/dataset/"],
-.publisher .masthead .navigation .nav-pills li a[href="/publisher/"],
-.publisher .masthead .navigation .nav-pills li a[href="/organization/"],
-.harvest .masthead .navigation .nav-pills li a[href="/harvest/"] {
+.masthead .navbar li.active a,
+.dataset .masthead .navbar li a[href="/dataset/"],
+.publisher .masthead .navbar li a[href="/publisher/"],
+.publisher .masthead .navbar li a[href="/organization/"],
+.harvest .masthead .navbar li a[href="/harvest/"] {
   background-color: rgb(0, 130, 59);
 }
 
@@ -73,7 +88,7 @@ label:after {
   content: "";
 }
 
-.hero {
+.homepage .hero {
   background: #128400;
 }
 
@@ -213,4 +228,42 @@ input {
 
 .activity .item .date {
   white-space: normal;
+}
+
+/*
+Additional styling to fix display issues for 2.10
+*/
+
+label.radio {
+  padding-top: 7px;
+}
+
+.radio {
+  display: block;
+}
+
+.col-md-3, .col-md-4, .col-md-5, .col-md-9 {
+  float: left;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+.control-large input {
+  height: 46px;
+  padding: 10px 16px;
+  font-size: 18px;
+  line-height: 1.3333333;
+  border-radius: 6px;
+}
+
+.control-large .control-label {
+  font-size: 18px;
+}
+
+.row {
+  --bs-gutter-x: 0;
+}
+
+.main {
+  padding-top: 10px;
 }

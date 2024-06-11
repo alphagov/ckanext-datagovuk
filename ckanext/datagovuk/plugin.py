@@ -6,7 +6,6 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import model
 from ckan.lib.plugins import DefaultTranslation
-from ckan.config.routing import SubMapper
 
 import ckanext.datagovuk.auth as auth
 import ckanext.datagovuk.schema as schema_defs
@@ -39,7 +38,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IDatasetForm, inherit=True)
     plugins.implements(plugins.IValidators)
-    plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IMiddleware, inherit=True)
@@ -81,9 +79,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             'codelist': [toolkit.get_validator('ignore_missing'),
                          toolkit.get_converter('convert_to_extras')],
             'author_email': [toolkit.get_validator('ignore_missing'),
-                             str],
+                             toolkit.get_validator('unicode_safe')],
             'maintainer_email': [toolkit.get_validator('ignore_missing'),
-                             str],
+                             toolkit.get_validator('unicode_safe')],
         })
         for contact_key in ['contact-name', 'contact-email', 'contact-phone', 'foi-name', 'foi-email', 'foi-web', 'foi-phone']:
             schema.update({
@@ -92,14 +90,14 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             })
 
         from ckan.logic.schema import default_extras_schema
-        from ckan.lib.navl.validators import ignore, not_empty
+        from ckan.lib.navl.validators import ignore, not_empty, unicode_safe
         from ckanext.datagovuk.logic.validators import extra_key_not_in_root_schema
 
         extras_schema = default_extras_schema()
         extras_schema['key'] = [
             not_empty,
             extra_key_not_in_root_schema,
-            str,
+            unicode_safe,
         ]
 
         schema['extras'] = extras_schema
@@ -166,10 +164,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # IPackageController
 
-    def before_index(self, data_dict):
+    def before_dataset_index(self, data_dict):
         return schema_defs.trim_strings_for_index(data_dict)
 
-    def after_show(self, context, data_dict):
+    def after_dataset_show(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] != 'harvest':
             harvest_object = model.Session.query(HarvestObject) \
                     .filter(HarvestObject.package_id==data_dict['id']) \
@@ -221,7 +219,6 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         from ckanext.datagovuk.views.user import (
             DGUUserEditView,
             DGUUserRegisterView,
-            me,
         )
         from ckanext.datagovuk.schema import user_new_form_schema, user_edit_form_schema
 
@@ -253,13 +250,11 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         bp.add_url_rule(u'/user/edit', view_func=_user_edit_view)
         bp.add_url_rule(u'/user/edit/<id>', view_func=_user_edit_view)
 
-        bp.add_url_rule(u'/user/me', view_func=me)
         # also monkeypatch occurrence in original module as some views
         # call it directly instead of redirecting externally
         import ckan.views.user as ckan_user_views
         ckan_user_views._edit_form_to_db_schema = user_edit_form_schema
         ckan_user_views._new_form_to_db_schema = user_new_form_schema
-        ckan_user_views.me = me
 
         return bp
 
@@ -343,10 +338,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
             )
             raise KeyError("Required S3 config options missing")
 
-    def before_create(self, context, resource):
+    def before_resource_create(self, context, resource):
         """Runs before resource_create. Modifies resource destructively to put in the S3 URL"""
         self.before_create_or_update(context, resource)
 
-    def before_update(self, context, _, resource):
+    def before_resource_update(self, context, _, resource):
         """Runs before resource_update. Modifies resource destructively to put in the S3 URL"""
         self.before_create_or_update(context, resource)

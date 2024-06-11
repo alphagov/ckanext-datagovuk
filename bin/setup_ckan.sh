@@ -11,6 +11,8 @@ if [ ${CKAN_DB_INIT:-} = "true" ]; then
     ckan db init
 fi
 
+ckan db upgrade
+
 if [ ! -z $CREATE_CKAN_ADMIN ]; then
     if (ckan user show ckan_admin | grep -q "User: None"); then
         echo "===== adding sysadmin user ====="
