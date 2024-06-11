@@ -1,4 +1,4 @@
-FROM ghcr.io/alphagov/ckan:2.10-core
+FROM ghcr.io/alphagov/ckan:2.10.3-core
 
 COPY production.ini $CKAN_CONFIG/production.ini
 # Set CKAN_INI
@@ -14,7 +14,7 @@ ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='ba28143e37d2eb5af6d6e7b8cb04cd56e4c00efd'
+ENV ckan_spatial_sha='a42a7f89674532c08f2963ec26b004fe6b54dd95'
 ENV ckan_spatial_fork='alphagov'
 
 RUN echo "pip install DGU extensions..." && \
@@ -34,7 +34,6 @@ RUN echo "pip install DGU extensions..." && \
     pip install $pipopt -U factory-boy==3.3.0 mock==2.0.0 pytest==7.4.3 && \
 
     # need to pin pyyaml to correctly pick up config settings
-    # pip install $pipopt -U pyyaml==5.4
     pip install $pipopt -U pyyaml==6.0.1
 
 EXPOSE 5000

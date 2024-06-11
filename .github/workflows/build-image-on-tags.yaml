@@ -24,7 +24,7 @@ jobs:
       - name: Build and push images
         env:
           APP: ckan
-          VERSION: "2.10"
+          VERSION: 2.10.3
           ARCH: amd64
           GH_REF: ${{ github.ref_name }}
         run: ./docker/build-image.sh

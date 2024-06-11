@@ -29,10 +29,11 @@ jobs:
         # remember to update versions on build-image-on-tags.yaml
         app:
           - name: ckan
-            version: "2.10"
+            version: 2.10.4
+            patch: ""
           - name: pycsw
             version: 2.6.1
-            patch: c
+            patch: e
           - name: solr
             version: "2.10"
         arch: [ amd64 ]
