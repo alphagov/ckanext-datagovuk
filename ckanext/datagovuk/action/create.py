@@ -66,7 +66,11 @@ def resource_create(context, data_dict):
         dict(context, return_type='dict'),
         {'id': package_id})
 
-    if mimetype in ('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
+    if mimetype in (
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel.sheet.macroEnabled.12'
+    ):
         log.debug("Excel file detected")
 
         if pkg_dict.get('schema-vocabulary') in ORGANOGRAM_IDS:
