@@ -13,6 +13,7 @@
   </h1>
   {% block form %}
   <form class="dataset-form form-horizontal add-member-form" method='post'>
+    {{ h.csrf_input() }}
     <div class="control-set">
       {% if not user %}
         <label for="username">
