@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:jammy AS base
+FROM --platform=$TARGETPLATFORM ubuntu:jammy AS base
 
 # Set timezone
 ENV TZ=UTC
@@ -91,7 +91,7 @@ RUN pip install -U pip && \
     chmod +x /pycsw-entrypoint.sh && \
     chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
-FROM base AS prod
+FROM --platform=$TARGETPLATFORM base AS prod
 
 WORKDIR $CKAN_VENV/src
 

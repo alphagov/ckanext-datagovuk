@@ -1,4 +1,4 @@
-FROM nginx:stable-alpine
+FROM --platform=$TARGETPLATFORM nginx:stable-alpine
 
 RUN rm /etc/nginx/conf.d/default.conf
 

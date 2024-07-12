@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:focal
+FROM --platform=$TARGETPLATFORM ubuntu:focal
 
 # Set timezone
 ENV TZ=UTC

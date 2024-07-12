@@ -1,4 +1,4 @@
-FROM ghcr.io/alphagov/ckan:2.10
+FROM --platform=$TARGETPLATFORM ghcr.io/alphagov/ckan:2.10
 
 WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
 
