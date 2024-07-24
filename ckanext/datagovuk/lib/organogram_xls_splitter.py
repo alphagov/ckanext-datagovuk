@@ -119,7 +119,7 @@ def load_excel_store_errors(stream, sheet_name, errors, validation_errors, input
         if df[column_name].dtype == 'O':
             df[column_name] = df[column_name].astype(str)
             for i, row in enumerate(df[column_name]):
-                df[column_name][i] = row.strip()
+                df.loc[i, column_name] = row.strip()
     return df
 
 def blank_out_columns(df, blank_columns):
