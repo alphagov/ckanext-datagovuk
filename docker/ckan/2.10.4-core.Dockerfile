@@ -1,5 +1,4 @@
 # See CKAN docs on installation from Docker Compose on usage
-# FROM ubuntu:focal
 FROM --platform=$TARGETPLATFORM ubuntu:jammy
 
 # Set timezone
@@ -44,9 +43,9 @@ RUN apt-get -q -y update \
     && rm -rf /var/lib/apt/lists/*
 
 # Define environment variables
-ENV CKAN_HOME /usr/lib/ckan
-ENV CKAN_VENV $CKAN_HOME/venv
-ENV CKAN_CONFIG /etc/ckan
+ENV CKAN_HOME=/usr/lib/ckan
+ENV CKAN_VENV=$CKAN_HOME/venv
+ENV CKAN_CONFIG=/etc/ckan
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
 
 # Create ckan user

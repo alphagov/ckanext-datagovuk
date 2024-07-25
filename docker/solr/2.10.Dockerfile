@@ -35,13 +35,13 @@ ENV SOLR_RPT_FIELD_DEFINITION '<fieldType name="location_rpt"   class="solr.Spat
     maxDistErr="0.001"              \
     distanceUnits="kilometers" />'
 
-ENV SOLR_RPT_FIELD '<field name="spatial_geom" type="location_rpt" indexed="true" multiValued="true" />'
+ENV SOLR_RPT_FIELD='<field name="spatial_geom" type="location_rpt" indexed="true" multiValued="true" />'
 
 RUN sed -i "/<types>/a $SOLR_RPT_FIELD_DEFINITION" $SOLR_SCHEMA_FILE
 RUN sed -i "/<fields>/a $SOLR_RPT_FIELD" $SOLR_SCHEMA_FILE
 
 ## BBox
-ENV SOLR_BBOX_FIELDS '<field name="bbox_area" type="float" indexed="true" stored="true" /> \
+ENV SOLR_BBOX_FIELDS='<field name="bbox_area" type="float" indexed="true" stored="true" /> \
     <field name="maxx" type="float" indexed="true" stored="true" /> \
     <field name="maxy" type="float" indexed="true" stored="true" /> \
     <field name="minx" type="float" indexed="true" stored="true" /> \
@@ -55,7 +55,7 @@ USER solr
 CMD ["sh", "-c", "solr-precreate ckan $SOLR_CONFIG_DIR/ckan"]
 
 # Enviroment
-ENV SOLR_CORE ckan
+ENV SOLR_CORE=ckan
 
 # Giving ownership to Solr
 USER root
