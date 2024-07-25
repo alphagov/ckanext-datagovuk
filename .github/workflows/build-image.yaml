@@ -63,6 +63,7 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          PATCH: ${{ matrix.app.patch }}
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push CKAN base and core image
@@ -87,6 +88,7 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          PATCH: ${{ matrix.app.patch }}
           ARCH: ${{ matrix.arch }}
           GH_REF: ${{ matrix.app.version }}
           BUILD_BASE: false
