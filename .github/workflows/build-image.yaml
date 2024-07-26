@@ -22,7 +22,7 @@ on:
 
 jobs:
   build_and_push:
-    name: ${{ matrix.app.name }} (${{ matrix.arch }})
+    name: ${{ inputs.buildType }}=${{ matrix.app.name }}:${{ matrix.app.version }}-${{ matrix.app.patch }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
