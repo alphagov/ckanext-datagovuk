@@ -8,7 +8,7 @@ on:
       - completed
   push:
     branches:
-      - main-2.10
+      - main
 
 jobs:
   create_pr:

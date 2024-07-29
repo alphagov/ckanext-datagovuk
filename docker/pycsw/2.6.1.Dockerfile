@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:jammy AS base
+FROM --platform=$TARGETPLATFORM ubuntu:jammy AS base
 
 # Set timezone
 ENV TZ=UTC
@@ -67,9 +67,9 @@ COPY ckan.ini $CKAN_CONFIG/ckan.ini
 
 # Setup additional env vars
 ENV pipopt='--exists-action=b --force-reinstall'
-ENV CKAN_INI $CKAN_CONFIG/ckan.ini
+ENV CKAN_INI=$CKAN_CONFIG/ckan.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
-ENV CKAN_DB_HOST db
+ENV CKAN_DB_HOST=db
 
 # ckan 2.10
 
@@ -91,7 +91,7 @@ RUN pip install -U pip && \
     chmod +x /pycsw-entrypoint.sh && \
     chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
-FROM base AS prod
+FROM --platform=$TARGETPLATFORM base AS prod
 
 WORKDIR $CKAN_VENV/src
 
@@ -105,8 +105,10 @@ ENV ckan_harvest_fork='ckan'
 ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 
 ## 2.6.1 pycsw
-ENV pycsw_sha='7fc81b42bfdc5b81250c24887fd6a66032a6b06e'
+ENV pycsw_sha='5cf1446d539efc28a0b15478b5a481f487c70e96'
 RUN echo "pip install pycsw..." && \
+    # pin setuptools version to stop unexpected arg bug strip_trailing_zero 
+    pip install $pipopt -U setuptools~=70.0 && \
     pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/geopython/pycsw/$pycsw_sha/requirements.txt) && \
     pip install $pipopt -Ue "git+https://github.com/geopython/pycsw.git@$pycsw_sha#egg=pycsw" && \
     (cd pycsw && python setup.py build)

@@ -16,8 +16,13 @@ fi
 
 if [[ ${BUILD_BASE:-} = "true" ]]; then
   if [ "${APP}" = "ckan" ]; then
-    build "${VERSION}-core" "${VERSION}-core"
-    build "${VERSION}-base" "${VERSION}-base"
+    if [[ -n ${PATCH:-} ]]; then
+      build "${VERSION}-${PATCH}-core" "${VERSION}-core"
+      build "${VERSION}-${PATCH}-base" "${VERSION}-base"
+    else
+      build "${VERSION}-core" "${VERSION}-core"
+      build "${VERSION}-base" "${VERSION}-base"
+    fi
   else
     DOCKER_TAG="${VERSION}"
   fi
@@ -47,8 +52,13 @@ else
       docker push "ghcr.io/alphagov/${APP}:${DOCKER_TAG}"
     fi
   else
-    docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
-    docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
+    if [[ -n ${PATCH:-} ]]; then
+      docker push "ghcr.io/alphagov/${APP}:${VERSION}-${PATCH}-core"
+      docker push "ghcr.io/alphagov/${APP}:${VERSION}-${PATCH}-base"
+    else
+      docker push "ghcr.io/alphagov/${APP}:${VERSION}-core"
+      docker push "ghcr.io/alphagov/${APP}:${VERSION}-base"
+    fi
 
     # tags only used for test images
     if [[ -n ${TAG:-} ]]; then
