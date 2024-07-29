@@ -30,7 +30,7 @@ jobs:
         app:
           - name: ckan
             version: 2.10.4
-            patch: ""
+            patch: a
           - name: pycsw
             version: 2.6.1
             patch: h
@@ -63,7 +63,6 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
-          PATCH: ${{ matrix.app.patch }}
           ARCH: ${{ matrix.arch }}
         run: ./docker/build-image.sh
       - name: Build and push CKAN base and core image
@@ -71,6 +70,7 @@ jobs:
         env:
           APP: ${{ matrix.app.name }}
           VERSION: ${{ matrix.app.version }}
+          PATCH: ${{ matrix.app.patch }}
           ARCH: ${{ matrix.arch }}
           BUILD_BASE: true
         run: ./docker/build-image.sh
