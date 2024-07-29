@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM ghcr.io/alphagov/ckan:2.10.4-core
+FROM --platform=$TARGETPLATFORM ghcr.io/alphagov/ckan:2.10.4-a-core
 
 COPY production.ini $CKAN_CONFIG/production.ini
 # Set CKAN_INI

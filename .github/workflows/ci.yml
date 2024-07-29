@@ -23,11 +23,11 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.10-base
+      image: ghcr.io/alphagov/ckan:2.10.4-a-base
       options: --user root
     services:
       solr:
-        image: ghcr.io/alphagov/solr:2.10
+        image: ghcr.io/alphagov/solr:2.10-a
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
