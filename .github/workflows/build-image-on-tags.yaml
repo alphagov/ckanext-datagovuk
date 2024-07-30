@@ -25,6 +25,7 @@ jobs:
         env:
           APP: ckan
           VERSION: 2.10.4
+          PATCH: a
           ARCH: amd64
           GH_REF: ${{ github.ref_name }}
         run: ./docker/build-image.sh
