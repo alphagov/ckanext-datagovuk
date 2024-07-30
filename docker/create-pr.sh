@@ -2,6 +2,11 @@
 
 set -eux
 
+if [[ ${REPO_OWNER} != "alphagov" ]]; then
+  echo "Not alphagov so no need to create chart PRs"
+  exit 0
+fi
+
 if [[ ${IS_TAG:-} = "true" ]]; then
   export IMAGE_TAG="${GH_REF}"
   export SOURCE_BRANCH="main"
