@@ -2,6 +2,11 @@
 
 set -eux
 
+if [[ ${REPO_OWNER} != "alphagov" ]]; then
+  echo "Not alphagov so no need to build images PRs"
+  exit 0
+fi
+
 build () {
   if [ "${ARCH}" = "amd64" ]; then
     docker build . -t "ghcr.io/alphagov/${APP}:${1}" -f "docker/${APP}/${2}.Dockerfile"

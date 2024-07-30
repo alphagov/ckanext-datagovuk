@@ -18,5 +18,6 @@ jobs:
       - run: bash ./docker/create-pr.sh
         env:
           GH_TOKEN: ${{ secrets.PR_GITHUB_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
           IS_TAG: "true"
           ENVS: "staging,production"
