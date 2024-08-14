@@ -332,7 +332,7 @@ def verify_graph(senior, junior, errors):
             # posts paid but on leave (0)
             continue
         # rows with that ref, just with the columns that need to be the same
-        rows = senior_[senior_['Post Unique Reference']==ref].loc[:,job_share_columns_that_need_to_be_the_same]
+        rows = senior_[senior_['Post Unique Reference']==ref].loc[:,list(job_share_columns_that_need_to_be_the_same)]
         # consider pairs of those rows until we find a problem
         for row_indexes in itertools.combinations(rows.T, 2):
             row_pair = rows.loc[list(row_indexes)]
