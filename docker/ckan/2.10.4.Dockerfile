@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM ghcr.io/alphagov/ckan:2.10.4-a-base
+FROM --platform=$TARGETPLATFORM ghcr.io/alphagov/ckan:2.10.4-b-base
 
 USER root
 
