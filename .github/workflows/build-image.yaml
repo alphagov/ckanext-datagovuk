@@ -30,10 +30,10 @@ jobs:
         app:
           - name: ckan
             version: 2.10.4
-            patch: a
+            patch: b
           - name: pycsw
             version: 2.6.1
-            patch: h
+            patch: i
           - name: solr
             version: "2.10"
             patch: a
