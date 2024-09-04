@@ -30,7 +30,7 @@ jobs:
         app:
           - name: ckan
             version: 2.10.4
-            patch: c
+            patch: d
           - name: pycsw
             version: 2.6.1
             patch: j
