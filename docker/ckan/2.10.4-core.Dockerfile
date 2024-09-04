@@ -19,8 +19,8 @@ RUN apt-get -q -y update \
     && apt-get -q -y install \
         python3-pip \
         python3-wheel \
-        python3.10-venv \ 
-        python3.10-dev \
+        python3.11-venv \ 
+        python3.11-dev \
         libpq-dev \
         libmagic-dev \
         libxml2-dev \
@@ -53,7 +53,7 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
-    python3.10 -m venv $CKAN_VENV && \
+    python3.11 -m venv $CKAN_VENV && \
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 
