@@ -22,8 +22,6 @@ git clone https://${GH_TOKEN}@github.com/alphagov/govuk-dgu-charts.git charts
 
 cd charts/charts/ckan/images
 
-git pull
-
 for ENV in $(echo $ENVS | tr "," " "); do
   (
     BRANCH="ci/${IMAGE_TAG}-${ENV}"
