@@ -11,7 +11,6 @@ on:
         description: Commit, tag or branch name to build
         required: false
         type: string
-        default: main
   workflow_dispatch:
     inputs:
       buildType:
@@ -29,7 +28,6 @@ on:
         description: Commit, tag or branch name to build
         required: false
         type: string
-        default: main
   push:
     branches:
       - main
@@ -50,6 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.gitRef || github.ref }}
           show-progress: false
       - id: set-matrix
         run: |
@@ -97,7 +96,7 @@ jobs:
       - name: Determine Image Tags
         id: determine-image-tags
         run: |
-          buildType = ${{ env.BUILD_TYPE }}
+          buildType="${{ env.BUILD_TYPE }}"
 
           case $buildType in
             "build_only" | "build_push_pycsw")
@@ -135,6 +134,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
+            type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-
           labels: |
@@ -148,7 +148,7 @@ jobs:
 
       - name: Build App Image
         id: build-app-image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: docker/${{ matrix.app.name }}/${{ matrix.app.version }}${{ env.APP_TAG_SUFFIX }}.Dockerfile
           context: .
@@ -156,7 +156,8 @@ jobs:
           load: true
           provenance: false
           labels: ${{ steps.app-metadata.outputs.labels }}
-          outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
+          outputs: |
+            type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
           cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
 
@@ -185,7 +186,7 @@ jobs:
       - name: Build Base Image (CKAN Only)
         if: ${{ env.BUILD_CKAN_BASE == 'true' }}
         id: build-base-image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: docker/${{ matrix.app.name }}/${{ matrix.app.version }}-base.Dockerfile
           context: .
@@ -193,6 +194,7 @@ jobs:
           load: true
           provenance: false
           labels: ${{ steps.base-metadata.outputs.labels }}
+          build-args: BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
           outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-base-${{ matrix.runs_on.arch }}
           cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-base-${{ matrix.runs_on.arch }},mode=max
@@ -230,20 +232,17 @@ jobs:
     if: ${{ inputs.buildType != 'build_only' }} // Does not support `env` context.
     name: Create Image Manifest
     needs:
+      - configure_builds 
       - build_push_multiarch_image
+    strategy:
+      matrix: 
+        app: ${{ fromJson(needs.configure_builds.outputs.build_type) }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
       packages: write
     steps:
-      - name: Download Image Digests
-        uses: actions/download-artifact@v4
-        with:
-          path: /tmp/digests
-          pattern: digests-${{ matrix.app.name }}-${{ matrix.app.version }}-*
-          merge-multiple: true
-
       - name: Setup Docker BuildX
         uses: docker/setup-buildx-action@v3
 
@@ -261,7 +260,7 @@ jobs:
       - name: Determine Image Tags
         id: determine-image-tags
         run: |
-          buildType = ${{ env.BUILD_TYPE }}
+          buildType="${{ env.BUILD_TYPE }}"
 
           case $buildType in
             "build_only" | "build_push_pycsw")
@@ -289,6 +288,13 @@ jobs:
             ;;
           esac
 
+      - name: Download Image Digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-*
+          merge-multiple: true
+
       - name: Generate App Image Metadata
         uses: docker/metadata-action@v5
         id: app-metadata
@@ -299,6 +305,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-
           labels: |
@@ -331,6 +338,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}-base
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}-base,enable=${{ matrix.app.patch != '' }}
             type=sha,prefix${{ env.BUILD_TAGS }}-base-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}-base
           labels: |

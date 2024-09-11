@@ -21,8 +21,8 @@ RUN apt-get -q -y update \
         python3-dev \
         python3-pip \
         python3-venv \
-        python3.10-venv \
-        python3.10-dev \
+        python3.11-venv \
+        python3.11-dev \
         python3-wheel \
         libpq-dev \
         libxml2-dev \
@@ -54,7 +54,7 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 
 # Setup virtual environment for CKAN
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
-    python3.10 -m venv $CKAN_VENV && \
+    python3.11 -m venv $CKAN_VENV && \
     # ln -s $CKAN_VENV/bin/pip3 /usr/local/bin/ckan-pip3 &&\
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
@@ -71,9 +71,9 @@ ENV CKAN_INI=$CKAN_CONFIG/ckan.ini
 ENV PYCSW_CONFIG=/config/pycsw.cfg
 ENV CKAN_DB_HOST=db
 
-# ckan 2.10
+# ckan 2.10.4
 
-ENV ckan_sha='ac558d6d1751054247ad2bfbb9e531e4b138b457'
+ENV ckan_sha='f03e7f7d02397b064a29a5c737fa4a72b8a30191'
 ENV ckan_fork='ckan'
 
 # Setup CKAN
