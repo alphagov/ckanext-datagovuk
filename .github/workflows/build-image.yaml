@@ -108,6 +108,7 @@ jobs:
               echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
+              echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
             ;;
 
@@ -115,6 +116,7 @@ jobs:
               echo "BUILD_TAGS=${{ matrix.app.version }}-test-d" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
+              echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
             ;;
 
@@ -134,7 +136,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
-            type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-
           labels: |
@@ -172,6 +174,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}-base
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}-base,enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}-base-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}-base
           labels: |
@@ -305,7 +308,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
-            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' }}
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-
           labels: |
@@ -338,7 +341,7 @@ jobs:
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
             type=raw,value=${{ env.BUILD_TAGS }}-base
-            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}-base,enable=${{ matrix.app.patch != '' }}
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}-base,enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}-base-,format=short
             type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}-base
           labels: |
