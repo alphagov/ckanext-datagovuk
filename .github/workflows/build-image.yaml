@@ -135,6 +135,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
+            type=raw,value=${{ env.GITHUB_SHA }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
@@ -249,6 +250,11 @@ jobs:
       - name: Setup Docker BuildX
         uses: docker/setup-buildx-action@v3
 
+      - name: Show GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Get Git Head
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
         id: local-head
@@ -307,6 +313,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
+            type=raw,value=${{ env.GITHUB_SHA }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
