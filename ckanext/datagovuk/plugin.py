@@ -168,6 +168,10 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         return schema_defs.trim_strings_for_index(data_dict)
 
     def after_dataset_show(self, context, data_dict):
+        logger = logging.getLogger(__name__)
+        logger.error(
+            f"DGU: after_dataset_show {data_dict}"
+        )
         if 'type' in data_dict and data_dict['type'] != 'harvest':
             harvest_object = model.Session.query(HarvestObject) \
                     .filter(HarvestObject.package_id==data_dict['id']) \
