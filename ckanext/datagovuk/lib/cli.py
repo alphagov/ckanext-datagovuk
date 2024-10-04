@@ -6,6 +6,7 @@ import sys
 import sqlalchemy
 from datetime import datetime, timedelta
 import json
+import pysolr
 
 from functools import wraps
 
@@ -365,6 +366,55 @@ def reindex_recent(context):
         package_index.index_package(new_dict, defer_commit=defer_commit)
 
     package_index.commit()
+
+
+@datagovuk.command()
+@pass_context
+def reindex_publishers(context):
+    '''
+        Reindex publishers
+    '''
+    print('=== Reindexing publishers')
+
+    engine = sqlalchemy.create_engine(tk.config.get('sqlalchemy.url'))
+    model.init_model(engine)
+
+    orgs = model.Session.query(model.Group) \
+                            .filter(model.Group.type == 'organization') \
+                            .filter(model.Group.state == u'active') \
+                            .order_by(model.Group.name) \
+                            .all()
+
+    solr = pysolr.Solr(os.getenv('CKAN_SOLR_URL'), always_commit=True, timeout=10)
+    solr.ping()
+
+    existing_publishers = [r.get('name') for r in solr.search("*", fq="(site_id:dgu_publishers)")]
+    publishers = []
+    counter = 0
+
+    for org in orgs:
+        if org.name in existing_publishers:
+            continue
+        counter += 1
+        print(f'{counter} - adding publisher {org.name}')
+        publishers.append(
+            {
+                "site_id": "dgu_publishers",
+                "id": org.id,
+                "title": org.title,
+                "name": org.name,
+            }
+        )
+
+    if publishers:
+        solr.add(publishers)
+
+    results = solr.search("*", fq="(site_id:dgu_publishers)", rows=2000)
+
+    print(f"Retrieved {len(results)} results")
+
+    for result in results:
+        print(f"{result.get('title')} - {result.get('name')}")
 
 
 def run_command(command):
