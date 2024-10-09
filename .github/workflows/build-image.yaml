@@ -1,6 +1,16 @@
-name: Build and push images
+name: Build and push multi-arch image
 
 on:
+  workflow_call:
+    inputs:
+      buildType:
+        description: Decide on what to build
+        required: true
+        type: string
+      gitRef:
+        description: Commit, tag or branch name to build
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       buildType:
@@ -8,102 +18,368 @@ on:
         required: true
         type: choice
         options:
-          - build_push_ckan
           - build_only
+          - build_push_ckan
           - build_push_base
           - build_push_pycsw
           - build_push_solr
           - build_push_test_ckan
+      gitRef:
+        description: Commit, tag or branch name to build
+        required: false
+        type: string
   push:
     branches:
       - main
   schedule:
     - cron: '0 3 * * 0'
 
+env:
+  BUILD_TYPE : ${{ inputs.buildType || 'build_push_ckan' }}
+  REGISTRY_BASE: ghcr.io/alphagov
+
 jobs:
-  build_and_push:
-    name: ${{ inputs.buildType }}=${{ matrix.app.name }}:${{ matrix.app.version }}-${{ matrix.app.patch }}
+  configure_builds:
+    name: Read configuration from build-config.yaml
     runs-on: ubuntu-latest
+    outputs:
+      build_type: ${{ steps.set-matrix.outputs.build_type }}
+      runs_on: ${{ steps.set-matrix.outputs.runs_on }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.gitRef || github.ref }}
+          show-progress: false
+      - id: set-matrix
+        run: |
+          input_build_type="${{ env.BUILD_TYPE }}"
+          build_type=$(yq -o=json "explode(.) .build_types.$input_build_type" build-config.yaml | jq -r '[. [] | {name: .name, version: .version, patch: .patch}] | @json')
+          runs_on=$(yq -o=json '.runs_on' build-config.yaml | jq -r '[.[] | {runner_type: .runner_type, arch: .arch}] | @json')
+          echo "[DEBUG] build_type: $build_type"
+          echo "[DEBUG] runs_on: $runs_on"
+          echo "build_type=$build_type" >> "$GITHUB_OUTPUT"
+          echo "runs_on=$runs_on" >> "$GITHUB_OUTPUT"
+          
+  build_push_multiarch_image:
+    name: Build ${{ matrix.app.name }} for ${{ matrix.runs_on.arch }}
+    needs: configure_builds
     strategy:
-      matrix:
-        # remember to update versions on build-image-on-tags.yaml
-        app:
-          - name: ckan
-            version: 2.10.4
-            patch: d
-          - name: pycsw
-            version: 2.6.1
-            patch: j
-          - name: solr
-            version: "2.10"
-            patch: a
-        arch: [ amd64 ]
+      matrix: 
+        app: ${{ fromJson(needs.configure_builds.outputs.build_type) }}
+        runs_on: ${{ fromJson(needs.configure_builds.outputs.runs_on) }}
+    runs-on: ${{ matrix.runs_on.runner_type }}
     permissions:
       packages: write
     steps:
       - name: Login to GHCR
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v3
+
+      - name: Git Checkout
+        uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.gitRef }}
-      - name: Build images (without pushing to registry)
-        if: ${{ inputs.buildType == 'build_only' }}
+          ref: ${{ inputs.gitRef || github.ref }}
+          show-progress: false
+      
+      - name: Setup Docker BuildX
+        uses: docker/setup-buildx-action@v3
+
+      - name: Calculate Image Tags
+        id: calculate-image-tags
+        run: |
+          CREATED_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "createdDate=${CREATED_DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Determine Image Tags
+        id: determine-image-tags
+        run: |
+          buildType="${{ env.BUILD_TYPE }}"
+
+          case $buildType in
+            "build_only" | "build_push_pycsw")
+              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+            ;;
+
+            "build_push_base")
+              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
+              echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
+              echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+            ;;
+
+            "build_push_test_ckan")
+              echo "BUILD_TAGS=${{ matrix.app.version }}-test-d" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
+              echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
+              echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+            ;;
+
+            *)
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
+            ;;
+          esac
+
+      - name: Generate App Image Metadata
+        uses: docker/metadata-action@v5
+        id: app-metadata
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
+          tags: |
+            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
+            type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
+            type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-
+          labels: |
+            org.opencontainers.image.title=${{ matrix.app.name }}
+            org.opencontainers.image.authors="GOV.UK Platform Engineering"
+            org.opencontainers.image.description="Core image for data.gov.uk ${{ matrix.app.name }}"
+            org.opencontainers.image.source="https://github.com/alphagov/ckanext-datagovuk"
+            org.opencontainers.image.version=${{ env.BUILD_TAGS }}
+            org.opencontainers.image.created=${{ steps.calculate-image-tags.outputs.createdDate }}
+            org.opencontainers.image.vendor=GDS
+
+      - name: Build App Image
+        id: build-app-image
+        uses: docker/build-push-action@v6
+        with:
+          file: docker/${{ matrix.app.name }}/${{ matrix.app.version }}${{ env.APP_TAG_SUFFIX }}.Dockerfile
+          context: .
+          platforms: "linux/${{ matrix.runs_on.arch }}"
+          load: true
+          provenance: false
+          labels: ${{ steps.app-metadata.outputs.labels }}
+          outputs: |
+            type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
+          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
+
+      - name: Generate Base Image Metadata
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
+        uses: docker/metadata-action@v5
+        id: base-metadata
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
+          tags: |
+            type=raw,value=${{ env.BUILD_TAGS }}-base
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}-base,enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
+            type=sha,prefix${{ env.BUILD_TAGS }}-base-,format=short
+            type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}-base
+          labels: |
+            org.opencontainers.image.title=${{ matrix.app.name }}
+            org.opencontainers.image.authors="GOV.UK Platform Engineering"
+            org.opencontainers.image.description="Base image for data.gov.uk ${{ matrix.app.name }}"
+            org.opencontainers.image.source="https://github.com/alphagov/ckanext-datagovuk"
+            org.opencontainers.image.version=${{ matrix.app.version }}
+            org.opencontainers.image.created=${{ steps.calculate-image-tags.outputs.createdDate }}
+            org.opencontainers.image.vendor=GDS
+
+      - name: Build Base Image (CKAN Only)
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
+        id: build-base-image
+        uses: docker/build-push-action@v6
+        with:
+          file: docker/${{ matrix.app.name }}/${{ matrix.app.version }}-base.Dockerfile
+          context: .
+          platforms: "linux/${{ matrix.runs_on.arch }}"
+          load: true
+          provenance: false
+          labels: ${{ steps.base-metadata.outputs.labels }}
+          build-args: BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
+          outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-base-${{ matrix.runs_on.arch }}
+          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-base-${{ matrix.runs_on.arch }},mode=max
+
+      - name: Export Image Digests
+        if: ${{ env.BUILD_TYPE != 'build_only' }}
+        id: export-digests
         env:
-          DRY_RUN: "1"
-          APP: ${{ matrix.app.name }}
-          VERSION: ${{ matrix.app.version }}
-          ARCH: ${{ matrix.arch }}
-        run: ./docker/build-image.sh
-      - name: Build and push CKAN image
-        if: ${{ (inputs.buildType == 'build_push_ckan' || github.ref == 'refs/heads/main') && matrix.app.name == 'ckan' }}
+          DIGEST: "${{ steps.build-app-image.outputs.digest }}"
+        run: |
+          mkdir -p /tmp/digests/app
+          touch "/tmp/digests/app/${DIGEST#sha256:}"
+
+      - name: Export Base Image Digests
+        if: ${{ env.BUILD_TYPE != 'build_only' && env.BUILD_CKAN_BASE == 'true' }}
+        id: export-base-digests
         env:
-          APP: ${{ matrix.app.name }}
-          VERSION: ${{ matrix.app.version }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          ARCH: ${{ matrix.arch }}
-        run: ./docker/build-image.sh
-      - name: Build and push CKAN base and core image
-        if: ${{ inputs.buildType == 'build_push_base' && matrix.app.name == 'ckan' }}
+          DIGEST: "${{ steps.build-base-image.outputs.digest }}"
+        run: |
+          mkdir -p /tmp/digests/base
+          touch "/tmp/digests/base/${DIGEST#sha256:}"
+
+      - name: Upload Digest Artifacts
+        if: ${{ env.BUILD_TYPE != 'build_only' }}
+        id: upload-digests
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-${{ matrix.runs_on.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+  create_image_manifest:
+    if: ${{ inputs.buildType != 'build_only' }} // Does not support `env` context.
+    name: Create Image Manifest
+    needs:
+      - configure_builds 
+      - build_push_multiarch_image
+    strategy:
+      matrix: 
+        app: ${{ fromJson(needs.configure_builds.outputs.build_type) }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Setup Docker BuildX
+        uses: docker/setup-buildx-action@v3
+
+      - name: Show GitHub context
         env:
-          APP: ${{ matrix.app.name }}
-          VERSION: ${{ matrix.app.version }}
-          PATCH: ${{ matrix.app.patch }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          ARCH: ${{ matrix.arch }}
-          BUILD_BASE: true
-        run: ./docker/build-image.sh
-      - name: Build and push pycsw image
-        if: ${{ inputs.buildType == 'build_push_pycsw' && matrix.app.name == 'pycsw' }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Get Git Head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        id: local-head
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Image Tags
+        id: determine-image-tags
+        run: |
+          buildType="${{ env.BUILD_TYPE }}"
+
+          case $buildType in
+            "build_only" | "build_push_pycsw")
+              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+            ;;
+
+            "build_push_base")
+              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
+              echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+            ;;
+
+            "build_push_test_ckan")
+              echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
+              echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+            ;;
+
+            *)
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
+            ;;
+          esac
+
+      - name: Download Image Digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.app.name }}-${{ env.BUILD_TAGS }}-*
+          merge-multiple: true
+
+      - name: Generate App Image Metadata
+        uses: docker/metadata-action@v5
+        id: app-metadata
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
+          tags: |
+            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
+            type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
+            type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-
+          labels: |
+            org.opencontainers.image.title=${{ matrix.app.name }}
+            org.opencontainers.image.authors="GOV.UK Platform Engineering"
+            org.opencontainers.image.description="Core image for data.gov.uk ${{ matrix.app.name }}"
+            org.opencontainers.image.source="https://github.com/alphagov/ckanext-datagovuk"
+            org.opencontainers.image.version=${{ env.BUILD_TAGS }}
+            org.opencontainers.image.created=${{ steps.calculate-image-tags.outputs.createdDate }}
+            org.opencontainers.image.vendor=GDS.opencontainers.image.vendor=GDS
+
+      - name: Create App Manifest Lists
         env:
-          APP: ${{ matrix.app.name }}
-          VERSION: ${{ matrix.app.version }}
-          PATCH: ${{ matrix.app.patch }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          ARCH: ${{ matrix.arch }}
-          BUILD_BASE: true
-        run: ./docker/build-image.sh
-      - name: Build and push solr image
-        if: ${{ inputs.buildType == 'build_push_solr'  && matrix.app.name == 'solr' }}
+          IMAGEREF_PREFIX: '${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}'
+        working-directory: /tmp/digests/app
+        run: |
+          tag_args=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          printf -v sources "${IMAGEREF_PREFIX}@sha256:%s " *
+          # shellcheck disable=SC2086 # Intentional word-splitting on $tag_args and $sources.
+          docker buildx imagetools create $tag_args $sources
+
+      - name: Generate Base Image Metadata
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
+        uses: docker/metadata-action@v5
+        id: base-metadata
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
+          tags: |
+            type=raw,value=${{ env.BUILD_TAGS }}-base
+            type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}-base,enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
+            type=sha,prefix${{ env.BUILD_TAGS }}-base-,format=short
+            type=sha,priority=100,format=long,prefix=${{ env.BUILD_TAGS }}-base
+          labels: |
+            org.opencontainers.image.title=${{ matrix.app.name }}
+            org.opencontainers.image.authors="GOV.UK Platform Engineering"
+            org.opencontainers.image.description="Base image for data.gov.uk ${{ matrix.app.name }}"
+            org.opencontainers.image.source="https://github.com/alphagov/ckanext-datagovuk"
+            org.opencontainers.image.version=${{ matrix.app.version }}
+            org.opencontainers.image.created=${{ steps.calculate-image-tags.outputs.createdDate }}
+            org.opencontainers.image.vendor=GDS
+
+      - name: Create Base Manifest Lists
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
         env:
-          APP: ${{ matrix.app.name }}
-          VERSION: ${{ matrix.app.version }}
-          PATCH: ${{ matrix.app.patch }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          ARCH: ${{ matrix.arch }}
-          GH_REF: ${{ matrix.app.version }}
-          BUILD_BASE: false
-        run: ./docker/build-image.sh
-      - name: Build and push CKAN test image
-        if: ${{ inputs.buildType == 'build_push_test_ckan' && matrix.app.name == 'ckan' }}
+          IMAGEREF_PREFIX: '${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}'
+        working-directory: /tmp/digests/base
+        run: |
+          tag_args=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          printf -v sources "${IMAGEREF_PREFIX}@sha256:%s " *
+          # shellcheck disable=SC2086 # Intentional word-splitting on $tag_args and $sources.
+          docker buildx imagetools create $tag_args $sources
+
+      - name: Inspect App Images
         env:
-          APP: ${{ matrix.app.name }}
-          VERSION: '2.9.9'
-          REPO_OWNER: ${{ github.repository_owner }}
-          TAG: '2.9.9-test-d'
-          ARCH: ${{ matrix.arch }}
-          BUILD_BASE: true
-        run: ./docker/build-image.sh
+          IMAGEREF: '${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}:${{ steps.app-metadata.outputs.version }}'
+        run: |
+          docker buildx imagetools inspect "$IMAGEREF"
+
+      - name: Inspect Base Images
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
+        env:
+          IMAGEREF: '${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}:${{ steps.base-metadata.outputs.version }}'
+        run: |
+          docker buildx imagetools inspect "$IMAGEREF"

@@ -1,0 +1,35 @@
+apps:
+  ckan: &app_ckan
+    name: ckan
+    version: "2.10.4"
+    patch: e
+  pycsw: &app_pycsw
+    name: pycsw
+    version: "2.6.1"
+    patch: k
+  solr: &app_solr
+    name: solr
+    version: "2.10"
+    patch: b
+
+build_types:
+  build_only:
+    - *app_ckan
+    - *app_pycsw
+    - *app_solr
+  build_push_ckan:
+    - *app_ckan
+  build_push_base:
+    - *app_ckan
+  build_push_pycsw:
+    - *app_pycsw
+  build_push_solr:
+    - *app_solr
+  build_push_test_ckan:
+    - *app_ckan
+
+runs_on:
+  - runner_type: ubuntu-latest
+    arch: amd64
+  - runner_type: ubuntu-24.04-arm
+    arch: arm64

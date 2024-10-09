@@ -7,25 +7,14 @@ on:
 
 jobs:
   build_and_push:
-    name: ${{ matrix.app.name }} (${{ matrix.arch }})
+    name: ${{ matrix.app.name }}
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
     steps:
-      - name: Login to GHCR
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.gitRef }}
-      - name: Build and push images
-        env:
-          APP: ckan
-          VERSION: 2.10.4
-          REPO_OWNER: ${{ github.repository_owner }}
-          ARCH: amd64
-          GH_REF: ${{ github.ref_name }}
-        run: ./docker/build-image.sh
+      - name: Build and Push Tagged Image
+        uses: ./.github/workflows/build-multiarch-image.yaml
+        with:
+          buildType: build_push_ckan
+          gitRef: ${{ github.ref_name }}
