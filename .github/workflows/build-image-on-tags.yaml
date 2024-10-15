@@ -14,7 +14,7 @@ jobs:
         with:
           ref: ${{ inputs.gitRef }}
       - name: Build and Push Tagged Image
-        uses: ./.github/workflows/build-multiarch-image.yaml
+        uses: ./.github/workflows/build-image.yaml
         with:
           buildType: build_push_ckan
           gitRef: ${{ github.ref_name }}
