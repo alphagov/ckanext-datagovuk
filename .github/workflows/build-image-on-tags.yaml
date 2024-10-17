@@ -8,14 +8,12 @@ on:
 
 jobs:
   build_and_push:
-    name: ${{ matrix.app.name }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.gitRef }}
-      - name: Build and Push Tagged Image
-        uses: /home/runner/work/ckanext-datagovuk/ckanext-datagovuk/.github/workflows/build-image.yaml
-        with:
-          buildType: build_push_ckan
-          gitRef: ${{ github.ref_name }}
+    name: Build and push the CKAN image with tags
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/build-image.yaml
+    with:
+      buildType: build_push_ckan
+      gitRef: ${{ github.ref_name }}
