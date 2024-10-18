@@ -128,7 +128,7 @@ jobs:
             ;;
 
             "build_push_ckan_with_gittag")
-              echo "BUILD_TAGS=${{ env.GH_REF }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=$GH_REF" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
@@ -310,7 +310,7 @@ jobs:
             ;;
 
             "build_push_ckan_with_gittag")
-              echo "BUILD_TAGS=${{ env.GH_REF }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=$GH_REF" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
