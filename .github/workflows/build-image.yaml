@@ -20,6 +20,7 @@ on:
         options:
           - build_only
           - build_push_ckan
+          - build_push_ckan_with_gittag
           - build_push_base
           - build_push_pycsw
           - build_push_solr
@@ -97,6 +98,10 @@ jobs:
         id: determine-image-tags
         run: |
           buildType="${{ env.BUILD_TYPE }}"
+
+          if ${{ inputs.buildType == 'build_push_ckan_with_gittag' }}
+              echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
+          fi
 
           case $buildType in
             "build_only" | "build_push_pycsw")

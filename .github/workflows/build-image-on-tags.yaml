@@ -11,17 +11,16 @@ jobs:
     name: check github
     runs-on: ubuntu-latest
     steps:
-      - name: Calculate Image Tags
+      - name: Work out latest git tag
         run: |
           echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
-          echo "$GH_REF"
-  # build_and_push:
-  #   name: Build and push the CKAN image with tags
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #     id-token: write
-  #   uses: ./.github/workflows/build-image.yaml
-  #   with:
-  #     buildType: build_push_ckan
-  #     gitRef: ${{ github.ref_name }}
+  build_and_push:
+    name: Build and push the CKAN image with tags
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/build-image.yaml
+    with:
+      buildType: build_push_ckan_with_gittag
+      gitRef: ${{ GH_REF }}
