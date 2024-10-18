@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Calculate Image Tags
         run: |
-          echo "${{ github.ref_name }}"
+          echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
   # build_and_push:
   #   name: Build and push the CKAN image with tags
   #   permissions:
