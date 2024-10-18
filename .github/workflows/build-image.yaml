@@ -101,6 +101,8 @@ jobs:
 
           if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
               echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
+          else
+              echo "GH_REF=${{ github.sha }}" >> $GITHUB_ENV
           fi
 
           case $buildType in
@@ -140,7 +142,6 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
-            type=raw,value=${{ github.sha }}
             type=raw,value=${{ env.GH_REF }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
@@ -279,6 +280,8 @@ jobs:
 
           if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
               echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
+          else
+              echo "GH_REF=${{ github.sha }}" >> $GITHUB_ENV
           fi
 
           case $buildType in
@@ -323,7 +326,6 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
-            type=raw,value=${{ github.sha }}
             type=raw,value=${{ env.GH_REF }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
