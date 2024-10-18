@@ -14,6 +14,7 @@ jobs:
       - name: Calculate Image Tags
         run: |
           echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
+          echo "$GH_REF"
   # build_and_push:
   #   name: Build and push the CKAN image with tags
   #   permissions:
