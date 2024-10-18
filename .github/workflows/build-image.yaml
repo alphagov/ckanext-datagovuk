@@ -127,6 +127,11 @@ jobs:
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
             ;;
 
+            "build_push_ckan_with_gittag")
+              echo "BUILD_TAGS=${{ env.GH_REF }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+            ;;
+
             *)
               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
@@ -302,6 +307,11 @@ jobs:
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+            ;;
+
+            "build_push_ckan_with_gittag")
+              echo "BUILD_TAGS=${{ env.GH_REF }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
             *)
