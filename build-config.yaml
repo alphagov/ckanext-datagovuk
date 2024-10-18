@@ -19,6 +19,8 @@ build_types:
     - *app_solr
   build_push_ckan:
     - *app_ckan
+  build_push_ckan_with_gittag:
+    - *app_ckan
   build_push_base:
     - *app_ckan
   build_push_pycsw:

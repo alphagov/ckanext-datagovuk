@@ -15,5 +15,5 @@ jobs:
       id-token: write
     uses: ./.github/workflows/build-image.yaml
     with:
-      buildType: build_push_ckan
+      buildType: build_push_ckan_with_gittag
       gitRef: ${{ github.ref_name }}
