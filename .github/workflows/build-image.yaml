@@ -277,6 +277,10 @@ jobs:
         run: |
           buildType="${{ env.BUILD_TYPE }}"
 
+          if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
+              echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
+          fi
+
           case $buildType in
             "build_only" | "build_push_pycsw")
               echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
