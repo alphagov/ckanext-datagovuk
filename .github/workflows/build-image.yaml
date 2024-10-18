@@ -99,7 +99,7 @@ jobs:
         run: |
           buildType="${{ env.BUILD_TYPE }}"
 
-          if ${{ inputs.buildType == 'build_push_ckan_with_gittag' }}
+          if [[ "$buildType" = "build_push_ckan_with_gittag" ]]; then
               echo "GH_REF=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`" >> $GITHUB_ENV
           fi
 
