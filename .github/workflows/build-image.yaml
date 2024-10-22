@@ -100,10 +100,9 @@ jobs:
           buildType="${{ env.BUILD_TYPE }}"
 
           if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
-              TAG=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`
-              echo "GH_REF=$TAG" >> $GITHUB_ENV
+            echo "GH_TAG=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
           else
-              echo "GH_REF=${{ github.sha }}" >> $GITHUB_ENV
+            echo "GH_TAG=${{ github.sha }}" >> $GITHUB_ENV
           fi
 
           case $buildType in
@@ -129,7 +128,7 @@ jobs:
             ;;
 
             "build_push_ckan_with_gittag")
-              echo "BUILD_TAGS=$TAG" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
@@ -148,7 +147,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
-            type=raw,value=${{ env.GH_REF }}
+            type=raw,value=${{ env.GH_TAG }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
@@ -260,12 +259,6 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.gitRef || github.ref }}
-          show-progress: false
-
       - name: Setup Docker BuildX
         uses: docker/setup-buildx-action@v3
 
@@ -280,16 +273,11 @@ jobs:
         id: determine-image-tags
         run: |
           buildType="${{ env.BUILD_TYPE }}"
-
+          
           if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
-              sudo apt-get install -y git
-
-              # mkdir -p /tmp/digests/app
-
-              TAG=`echo $(git fetch -t -q && git tag | sort --version-sort | tail -n1)`
-              echo "GH_REF=$TAG" >> $GITHUB_ENV
+            echo "GH_TAG=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
           else
-              echo "GH_REF=${{ github.sha }}" >> $GITHUB_ENV
+            echo "GH_TAG=${{ github.sha }}" >> $GITHUB_ENV
           fi
 
           case $buildType in
@@ -313,7 +301,7 @@ jobs:
             ;;
 
             "build_push_ckan_with_gittag")
-              echo "BUILD_TAGS=$TAG" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
@@ -339,7 +327,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
-            type=raw,value=${{ env.GH_REF }}
+            type=raw,value=${{ env.GH_TAG }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
@@ -359,7 +347,6 @@ jobs:
         working-directory: /tmp/digests/app
         run: |
           tag_args=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
-          ls /tmp/digests -la
           printf -v sources "${IMAGEREF_PREFIX}@sha256:%s " *
           # shellcheck disable=SC2086 # Intentional word-splitting on $tag_args and $sources.
           docker buildx imagetools create $tag_args $sources
