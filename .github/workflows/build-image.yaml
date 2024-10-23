@@ -20,6 +20,7 @@ on:
         options:
           - build_only
           - build_push_ckan
+          - build_push_ckan_with_gittag
           - build_push_base
           - build_push_pycsw
           - build_push_solr
@@ -98,6 +99,12 @@ jobs:
         run: |
           buildType="${{ env.BUILD_TYPE }}"
 
+          if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
+            echo "GH_TAG=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
+          else
+            echo "GH_TAG=${{ github.sha }}" >> $GITHUB_ENV
+          fi
+
           case $buildType in
             "build_only" | "build_push_pycsw")
               echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
@@ -120,6 +127,11 @@ jobs:
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
             ;;
 
+            "build_push_ckan_with_gittag")
+              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+            ;;
+
             *)
               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
@@ -135,7 +147,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
-            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ env.GH_TAG }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
@@ -250,26 +262,23 @@ jobs:
       - name: Setup Docker BuildX
         uses: docker/setup-buildx-action@v3
 
-      - name: Show GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
-      - name: Get Git Head
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-        id: local-head
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+  
       - name: Determine Image Tags
         id: determine-image-tags
         run: |
           buildType="${{ env.BUILD_TYPE }}"
+          
+          if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
+            echo "GH_TAG=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
+          else
+            echo "GH_TAG=${{ github.sha }}" >> $GITHUB_ENV
+          fi
 
           case $buildType in
             "build_only" | "build_push_pycsw")
@@ -289,6 +298,11 @@ jobs:
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+            ;;
+
+            "build_push_ckan_with_gittag")
+              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
             *)
@@ -313,7 +327,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}
           tags: |
-            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ env.GH_TAG }}
             type=raw,value=${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}
             type=raw,value=${{ env.BUILD_TAGS }}-${{ matrix.app.patch }}${{ env.APP_TAG_SUFFIX }},enable=${{ matrix.app.patch != '' && env.ADD_PATCH_TAG == 'true' }}
             type=sha,prefix${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-,format=short
