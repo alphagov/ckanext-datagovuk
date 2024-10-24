@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Set up environment from ckan.ini
-# export POSTGRES_URL=<sqlalchemy.url from ckan.ini>
-#
 # Execute script like this -
-# python remove_march2019_duplicates.py
+# python remove_duplicates.py - to show impacted datasets
+# python remove_duplicates.py run - to delete duplicate datasets
 #
 
 import os
@@ -15,7 +13,7 @@ import subprocess
 
 import logging
 
-POSTGRES_URL = os.environ.get('POSTGRES_URL')
+POSTGRES_URL = os.environ.get('CKAN_SQLALCHEMY_URL')
 
 logger = logging.getLogger(__name__)
 connection = psycopg2.connect(POSTGRES_URL)
@@ -40,9 +38,7 @@ def is_local():
     return '@localhost' in POSTGRES_URL
 
 
-def get_duplicate_datasets():
-    cursor = connection.cursor()
-    sql = """
+MARCH_2019_SQL = """
     WITH duplicates AS 
     (SELECT COUNT(*) AS duplicate_count, owner_org, title, notes, 
     package_extra.value AS metadata_date, package.state AS package_state
@@ -74,19 +70,28 @@ def get_duplicate_datasets():
     ORDER BY publisher, package.title, pkg_created
     """ % ("AND package.metadata_created BETWEEN '2019-03-01' AND '2019-04-01'" if not is_local() else '')
 
-    cursor.execute(sql)
+
+PVA_SQL = "SELECT id FROM package WHERE title = 'Potentially Vulnerable Areas (PVAs)' AND state = 'active'" \
+          "AND metadata_modified > '2023-03-30 16:50' AND metadata_modified < '2024-10-24';"
+
+
+def get_duplicate_datasets(sql):
+    cursor = connection.cursor()
+    _sql = globals()[sql]
+
+    cursor.execute(_sql)
 
     return cursor
 
 
 def delete_dataset(dataset):
-    paster_command = 'paster --plugin=ckan dataset delete {} -c /{}/ckan/ckan.ini'.format(
-        dataset[0], 'etc' if is_local() else 'var')
+    command = 'ckan dataset delete {}'.format(
+        dataset[0])
 
-    logger.info('CKAN delete dataset - Running command: %s', paster_command)
+    logger.info('CKAN delete dataset - Running command: %s', command)
 
     try:
-        subprocess.call(paster_command, shell=True)
+        subprocess.call(command, shell=True)
     except Exception as exception:
         logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
@@ -110,20 +115,20 @@ def reindex_solr():
         for line in f.readlines():
             fields = line.split(',')
 
-            paster_command = 'paster --plugin=ckan search-index rebuild {} -c /{}/ckan/ckan.ini'.format(
-                fields[0], 'etc' if is_local() else 'var')
+            command = 'ckan search-index rebuild {}'.format(
+                fields[0])
 
-            logger.info('CKAN reindex - Running command: %s', paster_command)
+            logger.info('CKAN reindex - Running command: %s', command)
 
             try:
-                subprocess.call(paster_command, shell=True)
+                subprocess.call(command, shell=True)
             except Exception as exception:
                 logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
 
-def main(command=None):
+def main(command=None, sql="PVA_SQL"):
     while command not in ['show', 'run', 'reindex']:
-        command = raw_input('(Options: show, run, reindex) show? ')
+        command = input('(Options: show, run, reindex) show? ')
         if not command:
             command = 'show'
 
@@ -147,7 +152,7 @@ def main(command=None):
         csv_rows = ''
 
         logger.info('Delete duplicate datasets')
-        for i, dataset in enumerate(get_duplicate_datasets()):
+        for i, dataset in enumerate(get_duplicate_datasets(sql)):
             logger.info('%d - %r', i, dataset)
             if run:
                 csv_rows += ','.join(dataset) + '\n'
