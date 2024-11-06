@@ -44,9 +44,9 @@ RUN apt-get -q -y update \
     && rm -rf /var/lib/apt/lists/*
 
 # Define environment variables
-ENV CKAN_HOME /usr/lib/ckan
-ENV CKAN_VENV $CKAN_HOME/venv
-ENV CKAN_CONFIG /config
+ENV CKAN_HOME=/usr/lib/ckan
+ENV CKAN_VENV=$CKAN_HOME/venv
+ENV CKAN_CONFIG=/config
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
 
 # Create ckan user
@@ -91,7 +91,7 @@ RUN pip install -U pip && \
     chmod +x /pycsw-entrypoint.sh && \
     chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
-FROM --platform=$TARGETPLATFORM base AS prod
+FROM base AS prod
 
 WORKDIR $CKAN_VENV/src
 
