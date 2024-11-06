@@ -112,7 +112,7 @@ jobs:
             ;;
 
             "build_push_base")
-              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
               echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
@@ -287,7 +287,7 @@ jobs:
             ;;
 
             "build_push_base")
-              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
               echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
