@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM --platform=$TARGETPLATFORM ubuntu:jammy AS base
+FROM ubuntu:jammy AS base
 
 # Set timezone
 ENV TZ=UTC
@@ -44,9 +44,9 @@ RUN apt-get -q -y update \
     && rm -rf /var/lib/apt/lists/*
 
 # Define environment variables
-ENV CKAN_HOME /usr/lib/ckan
-ENV CKAN_VENV $CKAN_HOME/venv
-ENV CKAN_CONFIG /config
+ENV CKAN_HOME=/usr/lib/ckan
+ENV CKAN_VENV=$CKAN_HOME/venv
+ENV CKAN_CONFIG=/config
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
 
 # Create ckan user
@@ -91,14 +91,14 @@ RUN pip install -U pip && \
     chmod +x /pycsw-entrypoint.sh && \
     chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
-FROM --platform=$TARGETPLATFORM base AS prod
+FROM base AS prod
 
 WORKDIR $CKAN_VENV/src
 
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='5840746380b194d84708181e73fcb904a66625f3'
+ENV ckan_spatial_sha='23f9e5d0d07fa411ffea56498167da6a2c9a7df6'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='ckan'
