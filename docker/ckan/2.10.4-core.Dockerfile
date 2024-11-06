@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM --platform=$TARGETPLATFORM ubuntu:jammy
+FROM ubuntu:jammy
 
 # Set timezone
 ENV TZ=UTC
