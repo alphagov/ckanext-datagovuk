@@ -98,7 +98,7 @@ WORKDIR $CKAN_VENV/src
 USER ckan
 EXPOSE 5000
 
-ENV ckan_spatial_sha='5840746380b194d84708181e73fcb904a66625f3'
+ENV ckan_spatial_sha='23f9e5d0d07fa411ffea56498167da6a2c9a7df6'
 ENV ckan_spatial_fork='alphagov'
 
 ENV ckan_harvest_fork='ckan'

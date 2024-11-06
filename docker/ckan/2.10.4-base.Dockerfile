@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/alphagov/ckan:2.10.4-e-core
+ARG BASE_IMAGE=ghcr.io/alphagov/ckan:2.10.4-f-core
 FROM --platform=$TARGETPLATFORM ${BASE_IMAGE}
 
 COPY production.ini $CKAN_CONFIG/production.ini
@@ -15,7 +15,7 @@ ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 ENV ckan_dcat_fork='ckan'
 ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
 
-ENV ckan_spatial_sha='5840746380b194d84708181e73fcb904a66625f3'
+ENV ckan_spatial_sha='23f9e5d0d07fa411ffea56498167da6a2c9a7df6'
 ENV ckan_spatial_fork='alphagov'
 
 RUN echo "pip install DGU extensions..." && \
