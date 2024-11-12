@@ -76,14 +76,13 @@ NOV_2024_TITLES_SQL = "SELECT title FROM package WHERE state = 'active' GROUP BY
 
 
 # retrieve active package_ids which are matching titles from 2 publishers with more than 100 duplicate datasets
-# skip the latest record as that will be the latest updated record retained for publication
 NOV_2024_PACKAGE_IDS_SQL = "SELECT package_extra.package_id FROM package_extra, harvest_object WHERE " \
                     "harvest_object.id = value AND key = 'harvest_object_id' AND value IN (" \
                     "SELECT id FROM harvest_object WHERE id IN (" \
                     "SELECT value FROM package_extra WHERE key = 'harvest_object_id' AND package_id IN (" \
                     "SELECT id FROM package WHERE title = '%s' AND state = 'active' AND owner_org IN " \
                     "('c924c995-e063-4f30-bbd3-61418486f0a9', 'b6b50d70-9d5c-4fef-9135-7756cca343c3')))) " \
-                    "ORDER BY metadata_modified_date DESC OFFSET 1 ROWS;"
+                    "ORDER BY metadata_modified_date DESC;"
 
 
 def get_duplicate_datasets(sql, token=None):
@@ -101,6 +100,18 @@ def delete_dataset(dataset):
         dataset[0])
 
     logger.info('CKAN delete dataset - Running command: %s', command)
+
+    try:
+        subprocess.call(command, shell=True)
+    except Exception as exception:
+        logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
+
+
+def reindex_dataset(dataset):
+    command = 'ckan search-index rebuild {}'.format(
+        dataset[0])
+
+    logger.info('CKAN reindex dataset - Running command: %s', command)
 
     try:
         subprocess.call(command, shell=True)
@@ -167,7 +178,14 @@ def main(command=None, sql="NOV_2024_TITLES_SQL", subset_sql="NOV_2024_PACKAGE_I
         counter = 0
         for dataset in get_duplicate_datasets(sql):
             if subset_sql:
+                reindexed_dataset = False
                 for subset_dataset in get_duplicate_datasets(subset_sql, token=dataset):
+                    # reindex the latest dataset to make it available
+                    if not reindexed_dataset:
+                        reindex_dataset(subset_dataset)
+                        reindexed_dataset = True
+                        continue
+
                     counter += 1
 
                     logger.info('%d - %r', counter, f"{dataset}-{subset_dataset}")
