@@ -71,13 +71,25 @@ MARCH_2019_SQL = """
     """ % ("AND package.metadata_created BETWEEN '2019-03-01' AND '2019-04-01'" if not is_local() else '')
 
 
-PVA_SQL = "SELECT id FROM package WHERE title = 'Potentially Vulnerable Areas (PVAs)' AND state = 'active'" \
-          "AND metadata_modified > '2023-03-30 16:50' AND metadata_modified < '2024-10-24';"
+NOV_2024_TITLES_SQL = "SELECT title FROM package WHERE state = 'active' GROUP BY title, owner_org " \
+                    "HAVING COUNT(*) > 100;"
 
 
-def get_duplicate_datasets(sql):
+# retrieve active package_ids which are matching titles from 2 publishers with more than 100 duplicate datasets
+# skip the latest record as that will be the latest updated record retained for publication
+NOV_2024_PACKAGE_IDS_SQL = "SELECT package_extra.package_id FROM package_extra, harvest_object WHERE " \
+                    "harvest_object.id = value AND key = 'harvest_object_id' AND value IN (" \
+                    "SELECT id FROM harvest_object WHERE id IN (" \
+                    "SELECT value FROM package_extra WHERE key = 'harvest_object_id' AND package_id IN (" \
+                    "SELECT id FROM package WHERE title = '%s' AND state = 'active' AND owner_org IN " \
+                    "('c924c995-e063-4f30-bbd3-61418486f0a9', 'b6b50d70-9d5c-4fef-9135-7756cca343c3')))) " \
+                    "ORDER BY metadata_modified_date DESC OFFSET 1 ROWS;"
+
+
+def get_duplicate_datasets(sql, token=None):
     cursor = connection.cursor()
     _sql = globals()[sql]
+    _sql = _sql % token if token else _sql
 
     cursor.execute(_sql)
 
@@ -126,7 +138,7 @@ def reindex_solr():
                 logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
 
-def main(command=None, sql="PVA_SQL"):
+def main(command=None, sql="NOV_2024_TITLES_SQL", subset_sql="NOV_2024_PACKAGE_IDS_SQL"):
     while command not in ['show', 'run', 'reindex']:
         command = input('(Options: show, run, reindex) show? ')
         if not command:
@@ -152,11 +164,22 @@ def main(command=None, sql="PVA_SQL"):
         csv_rows = ''
 
         logger.info('Delete duplicate datasets')
-        for i, dataset in enumerate(get_duplicate_datasets(sql)):
-            logger.info('%d - %r', i, dataset)
-            if run:
-                csv_rows += ','.join(dataset) + '\n'
-                delete_dataset(dataset)
+        counter = 0
+        for dataset in get_duplicate_datasets(sql):
+            if subset_sql:
+                for subset_dataset in get_duplicate_datasets(subset_sql, token=dataset):
+                    counter += 1
+
+                    logger.info('%d - %r', counter, f"{dataset}-{subset_dataset}")
+                    if run:
+                        csv_rows += ','.join(subset_dataset) + '\n'
+                        delete_dataset(subset_dataset)
+            else:
+                counter += 1
+                logger.info('%d - %r', counter, dataset)
+                if run:
+                    csv_rows += ','.join(dataset) + '\n'
+                    delete_dataset(dataset)
 
         if run:
             create_csv(csv_rows)
