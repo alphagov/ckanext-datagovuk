@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Set up environment from ckan.ini
-# export POSTGRES_URL=<sqlalchemy.url from ckan.ini>
-#
 # Execute script like this -
-# python remove_march2019_duplicates.py
+# python remove_duplicates.py - to show impacted datasets
+# python remove_duplicates.py run - to delete duplicate datasets
 #
 
 import os
@@ -15,7 +13,7 @@ import subprocess
 
 import logging
 
-POSTGRES_URL = os.environ.get('POSTGRES_URL')
+POSTGRES_URL = os.environ.get('CKAN_SQLALCHEMY_URL')
 
 logger = logging.getLogger(__name__)
 connection = psycopg2.connect(POSTGRES_URL)
@@ -40,9 +38,7 @@ def is_local():
     return '@localhost' in POSTGRES_URL
 
 
-def get_duplicate_datasets():
-    cursor = connection.cursor()
-    sql = """
+MARCH_2019_SQL = """
     WITH duplicates AS 
     (SELECT COUNT(*) AS duplicate_count, owner_org, title, notes, 
     package_extra.value AS metadata_date, package.state AS package_state
@@ -74,19 +70,51 @@ def get_duplicate_datasets():
     ORDER BY publisher, package.title, pkg_created
     """ % ("AND package.metadata_created BETWEEN '2019-03-01' AND '2019-04-01'" if not is_local() else '')
 
-    cursor.execute(sql)
+
+NOV_2024_TITLES_SQL = "SELECT title FROM package WHERE state = 'active' GROUP BY title, owner_org " \
+                    "HAVING COUNT(*) > 100;"
+
+
+# retrieve active package_ids which are matching titles from 2 publishers with more than 100 duplicate datasets
+NOV_2024_PACKAGE_IDS_SQL = "SELECT package_extra.package_id FROM package_extra, harvest_object WHERE " \
+                    "harvest_object.id = value AND key = 'harvest_object_id' AND value IN (" \
+                    "SELECT id FROM harvest_object WHERE id IN (" \
+                    "SELECT value FROM package_extra WHERE key = 'harvest_object_id' AND package_id IN (" \
+                    "SELECT id FROM package WHERE title = '%s' AND state = 'active' AND owner_org IN " \
+                    "('c924c995-e063-4f30-bbd3-61418486f0a9', 'b6b50d70-9d5c-4fef-9135-7756cca343c3')))) " \
+                    "ORDER BY metadata_modified_date DESC;"
+
+
+def get_duplicate_datasets(sql, token=None):
+    cursor = connection.cursor()
+    _sql = globals()[sql]
+    _sql = _sql % token if token else _sql
+
+    cursor.execute(_sql)
 
     return cursor
 
 
 def delete_dataset(dataset):
-    paster_command = 'paster --plugin=ckan dataset delete {} -c /{}/ckan/ckan.ini'.format(
-        dataset[0], 'etc' if is_local() else 'var')
+    command = 'ckan dataset delete {}'.format(
+        dataset[0])
 
-    logger.info('CKAN delete dataset - Running command: %s', paster_command)
+    logger.info('CKAN delete dataset - Running command: %s', command)
 
     try:
-        subprocess.call(paster_command, shell=True)
+        subprocess.call(command, shell=True)
+    except Exception as exception:
+        logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
+
+
+def reindex_dataset(dataset):
+    command = 'ckan search-index rebuild {}'.format(
+        dataset[0])
+
+    logger.info('CKAN reindex dataset - Running command: %s', command)
+
+    try:
+        subprocess.call(command, shell=True)
     except Exception as exception:
         logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
@@ -110,20 +138,20 @@ def reindex_solr():
         for line in f.readlines():
             fields = line.split(',')
 
-            paster_command = 'paster --plugin=ckan search-index rebuild {} -c /{}/ckan/ckan.ini'.format(
-                fields[0], 'etc' if is_local() else 'var')
+            command = 'ckan search-index rebuild {}'.format(
+                fields[0])
 
-            logger.info('CKAN reindex - Running command: %s', paster_command)
+            logger.info('CKAN reindex - Running command: %s', command)
 
             try:
-                subprocess.call(paster_command, shell=True)
+                subprocess.call(command, shell=True)
             except Exception as exception:
                 logger.error('Subprocess Failed, exception occured: %s', exc_info=exception)
 
 
-def main(command=None):
+def main(command=None, sql="NOV_2024_TITLES_SQL", subset_sql="NOV_2024_PACKAGE_IDS_SQL"):
     while command not in ['show', 'run', 'reindex']:
-        command = raw_input('(Options: show, run, reindex) show? ')
+        command = input('(Options: show, run, reindex) show? ')
         if not command:
             command = 'show'
 
@@ -147,11 +175,29 @@ def main(command=None):
         csv_rows = ''
 
         logger.info('Delete duplicate datasets')
-        for i, dataset in enumerate(get_duplicate_datasets()):
-            logger.info('%d - %r', i, dataset)
-            if run:
-                csv_rows += ','.join(dataset) + '\n'
-                delete_dataset(dataset)
+        counter = 0
+        for dataset in get_duplicate_datasets(sql):
+            if subset_sql:
+                reindexed_dataset = False
+                for subset_dataset in get_duplicate_datasets(subset_sql, token=dataset):
+                    # reindex the latest dataset to make it available
+                    if not reindexed_dataset:
+                        reindex_dataset(subset_dataset)
+                        reindexed_dataset = True
+                        continue
+
+                    counter += 1
+
+                    logger.info('%d - %r', counter, f"{dataset}-{subset_dataset}")
+                    if run:
+                        csv_rows += ','.join(subset_dataset) + '\n'
+                        delete_dataset(subset_dataset)
+            else:
+                counter += 1
+                logger.info('%d - %r', counter, dataset)
+                if run:
+                    csv_rows += ','.join(dataset) + '\n'
+                    delete_dataset(dataset)
 
         if run:
             create_csv(csv_rows)
