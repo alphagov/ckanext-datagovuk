@@ -107,7 +107,7 @@ jobs:
 
           case $buildType in
             "build_only" | "build_push_pycsw")
-              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
@@ -282,7 +282,7 @@ jobs:
 
           case $buildType in
             "build_only" | "build_push_pycsw")
-              echo "BUILD_TAGS=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
             ;;
 
