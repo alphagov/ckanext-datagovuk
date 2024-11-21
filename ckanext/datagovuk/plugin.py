@@ -259,7 +259,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         return bp
 
     # import these for monkey patching
-    from ckanext.datagovuk.ckan_patches import cli, logic, query
+    from ckanext.datagovuk.ckan_patches import cli, logic, query, helpers
 
     # ITemplateHelpers
 
