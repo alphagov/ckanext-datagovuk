@@ -120,7 +120,7 @@ jobs:
             ;;
 
             "build_push_test_ckan")
-              echo "BUILD_TAGS=${{ matrix.app.version }}-test-d" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> $GITHUB_ENV
               echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
               echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
               echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
