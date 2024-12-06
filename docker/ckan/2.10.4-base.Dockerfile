@@ -1,5 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/alphagov/ckan:2.10.4-i-core
-FROM --platform=$TARGETPLATFORM ${BASE_IMAGE}
+FROM ghcr.io/alphagov/ckan:2.10.4-i-core
 
 COPY production.ini $CKAN_CONFIG/production.ini
 # Set CKAN_INI
