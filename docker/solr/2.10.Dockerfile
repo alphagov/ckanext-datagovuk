@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM solr:8
+FROM solr:8
 
 EXPOSE 8983
 
@@ -27,7 +27,7 @@ RUN chmod 644 $JTS_JAR_FILE
 # Add the spatial field type definitions and fields
 
 ## RPT
-ENV SOLR_RPT_FIELD_DEFINITION '<fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType" \
+ENV SOLR_RPT_FIELD_DEFINITION='<fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType" \
     spatialContextFactory="JTS"     \
     autoIndex="true"                \
     validationRule="repairBuffer0"  \
