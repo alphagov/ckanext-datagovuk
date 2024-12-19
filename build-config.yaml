@@ -10,7 +10,7 @@ apps:
   solr: &app_solr
     name: solr
     version: "2.10"
-    patch: b
+    patch: c
 
 build_types:
   build_only:
