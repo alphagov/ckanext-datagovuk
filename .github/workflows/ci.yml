@@ -27,7 +27,7 @@ jobs:
       options: --user root
     services:
       solr:
-        image: ghcr.io/alphagov/solr:2.10-b
+        image: ghcr.io/alphagov/solr:2.10-c
       postgres:
         image: postgis/postgis:13-3.1-alpine
         env:
