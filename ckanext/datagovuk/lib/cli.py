@@ -395,7 +395,7 @@ def reindex_organisations(context):
     solr = pysolr.Solr(os.getenv('CKAN_SOLR_URL'), always_commit=True, timeout=10)
     solr.ping()
 
-    existing_organisations = [r.get('name') for r in solr.search("*", fq="(site_id:dgu_organisations)")]
+    existing_organisations = [r.get('name') for r in solr.search("*", fq="(site_id:dgu_organisations)", rows=3000)]
     organisations = []
     counter = 0
 
@@ -426,12 +426,9 @@ def reindex_organisations(context):
     if organisations:
         solr.add(organisations)
 
-    results = solr.search("*", fq="(site_id:dgu_organisations)", rows=2000)
+    results = solr.search("*", fq="(site_id:dgu_organisations)", rows=3000)
 
-    print(f"Retrieved {len(results)} results")
-
-    for result in results:
-        print(f"{result.get('title')} - {result.get('name')}")
+    print(f"Added {len(organisations)} organisations, total number = {len(results)}")
 
 
 def run_command(command):
