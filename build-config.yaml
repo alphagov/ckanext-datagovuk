@@ -2,11 +2,11 @@ apps:
   ckan: &app_ckan
     name: ckan
     version: "2.10.4"
-    patch: i
+    patch: j
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
-    patch: n
+    patch: o
   solr: &app_solr
     name: solr
     version: "2.10"
