@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows: [ "Build and push multi-arch image" ]
+    branches:
+      - main
     types:
       - completed
 
@@ -11,6 +13,7 @@ jobs:
   create_pr:
     name: Create charts PR
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout ckanext-datagovuk repository
         uses: actions/checkout@v3
