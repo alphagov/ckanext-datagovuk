@@ -81,11 +81,13 @@ ckan datagovuk remove-dgu-test-data
 
 The CKAN core and base images can be built on Github actions by selecting the `Build base images` under actions, Build and push images workflow. If you are releasing a change to the base image, which handles the extension versions or a change to the CKAN version, tests might fail until the images are built and pushed into GHCR.
 
-## Deploying CKAN, PyCSW and Solr
+## Deploying CKAN
 
 By default, merging a PR into main will trigger a build of the CKAN image and create PRs on the govuk-dgu-charts repo. Updating the tag will build and push a tagged image and create the PR for Staging and Production environments in the govuk-dgu-charts repo.
 
-If you want to deploy updates to PyCSW or Solr then you'll need to trigger the build manually via the github actions tab and manually update the pycsw or solr tag in govuk-dgu-charts repo for each environment.
+## Deploying PyCSW and Solr
+
+To deploy a new version of PyCSW or Solr, the version and/or patch needs to be updated in the [build-config.yaml](https://github.com/alphagov/ckanext-datagovuk/blob/main/build-config.yaml) before triggering the build for `pycsw` or `solr` manually via the "Build and push multi-arch image" workflow in the github actions tab. You will then need to  manually update the pycsw or solr tag in [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts/tree/main/charts/ckan/images) repo for each environment.
 
 ## Deploying test branches to integration
 
