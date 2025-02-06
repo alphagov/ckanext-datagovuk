@@ -3,10 +3,11 @@
 {% block basic_fields_url %}
   {% if h.activate_upload(pkg_name) %}
       <div style="margin-left: 100px;margin-bottom: 20px;">
-          Additional help can be found in this <a target="newwin" href='https://guidance.data.gov.uk/publish_and_manage_data/harvest_or_add_data/add_data/#add-an-organogram'>organogram guide</a>
+          Additional help can be found in this <a target="newwin" href='https://guidance.data.gov.uk/publish_and_manage_data/harvest_or_add_data/add_data/#publishing-organograms'>guide to publishing organograms</a>
       {% if h.is_central_gov_organogram(pkg_name) %}
         <br>
-          Ensure that you use this XLS template <a target="newwin" href='https://ckan.publishing.service.gov.uk/publisher-files/Blank_Organogram_Template_latest.xls'>standard template</a>
+          Ensure that you use this XLS template <a target="newwin" href='https://ckan.publishing.service.gov.uk/publisher-files/Blank_Organogram_Template_latest.xls'>standard template</a> which includes validation rules.
+          If you see an error message after clicking Publish please read it carefully and make corrections in your spreadsheet, before clicking Publish again.
       {% endif %}
       </div>
     {% endif %}
