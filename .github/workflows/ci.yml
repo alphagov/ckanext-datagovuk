@@ -46,7 +46,7 @@ jobs:
       CRYPTOGRAPHY_DONT_BUILD_RUST: 1
       TZ: UTC
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Create Database
         run: |
           psql --host=postgres --username=postgres --command="CREATE USER ckan_default WITH PASSWORD 'pass' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
