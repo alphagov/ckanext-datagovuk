@@ -121,8 +121,8 @@ The CKAN core and base images can be built on Github actions by selecting the `B
 
 2. **Merge the Staging and Production PRs**
    Creating a release triggers another GitHub Action that opens two Pull Requests in the govuk-dgu-charts repo:
-   - One for **Staging** (https://www.staging.data.gov.uk/, VPN required)
-   - One for **Production** (https://www.data.gov.uk/)
+   - One for [Staging](https://ckan.staging.publishing.service.gov.uk)
+   - One for [Production](https://ckan.publishing.service.gov.uk)
 
    Merge these PRs in govuk-dgu-charts to deploy your changes to the respective environments.
 
