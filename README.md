@@ -83,36 +83,50 @@ The CKAN core and base images can be built on Github actions by selecting the `B
 
 ## Deploying CKAN
 
+### Environments and URLs
+
+- **Integration**: [https://www.integration.data.gov.uk/](https://www.integration.data.gov.uk/) (VPN required)
+- **Staging**: [https://www.staging.data.gov.uk/](https://www.staging.data.gov.uk/) (VPN required)
+- **Production**: [https://www.data.gov.uk/](https://www.data.gov.uk/) (public)
+
+---
+
 ### Deploying to Integration
 
 1. **Make your change on a branch**
    Develop your feature or fix on a dedicated branch.
 
 2. **Have the change approved**
-   Open a Pull Request and await code review.
+   Open a Pull Request, get it reviewed and approved.
 
 3. **Merge the change into `main`**
-   Once approved, merge your branch into `main`. This action triggers a GitHub Workflow that automatically:
-
+   Once approved, merge your branch into `main`. This triggers a GitHub Action that:
    - Builds a new CKAN Docker image.
-   - Creates a Pull Request in the [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts) repository, updating the CKAN image tag to the new version.
+   - Creates a Pull Request in the [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts) repo, updating the CKAN image tag.
 
-4. **Merge the charts PR**
-   In the govuk-dgu-charts repo, merge the newly created PR. Once that PR is merged, your changes will be deployed to **Integration** (the “integration” URL).
+4. **Merge the newly created PR**
+   In the govuk-dgu-charts repo, merge the auto-created PR. Your changes will then be deployed to **Integration** at:
+   [https://www.integration.data.gov.uk/](https://www.integration.data.gov.uk/)
+   *(Note: You’ll need to be on VPN to access Integration.)*
+
+---
 
 ### Promoting to Staging and Production
 
-1. **Manually create a release in GitHub**  
-   When you’re ready to promote your changes to Staging and Production, go to your repository’s “Releases” section and create a new release. (At a high level: click “Draft a new release”, choose a tag version, provide a release title and description, then publish it.)
+1. **Create a release in GitHub**
+   When you’re ready to promote changes beyond Integration, navigate to your repository’s “Releases” section, then:
+   - Click “Draft a new release”.
+   - Choose a tag (e.g. `v1.2.3`) and provide a release title/description.
+   - Publish the release.
 
-2. **Merge the auto-created PRs for Staging and Production**  
-   Creating a release triggers another GitHub Workflow that opens two PRs in [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts):
-   - One for **Staging**
-   - One for **Production**
-   
-   Merge these PRs to deploy your changes to the respective environments.
+2. **Merge the Staging and Production PRs**
+   Creating a release triggers another GitHub Action that opens two Pull Requests in the govuk-dgu-charts repo:
+   - One for **Staging** (https://www.staging.data.gov.uk/, VPN required)
+   - One for **Production** (https://www.data.gov.uk/)
 
-Once both PRs have been merged, your updated CKAN (or related extensions) will be live in Staging and Production. 
+   Merge these PRs in govuk-dgu-charts to deploy your changes to the respective environments.
+
+Once both PRs are merged, your new CKAN version will be live on Staging and Production.
 
 ## Deploying PyCSW and Solr
 
