@@ -5,6 +5,8 @@ on:
   pull_request_target:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
     types:
       - closed
 
