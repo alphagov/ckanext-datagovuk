@@ -109,7 +109,6 @@ The CKAN core and base images can be built on Github actions by selecting the `B
 4. **Merge the newly created PR**
    In the govuk-dgu-charts repo, merge the auto-created PR. Your changes will then be deployed to **Integration** at:
    [https://ckan.integration.publishing.service.gov.uk/](https://ckan.integration.publishing.service.gov.uk)
-   *(Note: You’ll need to be on VPN to access Integration.)*
 
 ---
 
