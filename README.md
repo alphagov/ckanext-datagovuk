@@ -116,7 +116,7 @@ The CKAN core and base images can be built on Github actions by selecting the `B
 1. **Create a release in GitHub**
    When you’re ready to promote changes beyond Integration, navigate to your repository’s “Releases” section, then:
    - Click “Draft a new release”.
-   - Choose a tag (e.g. `v1.2.3`) and provide a release title/description.
+   - Create a new tag (e.g. `v1.2.3`) and provide a release title/description
    - Publish the release.
 
 2. **Merge the Staging and Production PRs**
