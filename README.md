@@ -83,7 +83,36 @@ The CKAN core and base images can be built on Github actions by selecting the `B
 
 ## Deploying CKAN
 
-By default, merging a PR into main will trigger a build of the CKAN image and create PRs on the govuk-dgu-charts repo. Updating the tag will build and push a tagged image and create the PR for Staging and Production environments in the govuk-dgu-charts repo.
+### Deploying to Integration
+
+1. **Make your change on a branch**
+   Develop your feature or fix on a dedicated branch.
+
+2. **Have the change approved**
+   Open a Pull Request and await code review.
+
+3. **Merge the change into `main`**
+   Once approved, merge your branch into `main`. This action triggers a GitHub Workflow that automatically:
+
+   - Builds a new CKAN Docker image.
+   - Creates a Pull Request in the [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts) repository, updating the CKAN image tag to the new version.
+
+4. **Merge the charts PR**
+   In the govuk-dgu-charts repo, merge the newly created PR. Once that PR is merged, your changes will be deployed to **Integration** (the “integration” URL).
+
+### Promoting to Staging and Production
+
+1. **Manually create a release in GitHub**  
+   When you’re ready to promote your changes to Staging and Production, go to your repository’s “Releases” section and create a new release. (At a high level: click “Draft a new release”, choose a tag version, provide a release title and description, then publish it.)
+
+2. **Merge the auto-created PRs for Staging and Production**  
+   Creating a release triggers another GitHub Workflow that opens two PRs in [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts):
+   - One for **Staging**
+   - One for **Production**
+   
+   Merge these PRs to deploy your changes to the respective environments.
+
+Once both PRs have been merged, your updated CKAN (or related extensions) will be live in Staging and Production. 
 
 ## Deploying PyCSW and Solr
 
