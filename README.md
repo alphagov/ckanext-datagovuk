@@ -79,6 +79,8 @@ ckan datagovuk remove-dgu-test-data
 
 ## Deploying CKAN core and base images
 
+> You rarely need to perform these steps and should only be used when there's an upstream CKAN change.
+
 The CKAN core and base images can be built on Github actions by selecting the `Build base images` under actions, Build and push images workflow. If you are releasing a change to the base image, which handles the extension versions or a change to the CKAN version, tests might fail until the images are built and pushed into GHCR.
 
 ## Deploying CKAN
