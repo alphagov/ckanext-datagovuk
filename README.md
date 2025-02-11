@@ -85,9 +85,9 @@ The CKAN core and base images can be built on Github actions by selecting the `B
 
 ### Environments and URLs
 
-- **Integration**: [https://www.integration.data.gov.uk/](https://www.integration.data.gov.uk/) (VPN required)
-- **Staging**: [https://www.staging.data.gov.uk/](https://www.staging.data.gov.uk/) (VPN required)
-- **Production**: [https://www.data.gov.uk/](https://www.data.gov.uk/) (public)
+- **Integration**: [https://ckan.integration.publishing.service.gov.uk](https://ckan.integration.publishing.service.gov.uk/)
+- **Staging**: [https://ckan.staging.publishing.service.gov.uk](https://ckan.staging.publishing.service.gov.uk//)
+- **Production**: [https://ckan.publishing.service.gov.uk/](https://ckan.publishing.service.gov.uk/)
 
 ---
 
