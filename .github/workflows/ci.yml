@@ -2,11 +2,18 @@ name: ckanext-datagovuk ci
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+    paths-ignore:
+      - "**/*.md"
+      - ".gitignore"
+      - ".github"
+      - ".dockerignore"
   pull_request_target:
     branches:
       - main
     paths-ignore:
-      - "**.md"
+      - "**/*.md"
       - ".gitignore"
       - ".github"
       - ".dockerignore"
