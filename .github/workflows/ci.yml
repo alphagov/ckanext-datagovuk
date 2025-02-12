@@ -5,6 +5,11 @@ on:
   pull_request_target:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
+      - ".gitignore"
+      - ".github"
+      - ".dockerignore"
     types:
       - closed
 
