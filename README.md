@@ -99,17 +99,17 @@ The CKAN core and base images can be built on Github actions by selecting the `B
    
    Develop your feature or fix on a dedicated branch.
 
-3. **Have the change approved**
+1. **Have the change approved**
    
    Open a Pull Request, get it reviewed and approved.
 
-5. **Merge the change into `main`**
+1. **Merge the change into `main`**
    
    Once approved, merge your branch into `main`. This triggers a GitHub Action that:
    - Builds a new CKAN Docker image.
    - Creates a Pull Request in the [govuk-dgu-charts](https://github.com/alphagov/govuk-dgu-charts) repo, updating the CKAN image tag.
 
-7. **Merge the newly created PR**
+1. **Merge the newly created PR**
    
    In the govuk-dgu-charts repo, merge the auto-created PR. Your changes will then be deployed to **Integration** at:
    [https://ckan.integration.publishing.service.gov.uk/](https://ckan.integration.publishing.service.gov.uk)
@@ -124,7 +124,7 @@ The CKAN core and base images can be built on Github actions by selecting the `B
    - Create a new tag (e.g. `v1.2.3`) and provide a release title/description
    - Publish the release.
 
-2. **Merge the Staging and Production PRs**
+1. **Merge the Staging and Production PRs**
    Creating a release triggers another GitHub Action that opens two Pull Requests in the govuk-dgu-charts repo:
    - One for [Staging](https://ckan.staging.publishing.service.gov.uk)
    - One for [Production](https://ckan.publishing.service.gov.uk)
