@@ -89,7 +89,7 @@ jobs:
           echo "error"
           exit 1
       - if: ${{ failure() }}
-        uses: alphagov/govuk-ci-github-action/.github/actions/send_ci_errors@test-6
+        uses: alphagov/govuk-ci-github-action/.github/actions/send_ci_errors@test-7
         with:
           slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           channel: test-ci
