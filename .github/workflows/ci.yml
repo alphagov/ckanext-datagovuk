@@ -79,17 +79,17 @@ jobs:
           sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
           # set the i18n directory
           sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" ${CKAN_CONFIG}/production.ini
-      - name: Init Database
-        run: |
-          ckan db init
-      - name: Run tests
-        run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+      # - name: Init Database
+      #   run: |
+      #     ckan db init
+      # - name: Run tests
+      #   run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
       - name: Always false
         run: |
           echo "error"
           exit 1
       - if: ${{ failure() }}
-        uses: alphagov/govuk-ci-github-action/.github/actions/send_ci_errors@test-3
+        uses: alphagov/govuk-ci-github-action/.github/actions/send_ci_errors@test-5
         with:
           slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           channel: test-ci
