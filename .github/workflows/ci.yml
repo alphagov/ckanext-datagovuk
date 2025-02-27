@@ -84,3 +84,14 @@ jobs:
           ckan db init
       - name: Run tests
         run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+      - name: Always false
+        run: |
+          echo "error"
+          exit 1
+      - if: ${{ failure() }}
+        uses: alphagov/govuk-ci-github-action/.github/actions/send_ci_errors@test
+        with:
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel: test-ci
+          github: ${{ toJson(github) }}
+  
