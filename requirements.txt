@@ -5,7 +5,7 @@ ckantoolkit>=0.0.7
 gunicorn
 jinja2==3.1.*
 lxml<5.1.1
-numpy==1.26.3
+numpy==2.2.3
 pandas==2.2.1
 #prometheus-flask-exporter==0.20.3 # installed in Dockerfile before CKAN
 psycopg2==2.9.9
