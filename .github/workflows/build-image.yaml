@@ -100,41 +100,41 @@ jobs:
           buildType="${{ env.BUILD_TYPE }}"
 
           if [ "$buildType" = "build_push_ckan_with_gittag" ]; then
-            echo "GH_TAG=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
+            echo "GH_TAG=${{ inputs.gitRef || github.ref }}" >> "$GITHUB_ENV"
           else
-            echo "GH_TAG=${{ github.sha }}" >> $GITHUB_ENV
+            echo "GH_TAG=${{ github.sha }}" >> "$GITHUB_ENV"
           fi
 
           case $buildType in
             "build_only" | "build_push_pycsw")
-              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
-              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
             ;;
 
             "build_push_base")
-              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
-              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
-              echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
-              echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
-              echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
+              echo "BUILD_CKAN_BASE=true" >> "$GITHUB_ENV"
+              echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
+              echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
             ;;
 
             "build_push_test_ckan")
-              echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> $GITHUB_ENV
-              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
-              echo "BUILD_CKAN_BASE=true" >> $GITHUB_ENV
-              echo "ADD_PATCH_TAG=true" >> $GITHUB_ENV
-              echo "APP_TAG_SUFFIX=-core" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> "$GITHUB_ENV"
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
+              echo "BUILD_CKAN_BASE=true" >> "$GITHUB_ENV"
+              echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
+              echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
             ;;
 
             "build_push_ckan_with_gittag")
-              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> $GITHUB_ENV
-              echo "DOCKERFILE=${{ matrix.app.version }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> "$GITHUB_ENV"
+              echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
             ;;
 
             *)
-              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
-              echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> $GITHUB_ENV
+              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
+              echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
             ;;
           esac
 
