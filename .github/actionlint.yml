@@ -1,0 +1,6 @@
+paths:
+  .github/workflows/build-image.yaml:
+    # List of regular expressions to filter errors by the error messages.
+    ignore:
+      # Ignore this specific error - false positives.
+      - 'property "calculate-image-tags" is not defined in object type .+'
