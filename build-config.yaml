@@ -3,6 +3,10 @@ apps:
     name: ckan
     version: "2.10.4"
     patch: j
+  postgis: &app_postgis
+    name: postgis
+    version: "13-3.1"
+    patch: ""
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
@@ -23,6 +27,8 @@ build_types:
     - *app_ckan
   build_push_base:
     - *app_ckan
+  build_push_postgis:
+    - *app_postgis
   build_push_pycsw:
     - *app_pycsw
   build_push_solr:
