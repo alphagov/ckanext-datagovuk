@@ -7,6 +7,10 @@ apps:
     name: postgis
     version: "13-3.1"
     patch: ""
+  postgis_base: &app_postgis_base
+    name: postgis-base
+    version: "13-bullseye"
+    patch: ""
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
@@ -29,6 +33,8 @@ build_types:
     - *app_ckan
   build_push_postgis:
     - *app_postgis
+  build_push_postgis_base:
+    - *app_postgis_base
   build_push_pycsw:
     - *app_pycsw
   build_push_solr:

@@ -25,6 +25,7 @@ on:
           - build_push_pycsw
           - build_push_solr
           - build_push_postgis
+          - build_push_postgis_base
           - build_push_test_ckan
       gitRef:
         description: Commit, tag or branch name to build
@@ -107,7 +108,7 @@ jobs:
           fi
 
           case $buildType in
-            "build_only" | "build_push_pycsw" | "build_push_postgis")
+            "build_only" | "build_push_pycsw" | "build_push_postgis" | "build_push_postgis_base")
               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
             ;;
