@@ -10,7 +10,7 @@ apps:
   postgis_base: &app_postgis_base
     name: postgis-base
     version: "13-bullseye"
-    patch: ""
+    patch: "a"
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
