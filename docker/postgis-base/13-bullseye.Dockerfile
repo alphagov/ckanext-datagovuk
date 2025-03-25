@@ -20,4 +20,4 @@ RUN apt-get update \
       && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /docker-entrypoint-initdb.d
-COPY ./initdb-postgis.sh /docker-entrypoint-initdb.d/10_postgis.sh
+COPY docker/postgis-base/initdb-postgis.sh /docker-entrypoint-initdb.d/10_postgis.sh
