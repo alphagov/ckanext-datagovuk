@@ -1,4 +1,4 @@
-FROM postgis/postgis:13-3.1-alpine
+FROM ghcr.io/alphagov/postgis-base:13-bullseye-
 
 # Allow connections; we don't map out any ports so only linked docker containers can connect
 RUN echo "host all  all    0.0.0.0/0  md5" >> /var/lib/postgresql/data/pg_hba.conf

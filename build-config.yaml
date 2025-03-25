@@ -6,7 +6,7 @@ apps:
   postgis: &app_postgis
     name: postgis
     version: "13-3.1"
-    patch: ""
+    patch: "a"
   postgis_base: &app_postgis_base
     name: postgis-base
     version: "13-bullseye"
