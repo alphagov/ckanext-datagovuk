@@ -4,8 +4,10 @@ echo "===== Running CKAN setup ====="
 
 # Wait for PostgreSQL
 while ! pg_isready -h $CKAN_DB_HOST -U ckan; do
+  echo "Waiting 1 second for postgres to be ready"
   sleep 1;
 done
+echo "Postgres is ready"
 
 if [ ${CKAN_DB_INIT:-} = "true" ]; then
     ckan db init
@@ -23,6 +25,12 @@ if [ ! -z $CREATE_CKAN_ADMIN ]; then
     fi
 fi
 
+while [ $(curl -s -o /dev/null -I -w '%{http_code}' "$CKAN_SOLR_URL/admin/ping") != "200" ]; do
+  echo "Waiting 1 second for Solr to be ready"
+  sleep 1;
+done
+echo "Solr ready"
+
 if [ ! -z $SETUP_DGU_TEST_DATA ]; then
     echo "===== removing old DGU test data ====="
     ckan datagovuk remove-dgu-test-data
@@ -30,7 +38,5 @@ if [ ! -z $SETUP_DGU_TEST_DATA ]; then
     echo "===== creating DGU test data ====="
     ckan datagovuk create-dgu-test-data
 fi
-
-ckan config-tool "$CKAN_INI" "ckan.i18n_directory=$CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk"
 
 exec "$@"
