@@ -254,7 +254,7 @@ def load_references(xls_stream, errors, validation_errors):
                             '(reference) professions',
                             '(reference) units',
                         ])
-    except XLRDError as e:
+    except (ValueError, XLRDError) as e:
         if str(e) == "No sheet named <'(reference) units'>":
             validation_errors.append(str(e))
             return {}
