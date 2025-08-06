@@ -81,7 +81,15 @@ ckan datagovuk remove-dgu-test-data
 
 > You rarely need to perform these steps and should only be used when there's an upstream CKAN change.
 
-The CKAN core and base images can be built on Github actions by selecting the `Build base images` under actions, Build and push images workflow. If you are releasing a change to the base image, which handles the extension versions or a change to the CKAN version, tests might fail until the images are built and pushed into GHCR.
+Before building and pushing updates to the core and base CKAN images you will need to ensure that the version number or patch is incremented to prevent overwriting of existing images in the `build-config.yaml` and ensure that the CKAN Dockerfiles have the correct version and patch values.
+
+You only need to run the `build_push_core` if there are changes to CKAN to deploy. If there are changes to the extensions then you should run `build_push_base` instead.
+
+The CKAN core and base images can be built on Github actions by clicking on the `Build and push multi-arch image` workflow then under `Run workflow` selecting the branch with your update if it not on the `main` branch and the `build_push_core` build. Once the `build_push_core` has successfully completed you will need to run the `build_push_base` on the same branch.
+
+If you are releasing a change to the base image, which handles the extension versions or a change to the CKAN version, tests might fail until the images are built and pushed into GHCR.
+
+You can check if the images have been correctly built and pushed on the [CKAN package page](https://github.com/alphagov/ckanext-datagovuk/pkgs/container/ckan)
 
 ## Deploying CKAN
 
