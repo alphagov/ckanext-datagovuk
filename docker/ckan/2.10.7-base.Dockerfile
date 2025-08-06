@@ -1,4 +1,4 @@
-FROM ghcr.io/alphagov/ckan:2.10.7-core
+FROM ghcr.io/alphagov/ckan:2.10.7--core
 
 COPY production.ini $CKAN_CONFIG/production.ini
 # Set CKAN_INI
