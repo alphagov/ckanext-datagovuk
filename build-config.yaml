@@ -21,6 +21,8 @@ build_types:
     - *app_ckan
   build_push_ckan_with_gittag:
     - *app_ckan
+  build_push_core:
+    - *app_ckan
   build_push_base:
     - *app_ckan
   build_push_pycsw:

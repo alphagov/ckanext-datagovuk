@@ -21,6 +21,7 @@ on:
           - build_only
           - build_push_ckan
           - build_push_ckan_with_gittag
+          - build_push_core
           - build_push_base
           - build_push_pycsw
           - build_push_solr
