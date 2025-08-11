@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM ubuntu:jammy
+FROM ubuntu:jammy-20250714
 
 # Set timezone
 ENV TZ=UTC
@@ -30,7 +30,7 @@ RUN apt-get -q -y update \
         libffi-dev \
         postgresql-client \
         build-essential \
-        git-core \
+        git \
         gunicorn \
         wget \
         proj-bin \
