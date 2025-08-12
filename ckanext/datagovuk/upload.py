@@ -109,7 +109,6 @@ def upload_resource_to_s3(context, resource):
         obj = bucket.put_object(Key=s3_filepath,
                                 Body=body.getvalue().encode('utf-8'),
                                 ContentType=content_type)
-        obj.Acl().put(ACL='public-read')
         logger.info("Successfully uploaded resource %s to S3" % resource.get('name', ''))
 
     except ClientError as exception:
