@@ -1,6 +1,6 @@
 beautifulsoup4==4.12.3
 blinker==1.4
-boto3==1.34.27
+boto3==1.40.55
 ckantoolkit>=0.0.7
 gunicorn
 jinja2==3.1.*
