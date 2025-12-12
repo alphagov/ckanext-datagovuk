@@ -3,10 +3,10 @@ version: "3"
 services:
   ckan-2.10:
     container_name: ckan-2.10
-    image: ghcr.io/alphagov/ckan:2.10
-    # build:
-    #   context: ../
-    #   dockerfile: docker/ckan/2.10.Dockerfile
+    # image: ghcr.io/alphagov/ckan:2.10
+    build:
+      context: ckan/
+      dockerfile: 2.10.7.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -19,13 +19,14 @@ services:
     volumes:
       - ckan_storage-2.10:/var/lib/ckan
       - ./logs/2.10:/var/log/ckan
+      - ../ckanext/datagovuk/:/usr/lib/ckan/venv/src/ckanext-datagovuk/ckanext/datagovuk/
     depends_on: 
       - db-2.10
       - solr-2.10
       - redis-2.10
       - static-mock-harvest-source-2.10
-    # command: bash -c "tail -f /dev/null"
-    command: bash -c "ckan run --host 0.0.0.0"
+    command: bash -c "tail -f /dev/null"
+    # command: bash -c "ckan run --host 0.0.0.0"
     networks:
       - ckan-2.10
 
@@ -34,8 +35,8 @@ services:
     image: ghcr.io/alphagov/pycsw:2.6.1
     # image: localhost:61511/pycsw:2.6.1
     # build:
-    #   context: ../
-    #   dockerfile: docker/pycsw/2.6.1.Dockerfile
+    #   context: pycsw/
+    #   dockerfile: 2.6.1.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -57,8 +58,8 @@ services:
     env_file:
       - .env-2.10
     build:
-      context: ../
-      dockerfile: docker/postgis/13-3.1.Dockerfile
+      context: postgis/
+      dockerfile: 13-3.1.Dockerfile
     volumes:
       - pg_data-2.10:/var/lib/postgresql/data
     networks:
@@ -101,11 +102,10 @@ services:
 
   static-mock-harvest-source-2.10:
     container_name: static-mock-harvest-source-2.10
-    image: ghcr.io/alphagov/static-mock-harvest-source:2.10
+    # image: ghcr.io/alphagov/static-mock-harvest-source:2.10
     # image: localhost:61511/static-mock-harvest-source:2.10
-    # build:
-    #   context: ../
-    #   dockerfile: docker/src/2.10/ckan-mock-harvest-sources/static/Dockerfile
+    build:
+      context: src/2.10/ckan-mock-harvest-sources/static/
     ports:
       - "11091:11088"
     volumes:
