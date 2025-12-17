@@ -32,11 +32,11 @@ services:
 
   pycsw-2.10:
     container_name: pycsw-2.10
-    image: ghcr.io/alphagov/pycsw:2.6.1
+    # image: ghcr.io/alphagov/pycsw:2.6.1
     # image: localhost:61511/pycsw:2.6.1
-    # build:
-    #   context: pycsw/
-    #   dockerfile: 2.6.1.Dockerfile
+    build:
+      context: ../
+      dockerfile: ./docker/pycsw/2.6.1.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -57,9 +57,10 @@ services:
     container_name: db-2.10
     env_file:
       - .env-2.10
-    build:
-      context: postgis/
-      dockerfile: 13-3.1.Dockerfile
+    image: docker-db-2.10
+    # build:
+    #   context: postgis/
+    #   dockerfile: 13-3.1.Dockerfile
     volumes:
       - pg_data-2.10:/var/lib/postgresql/data
     networks:
@@ -88,9 +89,10 @@ services:
 
   nginx-2.10:
     container_name: nginx-2.10
-    build:
-      context: ../
-      dockerfile: docker/nginx/Dockerfile
+    image: docker-nginx-2.10 
+    # build:
+    #   context: ../
+    #   dockerfile: docker/nginx/Dockerfile
     links:
       - ckan-2.10:ckan
     ports:
@@ -104,8 +106,9 @@ services:
     container_name: static-mock-harvest-source-2.10
     # image: ghcr.io/alphagov/static-mock-harvest-source:2.10
     # image: localhost:61511/static-mock-harvest-source:2.10
-    build:
-      context: src/2.10/ckan-mock-harvest-sources/static/
+    image: docker-static-mock-harvest-source-2.10 
+    # build:
+    #   context: src/2.10/ckan-mock-harvest-sources/static/
     ports:
       - "11091:11088"
     volumes:
