@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 
 from ckan.plugins.toolkit import config
 import ckan.plugins as plugins
@@ -20,7 +21,7 @@ from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 from flask import Blueprint
 
-from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -313,8 +314,9 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def make_middleware(self, app, config):
         sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
 
-        if not hasattr(app, '_metrics'):
-            metrics = PrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'], group_by='url_rule')
+        # only add metrics once and not for the ckan db init command
+        if not hasattr(app, '_metrics') and not 'ckan db init' in ' '.join(sys.argv):
+            metrics = GunicornPrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'], group_by='url_rule')
             app._metrics = metrics
         return app
 

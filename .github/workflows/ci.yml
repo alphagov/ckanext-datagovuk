@@ -28,7 +28,7 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.10.4-e-base
+      image: ghcr.io/alphagov/ckan:2.10.7--base
       options: --user root
     services:
       solr:
@@ -80,7 +80,7 @@ jobs:
           # set the i18n directory
           sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" "${CKAN_CONFIG}"/production.ini
       - name: Init Database
-        run: |
-          ckan db init
+        run: ckan db init
       - name: Run tests
-        run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+        run: |
+          PROMETHEUS_MULTIPROC_DIR="$RUNNER_TEMP" pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
