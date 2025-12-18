@@ -314,8 +314,8 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     def make_middleware(self, app, config):
         sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
 
-        # only add metrics once and not for the ckan db init command
-        if not hasattr(app, '_metrics') and not 'ckan db init' in ' '.join(sys.argv):
+        # only add metrics once and on gunicorn startup command
+        if not hasattr(app, '_metrics') and 'gunicorn -c' in ' '.join(sys.argv):
             metrics = GunicornPrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'], group_by='url_rule')
             app._metrics = metrics
         return app
