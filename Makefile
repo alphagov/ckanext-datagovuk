@@ -10,6 +10,10 @@ build: ## Set up everything to run the app
 run: ## Run the local docker stack
 	docker compose -f ./docker/docker-compose-2.10.yml up
 
+.PHONY: down
+down: ## Stop the local docker stack
+	docker compose -f ./docker/docker-compose-2.10.yml down
+
 .PHONY: test
 test: ## Test CKAN on docker stack 
 	docker exec -w /usr/lib/ckan/venv/src/ckanext-datagovuk  -it ckan-2.10 ./bin/run-tests.sh
