@@ -25,8 +25,8 @@ services:
       - solr-2.10
       - redis-2.10
       - static-mock-harvest-source-2.10
-    command: bash -c "tail -f /dev/null"
-    # command: bash -c "ckan run --host 0.0.0.0"
+    # command: bash -c "tail -f /dev/null"
+    command: bash -c "ckan run --host 0.0.0.0"
     networks:
       - ckan-2.10
 
@@ -65,8 +65,8 @@ services:
       - solr-2.10:solr
     depends_on: 
       - solr-2.10
-    # command: bash -c "bin/yarn && ./docker/local-run.sh"
-    command: bash -c "tail -f /dev/null"
+    command: bash -c "./docker/local-run.sh"
+    # command: bash -c "tail -f /dev/null"
     volumes:
       - ./src/2.10/datagovuk_find:/srv/app/datagovuk_find
       - ./logs/2.10:/var/log/find
