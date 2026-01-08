@@ -63,6 +63,7 @@ Then run the ckan command:
 
 ```
 ckan datagovuk create-dgu-test-data
+ckan datagovuk reindex-organisations  # this will create an organisations index used by the Find app
 ```
 
 To remove the test data:
