@@ -3,7 +3,9 @@ import unittest
 
 from ckan.lib.navl.dictization_functions import augment_data
 from ckan.lib.navl.validators import ignore
+from ckan.tests.helpers import change_config
 
+from ckanext.datagovuk.ckan_patches import helpers
 from ckanext.datagovuk.plugin import DatagovukPlugin
 from ckanext.datagovuk.action import create, get
 
@@ -58,6 +60,7 @@ class TestPlugin:
         assert ('invalid', 0, 'key') in data[('__junk',)]
         assert ('invalid', 0, 'value') in data[('__junk',)]
 
+    @change_config('ckan.site_url', 'http://test.ckan.net')
     def test_plugin_before_send(self):
         mock_event  = {
             'logentry': {
@@ -68,6 +71,7 @@ class TestPlugin:
 
         assert response == mock_event
 
+    @change_config('ckan.site_url', 'http://test.ckan.net')
     def test_plugin_before_send_ignores_data_errors(self):
         mock_events = [
             {'logentry': {'message': 'Found more than one dataset with the same guid xxx'}},
