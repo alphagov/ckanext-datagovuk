@@ -10,7 +10,7 @@ SPATIAL_FORK=alphagov
 SPATIAL_SHA=c4938431346b50209d7bcf89a1a0154698b9f9f2
 HARVEST_FORK=ckan
 HARVEST_SHA=9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4
-SRC_DIR=2.10.7
+SRC_DIR=2.10
 FIND_SHA=v3.2.6
 
 echo -e "Please ensure that the ${SRC_DIR} docker/src directory is empty before running this command. This command will not populate the directories required for this project to run effectively unless said directories are already empty or don't exist.\n"
