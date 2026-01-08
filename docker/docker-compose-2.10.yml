@@ -25,18 +25,18 @@ services:
       - solr-2.10
       - redis-2.10
       - static-mock-harvest-source-2.10
-    command: bash -c "tail -f /dev/null"
-    # command: bash -c "ckan run --host 0.0.0.0"
+    # command: bash -c "tail -f /dev/null"
+    command: bash -c "ckan run --host 0.0.0.0"
     networks:
       - ckan-2.10
 
   pycsw-2.10:
     container_name: pycsw-2.10
-    # image: ghcr.io/alphagov/pycsw:2.6.1
+    image: ghcr.io/alphagov/pycsw:2.6.1
     # image: localhost:61511/pycsw:2.6.1
-    build:
-      context: ../
-      dockerfile: ./docker/pycsw/2.6.1.Dockerfile
+    # build:
+    #   context: ../
+    #   dockerfile: ./docker/pycsw/2.6.1.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -53,14 +53,36 @@ services:
     networks:
       - ckan-2.10
 
+  find-2.10:
+    # image: ghcr.io/alphagov/datagovuk_find:v3.2.6
+    image: dev.datagovuk_find
+    container_name: find-2.10
+    # build:  
+    #   context: ./src/2.10/datagovuk_find/dev.Dockerfile
+    env_file:
+      - .env-2.10
+    links:
+      - solr-2.10:solr
+    depends_on: 
+      - solr-2.10
+    command: bash -c "./docker/local-run.sh"
+    # command: bash -c "tail -f /dev/null"
+    volumes:
+      - ./src/2.10/datagovuk_find:/srv/app/datagovuk_find
+      - ./logs/2.10:/var/log/find
+    networks:
+      - ckan-2.10
+    ports:
+      - "4001:3000"
+
   db-2.10:
     container_name: db-2.10
     env_file:
       - .env-2.10
-    image: docker-db-2.10
-    # build:
-    #   context: postgis/
-    #   dockerfile: 13-3.1.Dockerfile
+    # image: docker-db-2.10
+    build:
+      context: postgis/
+      dockerfile: 13-3.1.Dockerfile
     volumes:
       - pg_data-2.10:/var/lib/postgresql/data
     networks:
@@ -89,10 +111,10 @@ services:
 
   nginx-2.10:
     container_name: nginx-2.10
-    image: docker-nginx-2.10 
-    # build:
-    #   context: ../
-    #   dockerfile: docker/nginx/Dockerfile
+    # image: docker-nginx-2.10 
+    build:
+      context: ../
+      dockerfile: docker/nginx/Dockerfile
     links:
       - ckan-2.10:ckan
     ports:
@@ -106,9 +128,9 @@ services:
     container_name: static-mock-harvest-source-2.10
     # image: ghcr.io/alphagov/static-mock-harvest-source:2.10
     # image: localhost:61511/static-mock-harvest-source:2.10
-    image: docker-static-mock-harvest-source-2.10 
-    # build:
-    #   context: src/2.10/ckan-mock-harvest-sources/static/
+    # image: docker-static-mock-harvest-source-2.10 
+    build:
+      context: src/2.10/ckan-mock-harvest-sources/static/
     ports:
       - "11091:11088"
     volumes:
