@@ -1,0 +1,6 @@
+.github
+.pytest_cache
+venv
+docker
+!docker/postgis/docker-entrypoint-initdb.d
+docs
