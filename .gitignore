@@ -49,3 +49,4 @@ environment.sh
 .DS_Store
 .env*
 docker/src
+!.env.example

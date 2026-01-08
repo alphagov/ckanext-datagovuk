@@ -30,3 +30,8 @@ echo $'\nmap $host $mock_absolute_root_url { default "http://static-mock-harvest
 
 git clone https://github.com/alphagov/datagovuk_find.git --branch $FIND_SHA --single-branch
 popd
+
+if [[ ! -f "docker/.env-$SRC_DIR" ]]; then
+    cp "docker/.env.example" "docker/.env-$SRC_DIR"
+    echo "Created .env-$SRC_DIR from .env.example, please update it with your settings."
+fi
