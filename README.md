@@ -2,7 +2,7 @@
 
 The CKAN extension for data.gov.uk
 
-## Features
+## Features test
 
 - Configures Sentry automatically using a `SENTRY_DSN` environment variable.
 
