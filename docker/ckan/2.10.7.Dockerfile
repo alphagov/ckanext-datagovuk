@@ -21,7 +21,10 @@ WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
 RUN echo "pip install ckanext-datagovuk..." && \
 
     # install ckanext-datagovuk
+    # setuptools pkg_resources has been removed in setuptools 81 so pin it to 80 to avoid runtime errors, 
+    #   see https://github.com/pypa/setuptools/commit/8ba2f3829a8aae66165d9745bf838982dafb3f96
     pip install $pipopt -U -r requirements.txt && \
+    pip install $pipopt -U setuptools==80 && \
     pip install $pipopt -U -e .
 
 # to run the CKAN wsgi set the WORKDIR to CKAN
