@@ -2,7 +2,7 @@ apps:
   ckan: &app_ckan
     name: ckan
     version: "2.10.7"
-    patch: ""
+    patch: "a"
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
