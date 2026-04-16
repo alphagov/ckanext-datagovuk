@@ -23,6 +23,10 @@ from ckanext.harvest.model import define_harvester_tables
 from ckanext.harvest.plugin import _create_harvest_source_object
 
 
+DGU_ORGANISATIONS_ID = "dgu_organisations_2"
+ROWS_TO_RETRIEVE = 3000
+
+
 def get_commands():
     return [datagovuk]
 
@@ -373,7 +377,7 @@ def reindex_recent(context):
 #
 # curl -g "http://$CKAN_SOLR_URL/solr/ckan/update?commit=true" \
 #     -H 'Content-Type: application/json' \
-#     -d '{"delete":{"query":"site_id:dgu_organisations%20AND%20name:org-name"}}'
+#     -d '{"delete":{"query":"site_id:<DGU_ORGANISATIONS_ID>%20AND%20name:org-name"}}'
 ###
 @datagovuk.command()
 @pass_context
@@ -395,7 +399,7 @@ def reindex_organisations(context):
     solr = pysolr.Solr(os.getenv('CKAN_SOLR_URL'), always_commit=True, timeout=10)
     solr.ping()
 
-    existing_organisations = [r.get('name') for r in solr.search("*", fq="(site_id:dgu_organisations)", rows=3000)]
+    existing_organisations = [r.get('name') for r in solr.search("*", fq=f"(site_id:{DGU_ORGANISATIONS_ID})", rows=ROWS_TO_RETRIEVE)]
     organisations = []
     counter = 0
 
@@ -406,7 +410,7 @@ def reindex_organisations(context):
         counter += 1
         print(f'{counter} - adding organisation {org.name}')
         data = {
-            "site_id": "dgu_organisations",
+            "site_id": DGU_ORGANISATIONS_ID,
             "id": org.id,
             "title": org.title,
             "name": org.name,
@@ -426,7 +430,7 @@ def reindex_organisations(context):
     if organisations:
         solr.add(organisations)
 
-    results = solr.search("*", fq="(site_id:dgu_organisations)", rows=3000)
+    results = solr.search("*", fq=f"(site_id:{DGU_ORGANISATIONS_ID})", rows=ROWS_TO_RETRIEVE)
 
     print(f"Added {len(organisations)} organisations, total number = {len(results)}")
 
