@@ -28,7 +28,7 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.10.7--base
+      image: ghcr.io/alphagov/ckan:2.10.7-a-base
       options: --user root
     services:
       solr:
