@@ -28,7 +28,7 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.10.7--base
+      image: ghcr.io/alphagov/ckan:2.10.7-a-base
       options: --user root
     services:
       solr:
@@ -70,6 +70,9 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -e .
+          # setuptools pkg_resources has been removed in setuptools 81 so pin it to 80 to avoid runtime errors, 
+          #   see https://github.com/pypa/setuptools/commit/8ba2f3829a8aae66165d9745bf838982dafb3f96
+          pip install setuptools==80
       - name: Install dev requirements
         run: |
           pip install -r dev-requirements.txt
