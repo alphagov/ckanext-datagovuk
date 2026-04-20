@@ -1,0 +1,30 @@
+[project]
+name = "ckanext-datagovuk"
+version = "1.0.0"
+requires-python = ">=3.9"
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+exclude = [
+    "docker/",
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I"]
+ignore = [
+    "E501",  # line too long — formatter handles where possible
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ckanext"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
