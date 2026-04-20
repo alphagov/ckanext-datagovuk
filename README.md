@@ -6,32 +6,59 @@ The CKAN extension for data.gov.uk
 
 - Configures Sentry automatically using a `SENTRY_DSN` environment variable.
 
-## Running CKAN and Find locally
+## Local development
 
-To run a development version of Find locally you will need to build the development image locally which will allow you to made modifications to the code directly on the docker container
+### Prerequisites
+- Docker desktop
+- Make
 
-1. On the datagovuk_find root directory run `make dev-build` after making code updates and passing tests.
-2. Check that the image is available by running `docker images | grep dev.datagovuk_find`, if it's not showing then the build in the first step failed or the image is no longer available.
-3. If you run bootstrap then you can skip this step otherwise run `make bootstrap` to download the latest repositories
-  - NOTE - make sure that the `SRC_DIR` matches the source version in the docker-compose file.
-3. In the ckanext-datagovuk root directory run `make build` to build the images needed for the docker stack
-  - once the build is complete you can refer to the image of the docker build by uncommenting the image and comment out the build part of each stack.
-4. After the build is complete run `make run` to start the docker compose stack.
-  - after a few minutes it should be possible to access the different web apps and the search server
-    - CKAN - Publishing app - http://localhost:5001 
-    - Find - Public facing discovery app -  http://localhost:4001
-    - Solr - Search index server used by CKAN and Find - http://localhost:8983/solr
+### Initial setup
 
+1. Clone the repo and run:
 
-## Development
+```bash
+make bootstrap
+```
 
-### Using the Makefile
+This clones repos required for runnning the whole stack (ckan, find app etc) into `docker/src/[version-number]` it also creates an `docker/.env-[version-number]` from an example file: [.env.example](.env.example)
+
+The `docker/src/` directory is gitingored as it is a local development artefact.
+
+If the version number of the
+
+2. Build the find dev image (from the `datagovuk_find` repo)
+
+If you haven't already done so, checkout datagovuk_find from [https://github.com/alphagov/datagovuk_find](https://github.com/alphagov/datagovuk_find)
+
+In root of that project run:
+
+```bash
+make dev-build
+```
+
+---
+
+### Running the entire stack
 
 1. Run `make run` to start up the docker compose stack
-  - access CKAN on http://localhost:5001
-  - access Find on http://localhost:4001
 
-2. Run `make test` to just run the tests
+### Services
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| CKAN (via nginx) | http://localhost:5001 | ?* |
+| Find | http://localhost:4001 | none |
+| Solr | http://localhost:8983 | none |
+
+
+### Creating a CKAN admin user
+
+*There seem to currently be a bug in the creating of the admin user. So while CKAN starts, the login for local dev doesn't work.
+
+
+### Running tests
+
+1. Run `make test` to just run the tests
 
 ### Running commands on the docker compose stack
 

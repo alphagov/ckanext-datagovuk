@@ -11,13 +11,24 @@ SPATIAL_FORK=alphagov
 SPATIAL_SHA=c4938431346b50209d7bcf89a1a0154698b9f9f2
 HARVEST_FORK=ckan
 HARVEST_SHA=9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4
-SRC_DIR=2.10
 FIND_SHA=v3.8.0
 
-echo -e "Please ensure that the ${SRC_DIR} docker/src directory is empty before running this command. This command will not populate the directories required for this project to run effectively unless said directories are already empty or don't exist.\n"
 
-mkdir -p docker/src/$SRC_DIR
-pushd docker/src/$SRC_DIR
+if [[ ! -f "docker/.env" ]]; then
+    cp "docker/.env.example" "docker/.env"
+    echo "Created docker/.env from .env.example - if needed update it with your settings"
+fi
+
+# Check for contents in src dir
+if [[ -d "docker/src" ]]; then
+    echo "docker/src already exists"
+    read -p "Remove and re-clone dependencies? [y/N] " confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] || exit 0
+    rm -rf "docker/src"
+fi
+
+mkdir -p docker/src
+pushd docker/src
 (git clone https://github.com/$CKAN_FORK/$CKAN_REPO && cd $CKAN_REPO && git checkout $CKAN_SHA)
 
 (git clone https://github.com/$HARVEST_FORK/ckanext-harvest && cd ckanext-harvest && git checkout $HARVEST_SHA)
@@ -31,8 +42,3 @@ echo $'\nmap $host $mock_absolute_root_url { default "http://static-mock-harvest
 
 git clone https://github.com/alphagov/datagovuk_find.git --branch $FIND_SHA --single-branch
 popd
-
-if [[ ! -f "docker/.env-$SRC_DIR" ]]; then
-    cp "docker/.env.example" "docker/.env-$SRC_DIR"
-    echo "Created .env-$SRC_DIR from .env.example, please update it with your settings."
-fi
