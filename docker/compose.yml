@@ -3,7 +3,7 @@ services:
     container_name: ckan
     build:
       context: ../
-      dockerfile: docker/ckan/2.10.7.Dockerfile
+      dockerfile: docker/ckan/${CKAN_VERSION}.Dockerfile
     env_file:
       - .env
     links:
