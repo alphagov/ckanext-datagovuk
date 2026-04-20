@@ -3,7 +3,7 @@ services:
     container_name: ckan
     build:
       context: ../
-      dockerfile: docker/ckan/${CKAN_VERSION}.Dockerfile
+      dockerfile: docker/ckan/2.10.7.Dockerfile
     env_file:
       - .env
     links:
@@ -44,23 +44,23 @@ services:
     networks:
       - ckan
 
-  find:
-    image: dev.datagovuk_find
-    container_name: find
-    env_file:
-      - .env
-    links:
-      - solr
-    depends_on: 
-      - solr
-    command: bash -c "./docker/local-run.sh"
-    volumes:
-      - ./src/datagovuk_find:/srv/app/datagovuk_find
-      - ./logs:/var/log/find
-    networks:
-      - ckan
-    ports:
-      - "4001:3000"
+  # find:
+  #   image: dev.datagovuk_find
+  #   container_name: find
+  #   env_file:
+  #     - .env
+  #   links:
+  #     - solr
+  #   depends_on: 
+  #     - solr
+  #   command: bash -c "./docker/local-run.sh"
+  #   volumes:
+  #     - ./src/datagovuk_find:/srv/app/datagovuk_find
+  #     - ./logs:/var/log/find
+  #   networks:
+  #     - ckan
+  #   ports:
+  #     - "4001:3000"
 
   db:
     container_name: db
@@ -116,14 +116,14 @@ services:
       - ./src/ckan-mock-harvest-sources/static/responses:/srv/responses
       - ./src/ckan-mock-harvest-sources/static/mock-third-party:/src/mock-third-party
     networks:
-      - ckan-${CKAN_VERSION}
+      - ckan
 
 volumes:
-  ckan_storage-${CKAN_VERSION}:
-  pg_data-${CKAN_VERSION}:
-  solr_data-${CKAN_VERSION}:
-  redis_data-${CKAN_VERSION}:
+  ckan_storage:
+  pg_data:
+  solr_data:
+  redis_data:
 
 networks:
-  ckan-${CKAN_VERSION}:
+  ckan:
       driver: bridge
