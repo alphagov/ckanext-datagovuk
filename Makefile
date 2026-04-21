@@ -4,19 +4,19 @@
 
 .PHONY: build
 build: ## Set up everything to run the app
-	docker compose -f ./docker/docker-compose-2.10.yml build
+	docker compose -f ./docker/compose.yml build
 
 .PHONY: run
 run: ## Run the local docker stack
-	docker compose -f ./docker/docker-compose-2.10.yml up
+	docker compose -f ./docker/compose.yml up
 
 .PHONY: down
 down: ## Stop the local docker stack
-	docker compose -f ./docker/docker-compose-2.10.yml down
+	docker compose -f ./docker/compose.yml down
 
 .PHONY: test
 test: ## Test CKAN on docker stack 
-	docker exec -w /usr/lib/ckan/venv/src/ckanext-datagovuk  -it ckan-2.10 ./bin/run-tests.sh
+	docker exec -w /usr/lib/ckan/venv/src/ckanext-datagovuk  -it ckan ./bin/run-tests.sh
 
 .PHONY: bootstrap
 bootstrap: ## Download repositories for local build
