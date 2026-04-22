@@ -1,12 +1,19 @@
 import argparse
 import logging
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import StrEnum
 
 import requests
+from requests.adapters import HTTPAdapter
 
 LOG_FILE = "check_links.log"
+USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
+HTTP_TIMEOUT = (5, 10)  # (connect, read) seconds
+DEFAULT_WORKERS = 10
+BATCH_SIZE = 500
+HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
 
 
 def setup_logging(log_path: str = LOG_FILE) -> logging.Logger:
@@ -39,19 +46,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 class CheckOutcome(StrEnum):
     OK = "OK"
     BROKEN_404 = "BROKEN_404"
-    OTHER_4XX = "OTHER_4XX"
-    FIVE_XX = "5XX"
+    CLIENT_ERROR = "CLIENT_ERROR"
+    SERVER_ERROR = "SERVER_ERROR"
     TIMEOUT = "TIMEOUT"
-    CONN_ERROR = "CONN_ERROR"
-    SKIP_NON_HTTP = "SKIP_NON_HTTP"
+    CONNECTION_ERROR = "CONNECTION_ERROR"
     OTHER_ERROR = "OTHER_ERROR"
 
 
 @dataclass(frozen=True)
 class ResourceRow:
-    """
-    Represents a package (dataset) resource and its url from db
-    """
+    """Represents a package (dataset) resource and its url from db"""
 
     package_id: str
     package_name: str
@@ -59,21 +63,41 @@ class ResourceRow:
     url: str
 
 
-@dataclass
-class CheckResult:
-    """
-    Represents a row in a csv report file showing results of resource url checks
-    """
+@dataclass(frozen=True)
+class UrlCheckResult:
+    http_status: int | None
+    outcome: CheckOutcome
+    error_detail: str | None = None
+
+
+@dataclass(frozen=True)
+class ResourceCheckResult:
+    """A report row for one checked package resource URL"""
 
     row: ResourceRow
     http_status: int | None
     outcome: CheckOutcome
     error_detail: str | None
-    checked_at: CheckOutcome
+    checked_at: datetime
 
     @property
     def to_delete(self) -> bool:
         return self.outcome is CheckOutcome.BROKEN_404
+
+    @classmethod
+    def from_url_check(
+        cls,
+        row: ResourceRow,
+        url_check: UrlCheckResult,
+        checked_at: datetime,
+    ) -> "ResourceCheckResult":
+        return cls(
+            row=row,
+            http_status=url_check.http_status,
+            outcome=url_check.outcome,
+            error_detail=url_check.error_detail,
+            checked_at=checked_at,
+        )
 
 
 def classify_response(
@@ -83,7 +107,7 @@ def classify_response(
         case (_, requests.Timeout()):
             return CheckOutcome.TIMEOUT, str(exc)
         case (_, requests.ConnectionError()):
-            return CheckOutcome.CONN_ERROR, str(exc)
+            return CheckOutcome.CONNECTION_ERROR, str(exc)
         case (_, BaseException()):
             return CheckOutcome.OTHER_ERROR, str(exc)
         case (None, None):
@@ -93,11 +117,60 @@ def classify_response(
         case (int(s), None) if 200 <= s < 400:
             return CheckOutcome.OK, None
         case (int(s), None) if 400 <= s < 500:
-            return CheckOutcome.OTHER_4XX, None
+            return CheckOutcome.CLIENT_ERROR, None
         case (int(s), None) if 500 <= s < 600:
-            return CheckOutcome.FIVE_XX, None
+            return CheckOutcome.SERVER_ERROR, None
         case _:
             return CheckOutcome.OTHER_ERROR, f"unexpected status {status_code}"
+
+
+def session_factory(workers: int) -> requests.Session:
+    session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
+    adapter = HTTPAdapter(pool_connections=workers, pool_maxsize=workers * 2)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
+def fetch_status(session: requests.Session, url: str) -> int:
+    resp = session.head(url, timeout=HTTP_TIMEOUT, allow_redirects=True)
+    status = resp.status_code
+
+    if status in HEAD_FALLBACK_STATUSES:
+        with session.get(url, timeout=HTTP_TIMEOUT, allow_redirects=True, stream=True) as resp:
+            return resp.status_code
+
+    return status
+
+
+def check_url(
+    session: requests.Session,
+    url: str,
+) -> UrlCheckResult:
+    try:
+        status = fetch_status(session, url)
+        outcome, detail = classify_response(status, None)
+    except requests.RequestException as exc:
+        status = None
+        outcome, detail = classify_response(None, exc)
+
+    return UrlCheckResult(
+        http_status=status,
+        outcome=outcome,
+        error_detail=detail,
+    )
+
+
+def check_task(
+    row: ResourceRow,
+    session: requests.Session,
+) -> ResourceCheckResult:
+    return ResourceCheckResult.from_url_check(
+        row=row,
+        url_check=check_url(session, row.url),
+        checked_at=datetime.now(timezone.utc),
+    )
 
 
 def run(logger: logging.Logger):
