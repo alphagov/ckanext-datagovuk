@@ -1,6 +1,10 @@
-import sys
 import argparse
 import logging
+import sys
+from dataclasses import dataclass, field
+from enum import StrEnum
+
+import requests
 
 LOG_FILE = "check_links.log"
 
@@ -26,10 +30,74 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--mode",
         choices=["dry-run", "live"],
         default="dry-run",
-        help="default: 'dry-run' doesn't update db, creates report"
+        help="default: 'dry-run' doesn't update db, creates report",
     )
     parser.add_argument("--log-path", default=LOG_FILE)
     return parser.parse_args(argv)
+
+
+class CheckOutcome(StrEnum):
+    OK = "OK"
+    BROKEN_404 = "BROKEN_404"
+    OTHER_4XX = "OTHER_4XX"
+    FIVE_XX = "5XX"
+    TIMEOUT = "TIMEOUT"
+    CONN_ERROR = "CONN_ERROR"
+    SKIP_NON_HTTP = "SKIP_NON_HTTP"
+    OTHER_ERROR = "OTHER_ERROR"
+
+
+@dataclass(frozen=True)
+class ResourceRow:
+    """
+    Represents a package (dataset) resource and its url from db
+    """
+
+    package_id: str
+    package_name: str
+    resource_id: str
+    url: str
+
+
+@dataclass
+class CheckResult:
+    """
+    Represents a row in a csv report file showing results of resource url checks
+    """
+
+    row: ResourceRow
+    http_status: int | None
+    outcome: CheckOutcome
+    error_detail: str | None
+    checked_at: CheckOutcome
+
+    @property
+    def to_delete(self) -> bool:
+        return self.outcome is CheckOutcome.BROKEN_404
+
+
+def classify_response(
+    status_code: int | None, exc: BaseException | None
+) -> tuple[CheckOutcome, str | None]:
+    match (status_code, exc):
+        case (_, requests.Timeout()):
+            return CheckOutcome.TIMEOUT, str(exc)
+        case (_, requests.ConnectionError()):
+            return CheckOutcome.CONN_ERROR, str(exc)
+        case (_, BaseException()):
+            return CheckOutcome.OTHER_ERROR, str(exc)
+        case (None, None):
+            return CheckOutcome.OTHER_ERROR, "no status and no exception"
+        case (404, None):
+            return CheckOutcome.BROKEN_404, None
+        case (int(s), None) if 200 <= s < 400:
+            return CheckOutcome.OK, None
+        case (int(s), None) if 400 <= s < 500:
+            return CheckOutcome.OTHER_4XX, None
+        case (int(s), None) if 500 <= s < 600:
+            return CheckOutcome.FIVE_XX, None
+        case _:
+            return CheckOutcome.OTHER_ERROR, f"unexpected status {status_code}"
 
 
 def run(logger: logging.Logger):
@@ -47,4 +115,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

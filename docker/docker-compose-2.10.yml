@@ -20,6 +20,7 @@ services:
       - ckan_storage-2.10:/var/lib/ckan
       - ./logs/2.10:/var/log/ckan
       - ../ckanext/datagovuk/:/usr/lib/ckan/venv/src/ckanext-datagovuk/ckanext/datagovuk/
+      - ../bin/python_scripts/:/usr/lib/ckan/venv/src/ckanext-datagovuk/bin/python_scripts/
     depends_on: 
       - db-2.10
       - solr-2.10
@@ -53,27 +54,27 @@ services:
     networks:
       - ckan-2.10
 
-  find-2.10:
-    # image: ghcr.io/alphagov/datagovuk_find:v3.2.6
-    image: dev.datagovuk_find
-    container_name: find-2.10
-    # build:  
-    #   context: ./src/2.10/datagovuk_find/dev.Dockerfile
-    env_file:
-      - .env-2.10
-    links:
-      - solr-2.10:solr
-    depends_on: 
-      - solr-2.10
-    command: bash -c "./docker/local-run.sh"
-    # command: bash -c "tail -f /dev/null"
-    volumes:
-      - ./src/2.10/datagovuk_find:/srv/app/datagovuk_find
-      - ./logs/2.10:/var/log/find
-    networks:
-      - ckan-2.10
-    ports:
-      - "4001:3000"
+  # find-2.10:
+  #   # image: ghcr.io/alphagov/datagovuk_find:v3.2.6
+  #   image: dev.datagovuk_find
+  #   container_name: find-2.10
+  #   # build:  
+  #   #   context: ./src/2.10/datagovuk_find/dev.Dockerfile
+  #   env_file:
+  #     - .env-2.10
+  #   links:
+  #     - solr-2.10:solr
+  #   depends_on: 
+  #     - solr-2.10
+  #   command: bash -c "./docker/local-run.sh"
+  #   # command: bash -c "tail -f /dev/null"
+  #   volumes:
+  #     - ./src/2.10/datagovuk_find:/srv/app/datagovuk_find
+  #     - ./logs/2.10:/var/log/find
+  #   networks:
+  #     - ckan-2.10
+  #   ports:
+  #     - "4001:3000"
 
   db-2.10:
     container_name: db-2.10
@@ -83,6 +84,8 @@ services:
     build:
       context: postgis/
       dockerfile: 13-3.1.Dockerfile
+    ports:
+      - "5432:5432"
     volumes:
       - pg_data-2.10:/var/lib/postgresql/data
     networks:
