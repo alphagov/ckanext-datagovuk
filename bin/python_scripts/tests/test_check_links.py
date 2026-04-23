@@ -1,5 +1,5 @@
 import csv
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -38,7 +38,7 @@ def make_result():
             http_status=http_status,
             category=category,
             error_detail=error_detail,
-            checked_at=datetime(2026, 1, 2, 3, 4, 5, tzinfo=timezone.utc),
+            checked_at=datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
         )
 
     return _factory
@@ -91,7 +91,7 @@ def test_to_delete_only_for_definitively_gone(category, expected):
         http_status=None,
         category=category,
         error_detail=None,
-        checked_at=datetime.now(timezone.utc),
+        checked_at=datetime.now(UTC),
     )
     assert result.to_delete is expected
 

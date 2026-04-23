@@ -1,6 +1,8 @@
 include = [
     "check_links.py",
     "tests/test_check_links.py",
+    "revert_link_deletions.py",
+    "tests/test_revert_link_deletions.py",
 ]
 
 line-length = 100

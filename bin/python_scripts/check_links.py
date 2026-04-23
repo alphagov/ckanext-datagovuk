@@ -1,3 +1,16 @@
+"""Checks active resource URLs of active dataset packages.
+
+For each URL:
+  * Classifies the response (OK / 404 / 410 / other 4xx / 5xx / timeout / etc.).
+  * in `dry-run` mode no db writes - just report/log output
+  * in `live' mode: if 404 or 410, updates resource `state` to 'deleted'
+  * and updates package `metadata_modified` to NOW().
+
+Writes `check_links_report_{ts}.csv` (one row per URL) and
+`packages_to_reindex_{ts}.txt` (unique packages with at least one
+to-delete resource) for feeding into `solr_reindex_package_ids.py`.
+"""
+
 import argparse
 import csv
 import logging
@@ -5,7 +18,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 
 import psycopg2
@@ -14,6 +27,7 @@ from requests.adapters import HTTPAdapter
 
 LOG_FILE = "check_links_{timestamp}.log"
 REPORT_FILE = "check_links_report_{timestamp}.csv"
+REINDEX_FILE = "packages_to_reindex_{timestamp}.txt"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
 HTTP_TIMEOUT = (5, 10)  # (connect, read) seconds
 DEFAULT_WORKERS = 10
@@ -55,7 +69,7 @@ def setup_logging(log_path: str) -> logging.Logger:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--mode",
@@ -65,6 +79,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--log-path", default=LOG_FILE.format(timestamp=timestamp))
     parser.add_argument("--report-path", default=REPORT_FILE.format(timestamp=timestamp))
+    parser.add_argument("--reindex-path", default=REINDEX_FILE.format(timestamp=timestamp))
     return parser.parse_args(argv)
 
 
@@ -197,7 +212,7 @@ def check_task(
     return ResourceCheckResult.from_url_check(
         row=row,
         url_check=check_url(session, row.url),
-        checked_at=datetime.now(timezone.utc),
+        checked_at=datetime.now(UTC),
     )
 
 
@@ -217,6 +232,9 @@ class Repository:
     """
     UPDATE_RESOURCE_SQL = (
         "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND state = 'active'"
+    )
+    UPDATE_RESOURCE_ACTIVE_SQL = (
+        "UPDATE resource SET state = 'active' WHERE id = %(resource_id)s AND state = 'deleted'"
     )
     UPDATE_PACKAGE_MTIME_SQL = (
         "UPDATE package SET metadata_modified = NOW() WHERE id = %(package_id)s"
@@ -253,6 +271,15 @@ class Repository:
         assert self._conn is not None, "Repository not entered"
         with self._conn, self._conn.cursor() as cur:
             cur.execute(self.UPDATE_RESOURCE_SQL, {"resource_id": resource_id})
+            rowcount = cur.rowcount
+            if rowcount > 0:
+                cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
+        return rowcount
+
+    def mark_resource_active(self, resource_id: str, package_id: str) -> int:
+        assert self._conn is not None, "Repository not entered"
+        with self._conn, self._conn.cursor() as cur:
+            cur.execute(self.UPDATE_RESOURCE_ACTIVE_SQL, {"resource_id": resource_id})
             rowcount = cur.rowcount
             if rowcount > 0:
                 cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
@@ -295,9 +322,11 @@ class Reporter:
 
 
 def run(
+    *,
     logger: logging.Logger,
     repository: Repository,
     report_path: str,
+    reindex_path: str,
     mode: str,
     workers: int = DEFAULT_WORKERS,
 ) -> None:
@@ -306,6 +335,7 @@ def run(
     rows = repository.fetch_resources()
     logger.info(f"loaded {len(rows)} resources")
 
+    to_reindex: set[str] = set()
     session = session_factory(workers)
     with (
         Reporter(report_path) as reporter,
@@ -313,9 +343,16 @@ def run(
     ):
         for result in pool.map(lambda r: check_task(r, session), rows):
             reporter.write(result)
-            if mode == "live" and result.to_delete:
-                repository.mark_resource_deleted(result.row.resource_id, result.row.package_id)
-    logger.info(f"completed {len(rows)} checks")
+            if result.to_delete:
+                to_reindex.add(result.row.package_id)
+                if mode == "live":
+                    repository.mark_resource_deleted(result.row.resource_id, result.row.package_id)
+
+    with open(reindex_path, "w", encoding="utf-8") as f:
+        for package_id in sorted(to_reindex):
+            f.write(f"{package_id}\n")
+
+    logger.info(f"completed {len(rows)} checks, {len(to_reindex)} packages to reindex")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -323,6 +360,7 @@ def main(argv: list[str] | None = None) -> int:
     logger = setup_logging(args.log_path)
     logger.info(f"mode: {args.mode}")
     logger.info(f"report path: {args.report_path}")
+    logger.info(f"reindex path: {args.reindex_path}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
@@ -334,6 +372,7 @@ def main(argv: list[str] | None = None) -> int:
             logger=logger,
             repository=repository,
             report_path=args.report_path,
+            reindex_path=args.reindex_path,
             mode=args.mode,
         )
     return 0
