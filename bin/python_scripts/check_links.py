@@ -1,19 +1,41 @@
 import argparse
+import csv
 import logging
+import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import StrEnum
 
+import psycopg2
 import requests
 from requests.adapters import HTTPAdapter
 
 LOG_FILE = "check_links.log"
+REPORT_FILE = "check_links_report.csv"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
 HTTP_TIMEOUT = (5, 10)  # (connect, read) seconds
 DEFAULT_WORKERS = 10
-BATCH_SIZE = 500
 HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
+
+REPORT_HEADERS = [
+    "package-id",
+    "package-name",
+    "resource-id",
+    "resource-url",
+    "http-status",
+    "category",
+    "error-detail",
+    "to-delete",
+    "checked-at",
+]
+
+# TODOs:
+#  - Add org to csv output.
+#  - Create log of datasets to reindex using solr update scripts
+#  - Add more logging to this script covering steps
+#  - create some good test data?
 
 
 def setup_logging(log_path: str = LOG_FILE) -> logging.Logger:
@@ -40,12 +62,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="default: 'dry-run' doesn't update db, creates report",
     )
     parser.add_argument("--log-path", default=LOG_FILE)
+    parser.add_argument("--report-path", default=REPORT_FILE)
     return parser.parse_args(argv)
 
 
-class CheckOutcome(StrEnum):
+class Category(StrEnum):
     OK = "OK"
     BROKEN_404 = "BROKEN_404"
+    GONE_410 = "GONE_410"
     CLIENT_ERROR = "CLIENT_ERROR"
     SERVER_ERROR = "SERVER_ERROR"
     TIMEOUT = "TIMEOUT"
@@ -55,7 +79,7 @@ class CheckOutcome(StrEnum):
 
 @dataclass(frozen=True)
 class ResourceRow:
-    """Represents a package (dataset) resource and its url from db"""
+    """Represents a package (dataset) resource and its URL from db"""
 
     package_id: str
     package_name: str
@@ -66,7 +90,7 @@ class ResourceRow:
 @dataclass(frozen=True)
 class UrlCheckResult:
     http_status: int | None
-    outcome: CheckOutcome
+    category: Category
     error_detail: str | None = None
 
 
@@ -76,13 +100,13 @@ class ResourceCheckResult:
 
     row: ResourceRow
     http_status: int | None
-    outcome: CheckOutcome
+    category: Category
     error_detail: str | None
     checked_at: datetime
 
     @property
     def to_delete(self) -> bool:
-        return self.outcome is CheckOutcome.BROKEN_404
+        return self.category in {Category.BROKEN_404, Category.GONE_410}
 
     @classmethod
     def from_url_check(
@@ -94,7 +118,7 @@ class ResourceCheckResult:
         return cls(
             row=row,
             http_status=url_check.http_status,
-            outcome=url_check.outcome,
+            category=url_check.category,
             error_detail=url_check.error_detail,
             checked_at=checked_at,
         )
@@ -102,26 +126,28 @@ class ResourceCheckResult:
 
 def classify_response(
     status_code: int | None, exc: BaseException | None
-) -> tuple[CheckOutcome, str | None]:
+) -> tuple[Category, str | None]:
     match (status_code, exc):
         case (_, requests.Timeout()):
-            return CheckOutcome.TIMEOUT, str(exc)
+            return Category.TIMEOUT, str(exc)
         case (_, requests.ConnectionError()):
-            return CheckOutcome.CONNECTION_ERROR, str(exc)
+            return Category.CONNECTION_ERROR, str(exc)
         case (_, BaseException()):
-            return CheckOutcome.OTHER_ERROR, str(exc)
+            return Category.OTHER_ERROR, str(exc)
         case (None, None):
-            return CheckOutcome.OTHER_ERROR, "no status and no exception"
+            return Category.OTHER_ERROR, "no status and no exception"
         case (404, None):
-            return CheckOutcome.BROKEN_404, None
+            return Category.BROKEN_404, None
+        case (410, None):
+            return Category.GONE_410, None
         case (int(s), None) if 200 <= s < 400:
-            return CheckOutcome.OK, None
+            return Category.OK, None
         case (int(s), None) if 400 <= s < 500:
-            return CheckOutcome.CLIENT_ERROR, None
+            return Category.CLIENT_ERROR, None
         case (int(s), None) if 500 <= s < 600:
-            return CheckOutcome.SERVER_ERROR, None
+            return Category.SERVER_ERROR, None
         case _:
-            return CheckOutcome.OTHER_ERROR, f"unexpected status {status_code}"
+            return Category.OTHER_ERROR, f"unexpected status {status_code}"
 
 
 def session_factory(workers: int) -> requests.Session:
@@ -150,14 +176,14 @@ def check_url(
 ) -> UrlCheckResult:
     try:
         status = fetch_status(session, url)
-        outcome, detail = classify_response(status, None)
-    except requests.RequestException as exc:
+        category, detail = classify_response(status, None)
+    except Exception as exc:
         status = None
-        outcome, detail = classify_response(None, exc)
+        category, detail = classify_response(None, exc)
 
     return UrlCheckResult(
         http_status=status,
-        outcome=outcome,
+        category=category,
         error_detail=detail,
     )
 
@@ -173,16 +199,138 @@ def check_task(
     )
 
 
-def run(logger: logging.Logger):
-    logger.info("Do the work here")
+class Repository:
+    """Handles all db access. One connection opened in __enter__."""
+
+    SELECT_SQL = """
+        SELECT p.id, p.name, r.id, r.url
+        FROM package p
+        JOIN resource r ON r.package_id = p.id
+        WHERE p.state = 'active'
+          AND p.type = 'dataset'
+          AND r.state = 'active'
+          AND r.url IS NOT NULL
+          AND TRIM(r.url) <> ''
+        ORDER BY p.id, r.id
+    """
+    UPDATE_RESOURCE_SQL = (
+        "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND state = 'active'"
+    )
+    UPDATE_PACKAGE_MTIME_SQL = (
+        "UPDATE package SET metadata_modified = NOW() WHERE id = %(package_id)s"
+    )
+
+    def __init__(self, dsn: str) -> None:
+        self._dsn = dsn
+        self._conn: psycopg2.extensions.connection | None = None
+
+    def __enter__(self):
+        self._conn = psycopg2.connect(self._dsn)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def fetch_resources(self) -> list[ResourceRow]:
+        assert self._conn is not None, "Repository not entered"
+        with self._conn, self._conn.cursor() as cur:
+            cur.execute(self.SELECT_SQL)
+            return [
+                ResourceRow(
+                    package_id=package_id,
+                    package_name=package_name,
+                    resource_id=resource_id,
+                    url=url,
+                )
+                for package_id, package_name, resource_id, url in cur
+            ]
+
+    def mark_resource_deleted(self, resource_id: str, package_id: str) -> int:
+        assert self._conn is not None, "Repository not entered"
+        with self._conn, self._conn.cursor() as cur:
+            cur.execute(self.UPDATE_RESOURCE_SQL, {"resource_id": resource_id})
+            rowcount = cur.rowcount
+            if rowcount > 0:
+                cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
+        return rowcount
+
+
+class Reporter:
+    """Handles the CSV report writing. Flushes after every row."""
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+
+    def __enter__(self) -> "Reporter":
+        new_file = not os.path.exists(self._path) or os.path.getsize(self._path) == 0
+        self._fh = open(self._path, "a", newline="", encoding="utf-8")  # noqa: SIM115 — lifecycle managed by __exit__
+        self._writer = csv.DictWriter(self._fh, fieldnames=REPORT_HEADERS, quoting=csv.QUOTE_ALL)
+        if new_file:
+            self._writer.writeheader()
+            self._fh.flush()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._fh.close()
+
+    def write(self, result: ResourceCheckResult) -> None:
+        self._writer.writerow(
+            {
+                "package-id": result.row.package_id,
+                "package-name": result.row.package_name,
+                "resource-id": result.row.resource_id,
+                "resource-url": result.row.url,
+                "http-status": "" if result.http_status is None else result.http_status,
+                "category": result.category.value,
+                "error-detail": result.error_detail or "",
+                "to-delete": "true" if result.to_delete else "false",
+                "checked-at": result.checked_at.isoformat(timespec="seconds"),
+            }
+        )
+        self._fh.flush()
+
+
+def run(
+    logger: logging.Logger,
+    repository: Repository,
+    report_path: str,
+    mode: str,
+    workers: int = DEFAULT_WORKERS,
+) -> None:
+    rows = repository.fetch_resources()
+    logger.info(f"loaded {len(rows)} resources")
+
+    session = session_factory(workers)
+    with (
+        Reporter(report_path) as reporter,
+        ThreadPoolExecutor(max_workers=workers) as pool,
+    ):
+        for result in pool.map(lambda r: check_task(r, session), rows):
+            reporter.write(result)
+            if mode == "live" and result.to_delete:
+                repository.mark_resource_deleted(result.row.resource_id, result.row.package_id)
+    logger.info(f"completed {len(rows)} checks")
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     logger = setup_logging(args.log_path)
-    logger.info(args.mode)
-    logger.info(args.log_path)
-    run(logger=logger)
+    logger.info(f"mode: {args.mode}")
+
+    dsn = os.environ.get("POSTGRES_URL")
+    if not dsn:
+        logger.error("POSTGRES_URL env var is not set")
+        return 1
+
+    with Repository(dsn) as repository:
+        run(
+            logger=logger,
+            repository=repository,
+            report_path=args.report_path,
+            mode=args.mode,
+        )
     return 0
 
 
