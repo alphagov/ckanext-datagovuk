@@ -12,8 +12,8 @@ import psycopg2
 import requests
 from requests.adapters import HTTPAdapter
 
-LOG_FILE = "check_links.log"
-REPORT_FILE = "check_links_report.csv"
+LOG_FILE = "check_links_{timestamp}.log"
+REPORT_FILE = "check_links_report_{timestamp}.csv"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
 HTTP_TIMEOUT = (5, 10)  # (connect, read) seconds
 DEFAULT_WORKERS = 10
@@ -36,9 +36,10 @@ REPORT_HEADERS = [
 #  - Create log of datasets to reindex using solr update scripts
 #  - Add more logging to this script covering steps
 #  - create some good test data?
+#  - rate limiting - let's see if we get limited and introduce some throttling
 
 
-def setup_logging(log_path: str = LOG_FILE) -> logging.Logger:
+def setup_logging(log_path: str) -> logging.Logger:
     logger = logging.getLogger(__name__)
     if logger.handlers:
         return logger
@@ -54,15 +55,16 @@ def setup_logging(log_path: str = LOG_FILE) -> logging.Logger:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--mode",
         choices=["dry-run", "live"],
         default="dry-run",
-        help="default: 'dry-run' doesn't update db, creates report",
+        help="default: 'dry-run' doesn't update db, only creates report",
     )
-    parser.add_argument("--log-path", default=LOG_FILE)
-    parser.add_argument("--report-path", default=REPORT_FILE)
+    parser.add_argument("--log-path", default=LOG_FILE.format(timestamp=timestamp))
+    parser.add_argument("--report-path", default=REPORT_FILE.format(timestamp=timestamp))
     return parser.parse_args(argv)
 
 
@@ -265,7 +267,7 @@ class Reporter:
 
     def __enter__(self) -> "Reporter":
         new_file = not os.path.exists(self._path) or os.path.getsize(self._path) == 0
-        self._fh = open(self._path, "a", newline="", encoding="utf-8")  # noqa: SIM115 — lifecycle managed by __exit__
+        self._fh = open(self._path, "a", newline="", encoding="utf-8")
         self._writer = csv.DictWriter(self._fh, fieldnames=REPORT_HEADERS, quoting=csv.QUOTE_ALL)
         if new_file:
             self._writer.writeheader()
@@ -299,6 +301,8 @@ def run(
     mode: str,
     workers: int = DEFAULT_WORKERS,
 ) -> None:
+    # Loads full result set in memory. pool.map also queues all futures upfront.
+    # Test with real data, if issues, look into batching reads and writes
     rows = repository.fetch_resources()
     logger.info(f"loaded {len(rows)} resources")
 
@@ -318,6 +322,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     logger = setup_logging(args.log_path)
     logger.info(f"mode: {args.mode}")
+    logger.info(f"report path: {args.report_path}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
