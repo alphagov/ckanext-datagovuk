@@ -29,8 +29,8 @@ LOG_FILE = "check_links_{timestamp}.log"
 REPORT_FILE = "check_links_report_{timestamp}.csv"
 REINDEX_FILE = "packages_to_reindex_{timestamp}.txt"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
-HTTP_TIMEOUT = (5, 10)  # (connect, read) seconds
-DEFAULT_WORKERS = 10
+HTTP_TIMEOUT = (5, 5)  # (connect, read) seconds
+DEFAULT_WORKERS = 25
 HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
 
 REPORT_HEADERS = [
@@ -47,9 +47,7 @@ REPORT_HEADERS = [
 
 # TODOs:
 #  - Add org to csv output.
-#  - Create log of datasets to reindex using solr update scripts
 #  - Add more logging to this script covering steps
-#  - create some good test data?
 #  - rate limiting - let's see if we get limited and introduce some throttling
 
 
@@ -78,8 +76,30 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="default: 'dry-run' doesn't update db, only creates report",
     )
     parser.add_argument("--log-path", default=LOG_FILE.format(timestamp=timestamp))
-    parser.add_argument("--report-path", default=REPORT_FILE.format(timestamp=timestamp))
-    parser.add_argument("--reindex-path", default=REINDEX_FILE.format(timestamp=timestamp))
+    parser.add_argument(
+        "--report-path", default=REPORT_FILE.format(timestamp=timestamp)
+    )
+    parser.add_argument(
+        "--reindex-path", default=REINDEX_FILE.format(timestamp=timestamp)
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        help=f"number of concurrent HTTP workers (default: {DEFAULT_WORKERS})",
+    )
+    parser.add_argument(
+        "--http-timeout-connect",
+        type=int,
+        default=HTTP_TIMEOUT[0],
+        help=f"HTTP connect timeout in seconds (default: {HTTP_TIMEOUT[0]})",
+    )
+    parser.add_argument(
+        "--http-timeout-read",
+        type=int,
+        default=HTTP_TIMEOUT[1],
+        help=f"HTTP read timeout in seconds (default: {HTTP_TIMEOUT[1]})",
+    )
     return parser.parse_args(argv)
 
 
@@ -176,12 +196,18 @@ def session_factory(workers: int) -> requests.Session:
     return session
 
 
-def fetch_status(session: requests.Session, url: str) -> int:
-    resp = session.head(url, timeout=HTTP_TIMEOUT, allow_redirects=True)
+def fetch_status(
+    session: requests.Session,
+    url: str,
+    timeout: tuple[float, float] = HTTP_TIMEOUT,
+) -> int:
+    resp = session.head(url, timeout=timeout, allow_redirects=True)
     status = resp.status_code
 
     if status in HEAD_FALLBACK_STATUSES:
-        with session.get(url, timeout=HTTP_TIMEOUT, allow_redirects=True, stream=True) as resp:
+        with session.get(
+            url, timeout=timeout, allow_redirects=True, stream=True
+        ) as resp:
             return resp.status_code
 
     return status
@@ -190,9 +216,10 @@ def fetch_status(session: requests.Session, url: str) -> int:
 def check_url(
     session: requests.Session,
     url: str,
+    timeout: tuple[float, float] = HTTP_TIMEOUT,
 ) -> UrlCheckResult:
     try:
-        status = fetch_status(session, url)
+        status = fetch_status(session, url, timeout=timeout)
         category, detail = classify_response(status, None)
     except Exception as exc:
         status = None
@@ -208,10 +235,11 @@ def check_url(
 def check_task(
     row: ResourceRow,
     session: requests.Session,
+    timeout: tuple[float, float] = HTTP_TIMEOUT,
 ) -> ResourceCheckResult:
     return ResourceCheckResult.from_url_check(
         row=row,
-        url_check=check_url(session, row.url),
+        url_check=check_url(session, row.url, timeout=timeout),
         checked_at=datetime.now(UTC),
     )
 
@@ -230,12 +258,8 @@ class Repository:
           AND TRIM(r.url) <> ''
         ORDER BY p.id, r.id
     """
-    UPDATE_RESOURCE_SQL = (
-        "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND state = 'active'"
-    )
-    UPDATE_RESOURCE_ACTIVE_SQL = (
-        "UPDATE resource SET state = 'active' WHERE id = %(resource_id)s AND state = 'deleted'"
-    )
+    UPDATE_RESOURCE_SQL = "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND state = 'active'"
+    UPDATE_RESOURCE_ACTIVE_SQL = "UPDATE resource SET state = 'active' WHERE id = %(resource_id)s AND state = 'deleted'"
     UPDATE_PACKAGE_MTIME_SQL = (
         "UPDATE package SET metadata_modified = NOW() WHERE id = %(package_id)s"
     )
@@ -295,7 +319,9 @@ class Reporter:
     def __enter__(self) -> "Reporter":
         new_file = not os.path.exists(self._path) or os.path.getsize(self._path) == 0
         self._fh = open(self._path, "a", newline="", encoding="utf-8")
-        self._writer = csv.DictWriter(self._fh, fieldnames=REPORT_HEADERS, quoting=csv.QUOTE_ALL)
+        self._writer = csv.DictWriter(
+            self._fh, fieldnames=REPORT_HEADERS, quoting=csv.QUOTE_ALL
+        )
         if new_file:
             self._writer.writeheader()
             self._fh.flush()
@@ -329,6 +355,7 @@ def run(
     reindex_path: str,
     mode: str,
     workers: int = DEFAULT_WORKERS,
+    http_timeout: tuple[float, float] = HTTP_TIMEOUT,
 ) -> None:
     # Loads full result set in memory. pool.map also queues all futures upfront.
     # Test with real data, if issues, look into batching reads and writes
@@ -341,12 +368,16 @@ def run(
         Reporter(report_path) as reporter,
         ThreadPoolExecutor(max_workers=workers) as pool,
     ):
-        for result in pool.map(lambda r: check_task(r, session), rows):
+        for result in pool.map(
+            lambda r: check_task(r, session, timeout=http_timeout), rows
+        ):
             reporter.write(result)
             if result.to_delete:
                 to_reindex.add(result.row.package_id)
                 if mode == "live":
-                    repository.mark_resource_deleted(result.row.resource_id, result.row.package_id)
+                    repository.mark_resource_deleted(
+                        result.row.resource_id, result.row.package_id
+                    )
 
     with open(reindex_path, "w", encoding="utf-8") as f:
         for package_id in sorted(to_reindex):
@@ -358,9 +389,11 @@ def run(
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     logger = setup_logging(args.log_path)
+    http_timeout = (args.http_timeout_connect, args.http_timeout_read)
     logger.info(f"mode: {args.mode}")
     logger.info(f"report path: {args.report_path}")
     logger.info(f"reindex path: {args.reindex_path}")
+    logger.info(f"workers: {args.workers}, http_timeout: {http_timeout}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
@@ -374,6 +407,8 @@ def main(argv: list[str] | None = None) -> int:
             report_path=args.report_path,
             reindex_path=args.reindex_path,
             mode=args.mode,
+            workers=args.workers,
+            http_timeout=http_timeout,
         )
     return 0
 
