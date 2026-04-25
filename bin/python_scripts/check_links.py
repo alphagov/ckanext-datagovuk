@@ -16,7 +16,7 @@ import csv
 import logging
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -142,7 +142,7 @@ def session_factory(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET"],
-        backoff_factor=2,
+        backoff_factor=1,
         respect_retry_after_header=True,
     )
     adapter = HTTPAdapter(
@@ -306,17 +306,22 @@ def run(
         Reporter(report_path) as reporter,
         ThreadPoolExecutor(max_workers=WORKERS) as pool,
     ):
-        for result in pool.map(lambda r: check_task(r, session), rows):
-            reporter.write(result)
-            logger.info(
-                f"Checked resource: {result.row.resource_id} - url: {result.row.url}- outcome: {result.category}"
-            )
-            if result.to_delete:
-                to_reindex.add(result.row.package_id)
-                if mode == "live":
-                    repository.mark_resource_deleted(
-                        result.row.resource_id, result.row.package_id
-                    )
+        futures = [pool.submit(check_task, r, session) for r in rows]
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+                reporter.write(result)
+                logger.info(
+                    f"Checked resource: {result.row.resource_id} - url: {result.row.url}- outcome: {result.category}"
+                )
+                if result.to_delete:
+                    to_reindex.add(result.row.package_id)
+                    if mode == "live":
+                        repository.mark_resource_deleted(
+                            result.row.resource_id, result.row.package_id
+                        )
+            except Exception as e:
+                logger.exception("URL check task failed")
 
     with open(reindex_path, "w", encoding="utf-8") as f:
         for package_id in sorted(to_reindex):
