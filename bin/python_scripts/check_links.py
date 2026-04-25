@@ -24,13 +24,14 @@ from enum import StrEnum
 import psycopg2
 import requests
 from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-LOG_FILE = "check_links_{timestamp}.log"
+LOG_FILE = "check_links.log"
 REPORT_FILE = "check_links_report_{timestamp}.csv"
 REINDEX_FILE = "packages_to_reindex_{timestamp}.txt"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
 HTTP_TIMEOUT = (5, 5)  # (connect, read) seconds
-DEFAULT_WORKERS = 25
+WORKERS = 50
 HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
 
 REPORT_HEADERS = [
@@ -47,8 +48,9 @@ REPORT_HEADERS = [
 
 # TODOs:
 #  - Add org to csv output.
-#  - Add more logging to this script covering steps
-#  - rate limiting - let's see if we get limited and introduce some throttling
+#  - Add more logging to this script so progress can be seen on console
+#  - **IMPORTANT** with introduction of per host rate limit it would be a good idea
+#  - to distribute the domains amongst the result set
 
 
 def setup_logging(log_path: str) -> logging.Logger:
@@ -66,48 +68,12 @@ def setup_logging(log_path: str) -> logging.Logger:
     return logger
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--mode",
-        choices=["dry-run", "live"],
-        default="dry-run",
-        help="default: 'dry-run' doesn't update db, only creates report",
-    )
-    parser.add_argument("--log-path", default=LOG_FILE.format(timestamp=timestamp))
-    parser.add_argument(
-        "--report-path", default=REPORT_FILE.format(timestamp=timestamp)
-    )
-    parser.add_argument(
-        "--reindex-path", default=REINDEX_FILE.format(timestamp=timestamp)
-    )
-    parser.add_argument(
-        "--workers",
-        type=int,
-        default=DEFAULT_WORKERS,
-        help=f"number of concurrent HTTP workers (default: {DEFAULT_WORKERS})",
-    )
-    parser.add_argument(
-        "--http-timeout-connect",
-        type=int,
-        default=HTTP_TIMEOUT[0],
-        help=f"HTTP connect timeout in seconds (default: {HTTP_TIMEOUT[0]})",
-    )
-    parser.add_argument(
-        "--http-timeout-read",
-        type=int,
-        default=HTTP_TIMEOUT[1],
-        help=f"HTTP read timeout in seconds (default: {HTTP_TIMEOUT[1]})",
-    )
-    return parser.parse_args(argv)
-
-
 class Category(StrEnum):
     OK = "OK"
-    BROKEN_404 = "BROKEN_404"
-    GONE_410 = "GONE_410"
-    CLIENT_ERROR = "CLIENT_ERROR"
+    NOT_FOUND = "404"
+    GONE = "410"
+    TOO_MANY_REQUESTS = "429"
+    OTHER_CLIENT_ERROR = "OTHER_CLIENT_ERROR"
     SERVER_ERROR = "SERVER_ERROR"
     TIMEOUT = "TIMEOUT"
     CONNECTION_ERROR = "CONNECTION_ERROR"
@@ -124,41 +90,19 @@ class ResourceRow:
     url: str
 
 
-@dataclass(frozen=True)
-class UrlCheckResult:
-    http_status: int | None
-    category: Category
-    error_detail: str | None = None
-
-
-@dataclass(frozen=True)
-class ResourceCheckResult:
+@dataclass
+class CheckResult:
     """A report row for one checked package resource URL"""
 
     row: ResourceRow
-    http_status: int | None
-    category: Category
-    error_detail: str | None
-    checked_at: datetime
+    http_status: int | None = None
+    category: Category | None = None
+    error_detail: str | None = None
+    checked_at: datetime | None = None
 
     @property
     def to_delete(self) -> bool:
-        return self.category in {Category.BROKEN_404, Category.GONE_410}
-
-    @classmethod
-    def from_url_check(
-        cls,
-        row: ResourceRow,
-        url_check: UrlCheckResult,
-        checked_at: datetime,
-    ) -> "ResourceCheckResult":
-        return cls(
-            row=row,
-            http_status=url_check.http_status,
-            category=url_check.category,
-            error_detail=url_check.error_detail,
-            checked_at=checked_at,
-        )
+        return self.category in {Category.NOT_FOUND, Category.GONE}
 
 
 def classify_response(
@@ -174,23 +118,38 @@ def classify_response(
         case (None, None):
             return Category.OTHER_ERROR, "no status and no exception"
         case (404, None):
-            return Category.BROKEN_404, None
+            return Category.NOT_FOUND, None
         case (410, None):
-            return Category.GONE_410, None
+            return Category.GONE, None
+        case (429, None):
+            return Category.TOO_MANY_REQUESTS, None
         case (int(s), None) if 200 <= s < 400:
             return Category.OK, None
         case (int(s), None) if 400 <= s < 500:
-            return Category.CLIENT_ERROR, None
+            return Category.OTHER_CLIENT_ERROR, None
         case (int(s), None) if 500 <= s < 600:
             return Category.SERVER_ERROR, None
         case _:
             return Category.OTHER_ERROR, f"unexpected status {status_code}"
 
 
-def session_factory(workers: int) -> requests.Session:
+def session_factory(
+    workers: int = WORKERS,
+) -> requests.Session:
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
-    adapter = HTTPAdapter(pool_connections=workers, pool_maxsize=workers * 2)
+    retry = Retry(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET"],
+        backoff_factor=2,
+        respect_retry_after_header=True,
+    )
+    adapter = HTTPAdapter(
+        max_retries=retry,
+        pool_connections=workers,
+        pool_maxsize=workers * 2,
+    )
     session.mount("http://", adapter)
     session.mount("https://", adapter)
     return session
@@ -213,35 +172,16 @@ def fetch_status(
     return status
 
 
-def check_url(
-    session: requests.Session,
-    url: str,
-    timeout: tuple[float, float] = HTTP_TIMEOUT,
-) -> UrlCheckResult:
+def check_task(row: ResourceRow, session: requests.Session) -> CheckResult:
+    result = CheckResult(row=row)
     try:
-        status = fetch_status(session, url, timeout=timeout)
-        category, detail = classify_response(status, None)
+        status = fetch_status(session, row.url)
+        result.http_status = status
+        result.category, result.error_detail = classify_response(status, None)
     except Exception as exc:
-        status = None
-        category, detail = classify_response(None, exc)
-
-    return UrlCheckResult(
-        http_status=status,
-        category=category,
-        error_detail=detail,
-    )
-
-
-def check_task(
-    row: ResourceRow,
-    session: requests.Session,
-    timeout: tuple[float, float] = HTTP_TIMEOUT,
-) -> ResourceCheckResult:
-    return ResourceCheckResult.from_url_check(
-        row=row,
-        url_check=check_url(session, row.url, timeout=timeout),
-        checked_at=datetime.now(UTC),
-    )
+        result.category, result.error_detail = classify_response(None, exc)
+    result.checked_at = datetime.now(UTC)
+    return result
 
 
 class Repository:
@@ -330,7 +270,7 @@ class Reporter:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._fh.close()
 
-    def write(self, result: ResourceCheckResult) -> None:
+    def write(self, result: CheckResult) -> None:
         self._writer.writerow(
             {
                 "package-id": result.row.package_id,
@@ -354,8 +294,6 @@ def run(
     report_path: str,
     reindex_path: str,
     mode: str,
-    workers: int = DEFAULT_WORKERS,
-    http_timeout: tuple[float, float] = HTTP_TIMEOUT,
 ) -> None:
     # Loads full result set in memory. pool.map also queues all futures upfront.
     # Test with real data, if issues, look into batching reads and writes
@@ -363,14 +301,12 @@ def run(
     logger.info(f"loaded {len(rows)} resources")
 
     to_reindex: set[str] = set()
-    session = session_factory(workers)
+    session = session_factory()
     with (
         Reporter(report_path) as reporter,
-        ThreadPoolExecutor(max_workers=workers) as pool,
+        ThreadPoolExecutor(max_workers=WORKERS) as pool,
     ):
-        for result in pool.map(
-            lambda r: check_task(r, session, timeout=http_timeout), rows
-        ):
+        for result in pool.map(lambda r: check_task(r, session), rows):
             reporter.write(result)
             if result.to_delete:
                 to_reindex.add(result.row.package_id)
@@ -386,14 +322,42 @@ def run(
     logger.info(f"completed {len(rows)} checks, {len(to_reindex)} packages to reindex")
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Tuning knobs (workers, timeouts) are module-level constants "
+        "at the top of this file — edit there to change. Filenames are timestamped "
+        "templates (also module-level constants).",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["dry-run", "live"],
+        default="dry-run",
+        help="'dry-run' (default) reports only; 'live' marks 404/410 resources deleted",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=".",
+        help="directory for CSV report and reindex list (default: current directory). "
+        "Log file is always written to the current directory.",
+    )
+    return parser.parse_args(argv)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    logger = setup_logging(args.log_path)
-    http_timeout = (args.http_timeout_connect, args.http_timeout_read)
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    log_path = LOG_FILE
+    report_path = os.path.join(
+        args.output_dir, REPORT_FILE.format(timestamp=timestamp)
+    )
+    reindex_path = os.path.join(
+        args.output_dir, REINDEX_FILE.format(timestamp=timestamp)
+    )
+    logger = setup_logging(log_path)
     logger.info(f"mode: {args.mode}")
-    logger.info(f"report path: {args.report_path}")
-    logger.info(f"reindex path: {args.reindex_path}")
-    logger.info(f"workers: {args.workers}, http_timeout: {http_timeout}")
+    logger.info(f"report path: {report_path}")
+    logger.info(f"reindex path: {reindex_path}")
+    logger.info(f"workers: {WORKERS}, http_timeout: {HTTP_TIMEOUT}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
@@ -404,11 +368,9 @@ def main(argv: list[str] | None = None) -> int:
         run(
             logger=logger,
             repository=repository,
-            report_path=args.report_path,
-            reindex_path=args.reindex_path,
+            report_path=report_path,
+            reindex_path=reindex_path,
             mode=args.mode,
-            workers=args.workers,
-            http_timeout=http_timeout,
         )
     return 0
 

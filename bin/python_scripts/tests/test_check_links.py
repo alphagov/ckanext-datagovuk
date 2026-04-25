@@ -8,10 +8,10 @@ import requests
 from python_scripts.check_links import (
     HTTP_TIMEOUT,
     Category,
+    CheckResult,
     Reporter,
-    ResourceCheckResult,
     ResourceRow,
-    check_url,
+    check_task,
     classify_response,
 )
 
@@ -27,8 +27,8 @@ def make_result():
         http_status: int | None = 200,
         category: Category = Category.OK,
         error_detail: str | None = None,
-    ) -> ResourceCheckResult:
-        return ResourceCheckResult(
+    ) -> CheckResult:
+        return CheckResult(
             row=ResourceRow(
                 package_id=package_id,
                 package_name=package_name,
@@ -49,9 +49,10 @@ def make_result():
     [
         (200, None, Category.OK),
         (301, None, Category.OK),
-        (404, None, Category.BROKEN_404),
-        (403, None, Category.CLIENT_ERROR),
-        (410, None, Category.GONE_410),
+        (404, None, Category.NOT_FOUND),
+        (403, None, Category.OTHER_CLIENT_ERROR),
+        (410, None, Category.GONE),
+        (429, None, Category.TOO_MANY_REQUESTS),
         (500, None, Category.SERVER_ERROR),
         (503, None, Category.SERVER_ERROR),
         (None, requests.Timeout("timeout"), Category.TIMEOUT),
@@ -71,9 +72,9 @@ def test_classify_maps_http_and_exceptions_to_categories(status, exc, expected_c
     "category, expected",
     [
         (Category.OK, False),
-        (Category.BROKEN_404, True),
-        (Category.GONE_410, True),
-        (Category.CLIENT_ERROR, False),
+        (Category.NOT_FOUND, True),
+        (Category.GONE, True),
+        (Category.OTHER_CLIENT_ERROR, False),
         (Category.SERVER_ERROR, False),
         (Category.TIMEOUT, False),
         (Category.CONNECTION_ERROR, False),
@@ -81,7 +82,7 @@ def test_classify_maps_http_and_exceptions_to_categories(status, exc, expected_c
     ],
 )
 def test_to_delete_only_for_definitively_gone(category, expected):
-    result = ResourceCheckResult(
+    result = CheckResult(
         row=ResourceRow(
             package_id="pkg-id",
             package_name="pkg-name",
@@ -120,7 +121,7 @@ def test_reporter_creates_file_with_header(tmp_path):
 def test_reporter_writes_result_row(tmp_path, make_result):
     path = tmp_path / "report.csv"
     with Reporter(str(path)) as reporter:
-        reporter.write(make_result(http_status=404, category=Category.BROKEN_404))
+        reporter.write(make_result(http_status=404, category=Category.NOT_FOUND))
 
     rows = list(csv.reader(path.read_text().splitlines()))
     assert rows[1] == [
@@ -129,14 +130,16 @@ def test_reporter_writes_result_row(tmp_path, make_result):
         "res-1",
         "https://opendata.gov.uk",
         "404",
-        "BROKEN_404",
+        "404",
         "",
         "true",
         "2026-01-02T03:04:05+00:00",
     ]
 
 
-def test_reporter_appends_to_existing_file_without_duplicate_header(tmp_path, make_result):
+def test_reporter_appends_to_existing_file_without_duplicate_header(
+    tmp_path, make_result
+):
     path = tmp_path / "report.csv"
     with Reporter(str(path)) as reporter:
         reporter.write(make_result(resource_id="res-1"))
@@ -151,11 +154,20 @@ def test_reporter_appends_to_existing_file_without_duplicate_header(tmp_path, ma
     assert rows[1]["resource-id"] == "res-2"
 
 
-def test_check_url_uses_head_status():
+def _row(url: str = "https://opendata.gov.uk") -> ResourceRow:
+    return ResourceRow(
+        package_id="pkg-id",
+        package_name="pkg-name",
+        resource_id="res-id",
+        url=url,
+    )
+
+
+def test_check_task_uses_head_status():
     session = requests.Session()
     session.head = Mock(return_value=Mock(status_code=200))
 
-    result = check_url(session, "https://opendata.gov.uk")
+    result = check_task(_row(), session)
 
     assert result.http_status == 200
     assert result.category is Category.OK
@@ -166,7 +178,7 @@ def test_check_url_uses_head_status():
     )
 
 
-def test_check_url_falls_back_to_get_for_head_fallback_status():
+def test_check_task_falls_back_to_get_for_head_fallback_status():
     session = requests.Session()
 
     session.head = Mock(return_value=Mock(status_code=405))
@@ -177,7 +189,7 @@ def test_check_url_falls_back_to_get_for_head_fallback_status():
     get_response.__exit__.return_value = False
     session.get = Mock(return_value=get_response)
 
-    result = check_url(session, "https://opendata.gov.uk")
+    result = check_task(_row(), session)
 
     assert result.http_status == 200
     assert result.category is Category.OK

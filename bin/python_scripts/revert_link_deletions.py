@@ -22,22 +22,32 @@ from datetime import UTC, datetime
 
 from python_scripts.check_links import Repository, setup_logging
 
-LOG_FILE = "check_links_revert_{timestamp}.log"
+LOG_FILE = "check_links_revert.log"
 REINDEX_FILE = "packages_to_reindex_revert_{timestamp}.txt"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True, help="check_links CSV report to reverse")
+    parser = argparse.ArgumentParser(
+        description="Reverses a prior check_links --mode live run from its CSV report. "
+        "Filenames are timestamped templates (module-level constants).",
+    )
+    parser.add_argument(
+        "--input",
+        required=True,
+        help="check_links CSV report to reverse (required)",
+    )
     parser.add_argument(
         "--mode",
         choices=["dry-run", "live"],
         default="dry-run",
-        help="default: 'dry-run' doesn't update db, only writes reindex file",
+        help="'dry-run' (default) reports only; 'live' restores deleted resources",
     )
-    parser.add_argument("--log-path", default=LOG_FILE.format(timestamp=timestamp))
-    parser.add_argument("--reindex-path", default=REINDEX_FILE.format(timestamp=timestamp))
+    parser.add_argument(
+        "--output-dir",
+        default=".",
+        help="directory for the reindex list (default: current directory). "
+        "Log file is always written to the current directory.",
+    )
     return parser.parse_args(argv)
 
 
@@ -80,10 +90,15 @@ def revert(
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    logger = setup_logging(args.log_path)
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    log_path = LOG_FILE
+    reindex_path = os.path.join(
+        args.output_dir, REINDEX_FILE.format(timestamp=timestamp)
+    )
+    logger = setup_logging(log_path)
     logger.info(f"mode: {args.mode}")
     logger.info(f"input: {args.input}")
-    logger.info(f"reindex path: {args.reindex_path}")
+    logger.info(f"reindex path: {reindex_path}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
@@ -95,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
             logger=logger,
             repository=repository,
             input_path=args.input,
-            reindex_path=args.reindex_path,
+            reindex_path=reindex_path,
             mode=args.mode,
         )
     return 0

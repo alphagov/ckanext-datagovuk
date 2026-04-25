@@ -6,39 +6,51 @@ Two-step cycle: scan for broken links → reindex affected packages.
 
 ### 1. `check_links.py`
 
-Scans active resource URLs on active datasets, classifies each response, and (in `live` mode) marks 404/410 resources as deleted and bumps `package.metadata_modified`. Writes a CSV report and a `packages_to_reindex_*.txt` list feeding into `solr_reindex_package_ids.py`.
+Scans active resource URLs on active datasets, classifies each response, and (in `live` mode) marks 404/410 resources as deleted and updates `package.metadata_modified`. Writes a CSV report and a `packages_to_reindex_*.txt` list feeding into `solr_reindex_package_ids.py`.
 
 Then run:
 
 Set environment variable for: `POSTGRES_URL`
 
 ```bash
-    python check_links.py --mode dry-run --workers 50
+    python check_links.py --mode dry-run
 ```
 
-CSV output will show results, including column `to-delete` which which show resources that would be updated in live mode.
+CSV output will show results, including column `to-delete` which shows resources that would be updated in live mode.
 
-To update db instead of `--mode dry-run` use `--mode live`
+To update db instead of `--mode dry-run` use `--mode live`.
+
+### CLI flags
+
+| Flag | Required | Default | Purpose |
+|---|---|---|---|
+| `--mode` | no | `dry-run` | `dry-run` reports only; `live` marks 404/410 resources deleted |
+| `--output-dir` | no | `.` (cwd) | directory for the CSV report and reindex list |
+
+Filenames are module-level constants (`LOG_FILE` = `check_links.log`, `REPORT_FILE` = `check_links_report_{ts}.csv`, `REINDEX_FILE` = `packages_to_reindex_{ts}.txt`). 
+The CSV report and reindex list are timestamped per run and placed in current directory or `--output-dir`.
+
+Tuning config (worker count, timeouts) remain module-level constants — see "What to tune" below.
 
 ### What to tune
 
-1. **Reduce `--workers` first** (if container memory climbing, CPU saturating) - try 50 → 25 → 10.
-2. **Then `--http-timeout-read`** (e.g. 5s → 4s) to decrease total runtime
-3. **Possibly `--http-timeout-connect` defaults to 5s** — a healthy host should easily connect in less time so can be reduced
+1. **Reduce `WORKERS` first** (if container memory climbing or CPU saturating) — try 50 → 25 → 10.
+2. **Then `HTTP_TIMEOUT`** (a `(connect, read)` tuple) — a healthy host should connect in well under allowed time. Reducing the read timeout shortens total runtime on slow hosts.
 
-### Defaults
+### Config
 
-| Flag | Default |
-|---|---|
-| `--workers` | 25 (recommend **50**) |
-| `--http-timeout-connect` | 5 s |
-| `--http-timeout-read` | 5 s |
+| Constant | Current value | What it does |
+|---|---|---|
+| `WORKERS` | 50 | concurrent HTTP workers |
+| `HTTP_TIMEOUT` | `(5, 5)` | `(connect, read)` seconds |
 
-### Outputs (written to cwd, timestamped)
+These are module constants near top of script. Change if needed according to tuning section above.
 
-- `check_links_{ts}.log` — run log
-- `check_links_report_{ts}.csv` — one row per resource (category + `to-delete` flag)
-- `packages_to_reindex_{ts}.txt` — unique package IDs that had a 404/410 - feeds into `solr_reindex_package_ids.py`
+### Outputs
+
+- `check_links.log` — run log (stable name, always current dir)
+- `check_links_report_{ts}.csv` — one row per resource (category + `to-delete` flag) - current dir unless `--output-dir` set
+- `packages_to_reindex_{ts}.txt` — unique package IDs that had a 404/410 — used as input to `solr_reindex_package_ids.py` - cuirrent dir unless `--output-dir` set
 
 ### 2. `revert_link_deletions.py`
 
@@ -46,16 +58,24 @@ Reverses a prior `check_links.py --mode live` run using its CSV report. Every ro
 
 Set environment variable for: `POSTGRES_URL`
 
-Then run: 
+Then run:
 
 ```bash
     python revert_link_deletions.py --input check_links_report_<ts>.csv --mode dry-run
 ```
 
-`--mode` defaults to `dry-run` (no db writes, only logs and writes the revert reindex file). 
+`--mode` defaults to `dry-run` (no db writes, only logs and writes the revert reindex file). Use `--mode live` to actually restore.
 
-Use `--mode live` to actually restore.
+### CLI flags
 
-Writes `packages_to_reindex_revert_{ts}.txt` - also creates input for  `solr_reindex_package_ids.py`.
+| Flag | Required | Default | Purpose |
+|---|---|---|---|
+| `--input` | **yes** | — | check_links CSV report to reverse (full path) |
+| `--mode` | no | `dry-run` | `dry-run` reports only; `live` restores deleted resources |
+| `--output-dir` | no | `.` (current dir) | directory for the reindex list |
 
-Note: the original pre-deletion `metadata_modified` can't be recovered, it gets udpated to NOW() on revert.
+Same convention as `check_links.py`: filenames are module-level constants (`LOG_FILE` = `check_links_revert.log`, `REINDEX_FILE` = `packages_to_reindex_revert_{ts}.txt`). The log file uses a stable name and written to the current working directory. The reindex list is timestamped per run and outputs to current dir or `--output-dir`.
+
+The reindex output used as input to `solr_reindex_package_ids.py`.
+
+Note: the original pre-deletion `metadata_modified` can't be recovered, it gets updated to NOW() on revert.
