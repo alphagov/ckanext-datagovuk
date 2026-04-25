@@ -308,6 +308,9 @@ def run(
     ):
         for result in pool.map(lambda r: check_task(r, session), rows):
             reporter.write(result)
+            logger.info(
+                f"Checked resource: {result.row.resource_id} - url: {result.row.url}- outcome: {result.category}"
+            )
             if result.to_delete:
                 to_reindex.add(result.row.package_id)
                 if mode == "live":
@@ -347,9 +350,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     log_path = LOG_FILE
-    report_path = os.path.join(
-        args.output_dir, REPORT_FILE.format(timestamp=timestamp)
-    )
+    report_path = os.path.join(args.output_dir, REPORT_FILE.format(timestamp=timestamp))
     reindex_path = os.path.join(
         args.output_dir, REINDEX_FILE.format(timestamp=timestamp)
     )
