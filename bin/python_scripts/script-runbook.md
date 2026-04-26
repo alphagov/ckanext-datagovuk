@@ -1,5 +1,13 @@
 # Script runbook
 
+## Prerequisites
+
+- Set environment variable `POSTGRES_URL`
+- [requests](https://pypi.org/project/requests/) (see requirements.txt)
+- [more-itertools](https://pypi.org/project/more-itertools/) (see requirements.txt)
+
+***
+
 ### Link checking
 
 Two-step cycle: scan for broken links → reindex affected packages.
@@ -56,9 +64,7 @@ These are module constants near top of script. Change if needed according to tun
 
 Reverses a prior `check_links.py --mode live` run using its CSV report. Every row with `to-delete == "true"` has its resource `state` reverted to `active` (if currently `deleted`) and `package.metadata_modified` updated to NOW().
 
-Set environment variable for: `POSTGRES_URL`
-
-Then run:
+Run (inside the container, with `POSTGRES_URL` set):
 
 ```bash
     python revert_link_deletions.py --input check_links_report_<ts>.csv --mode dry-run
@@ -78,4 +84,4 @@ Same convention as `check_links.py`: filenames are module-level constants (`LOG_
 
 The reindex output used as input to `solr_reindex_package_ids.py`.
 
-Note: the original pre-deletion `metadata_modified` can't be recovered, it gets updated to NOW() on revert.
+Note: the original `metadata_modified` that was updated in check links, can't be recovered, it gets updated to NOW() on revert.
