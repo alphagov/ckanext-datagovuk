@@ -16,13 +16,16 @@ import csv
 import logging
 import os
 import sys
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
+from urllib.parse import urlsplit
 
 import psycopg2
 import requests
+from more_itertools import interleave_longest
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -48,9 +51,6 @@ REPORT_HEADERS = [
 
 # TODOs:
 #  - Add org to csv output.
-#  - Add more logging to this script so progress can be seen on console
-#  - **IMPORTANT** with introduction of per host rate limit it would be a good idea
-#  - to distribute the domains amongst the result set
 
 
 def setup_logging(log_path: str) -> logging.Logger:
@@ -184,6 +184,20 @@ def check_task(row: ResourceRow, session: requests.Session) -> CheckResult:
     return result
 
 
+def host_key(url: str) -> str:
+    try:
+        return urlsplit(url).netloc.lower() or url
+    except Exception:
+        return url
+
+
+def interleave_rows_by_host(rows: list[ResourceRow]) -> list[ResourceRow]:
+    buckets: dict[str, list[ResourceRow]] = defaultdict(list)
+    for row in rows:
+        buckets[host_key(row.url)].append(row)
+    return list(interleave_longest(*buckets.values()))
+
+
 class Repository:
     """Handles all db access. One connection opened in __enter__."""
 
@@ -295,13 +309,24 @@ def run(
     reindex_path: str,
     mode: str,
 ) -> None:
-    # Loads full result set in memory. pool.map also queues all futures upfront.
-    # Test with real data, if issues, look into batching reads and writes
-    rows = repository.fetch_resources()
+
+    # **NOTE**
+    # This loads full result set in memory. pool.submit also queues all futures upfront.
+    # This will result in a fair amount of memory being allocated. Some tests were done
+    # locally with dummy data which isn't a substitute for testing with real data
+    # Once tested with real data, if there are issues, look into processing data in
+    # chunks
+
+    rows_from_db = repository.fetch_resources()
+    rows = interleave_rows_by_host(rows_from_db)
     logger.info(f"loaded {len(rows)} resources")
 
     to_reindex: set[str] = set()
+
+    # Shared session not formally thread safe, but the underlying pool is,
+    # and we don't mutate session state or rely on cookies
     session = session_factory()
+
     with (
         Reporter(report_path) as reporter,
         ThreadPoolExecutor(max_workers=WORKERS) as pool,

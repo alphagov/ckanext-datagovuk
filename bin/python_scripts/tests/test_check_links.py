@@ -13,7 +13,22 @@ from python_scripts.check_links import (
     ResourceRow,
     check_task,
     classify_response,
+    host_key,
+    interleave_rows_by_host,
 )
+
+
+@pytest.fixture
+def make_row():
+    def _make(resource_id: str, url: str) -> ResourceRow:
+        return ResourceRow(
+            package_id="pkg-id",
+            package_name="pkg-name",
+            resource_id=resource_id,
+            url=url,
+        )
+
+    return _make
 
 
 @pytest.fixture
@@ -74,6 +89,7 @@ def test_classify_maps_http_and_exceptions_to_categories(status, exc, expected_c
         (Category.OK, False),
         (Category.NOT_FOUND, True),
         (Category.GONE, True),
+        (Category.TOO_MANY_REQUESTS, False),
         (Category.OTHER_CLIENT_ERROR, False),
         (Category.SERVER_ERROR, False),
         (Category.TIMEOUT, False),
@@ -154,20 +170,11 @@ def test_reporter_appends_to_existing_file_without_duplicate_header(
     assert rows[1]["resource-id"] == "res-2"
 
 
-def _row(url: str = "https://opendata.gov.uk") -> ResourceRow:
-    return ResourceRow(
-        package_id="pkg-id",
-        package_name="pkg-name",
-        resource_id="res-id",
-        url=url,
-    )
-
-
-def test_check_task_uses_head_status():
+def test_check_task_uses_head_status(make_row):
     session = requests.Session()
     session.head = Mock(return_value=Mock(status_code=200))
 
-    result = check_task(_row(), session)
+    result = check_task(make_row("res-id", "https://opendata.gov.uk"), session)
 
     assert result.http_status == 200
     assert result.category is Category.OK
@@ -178,7 +185,7 @@ def test_check_task_uses_head_status():
     )
 
 
-def test_check_task_falls_back_to_get_for_head_fallback_status():
+def test_check_task_falls_back_to_get_for_head_fallback_status(make_row):
     session = requests.Session()
 
     session.head = Mock(return_value=Mock(status_code=405))
@@ -189,7 +196,7 @@ def test_check_task_falls_back_to_get_for_head_fallback_status():
     get_response.__exit__.return_value = False
     session.get = Mock(return_value=get_response)
 
-    result = check_task(_row(), session)
+    result = check_task(make_row("res-id", "https://opendata.gov.uk"), session)
 
     assert result.http_status == 200
     assert result.category is Category.OK
@@ -205,3 +212,35 @@ def test_check_task_falls_back_to_get_for_head_fallback_status():
         allow_redirects=True,
         stream=True,
     )
+
+
+def test_interleave_rows_by_host_round_robins_across_hosts(make_row):
+    rows = [
+        make_row("r1", "https://govtdept.opendata.gov.uk/1"),
+        make_row("r2", "https://govtdept.opendata.gov.uk/2"),
+        make_row("r3", "https://localgovt.opendata.gov.uk/1"),
+        make_row("r4", "https://otherpublicbody.opendata.gov.uk/1"),
+        make_row("r5", "https://localgovt.opendata.gov.uk/2"),
+        make_row("r6", "https://govtdept.opendata.gov.uk/3"),
+    ]
+
+    result = interleave_rows_by_host(rows)
+
+    assert [(r.resource_id, host_key(r.url)) for r in result] == [
+        ("r1", "govtdept.opendata.gov.uk"),
+        ("r3", "localgovt.opendata.gov.uk"),
+        ("r4", "otherpublicbody.opendata.gov.uk"),
+        ("r2", "govtdept.opendata.gov.uk"),
+        ("r5", "localgovt.opendata.gov.uk"),
+        ("r6", "govtdept.opendata.gov.uk"),
+    ]
+
+
+def test_interleave_rows_by_host_preserves_order_for_single_host(make_row):
+    rows = [
+        make_row("r1", "https://govtdept.opendata.gov.uk/1"),
+        make_row("r2", "https://govtdept.opendata.gov.uk/2"),
+        make_row("r3", "https://govtdept.opendata.gov.uk/3"),
+    ]
+
+    assert interleave_rows_by_host(rows) == rows
