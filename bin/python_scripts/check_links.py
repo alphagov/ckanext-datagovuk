@@ -16,7 +16,7 @@ import csv
 import logging
 import os
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -25,7 +25,6 @@ from urllib.parse import urlsplit
 
 import psycopg2
 import requests
-from more_itertools import interleave_longest
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -49,8 +48,9 @@ REPORT_HEADERS = [
     "checked-at",
 ]
 
-# TODOs:
-#  - Add org to csv output.
+# TODO:
+#  Add org to csv output - not sure how to do this without having
+#  a look at real data.
 
 
 def setup_logging(log_path: str) -> logging.Logger:
@@ -160,8 +160,9 @@ def fetch_status(
     url: str,
     timeout: tuple[float, float] = HTTP_TIMEOUT,
 ) -> int:
-    resp = session.head(url, timeout=timeout, allow_redirects=True)
-    status = resp.status_code
+
+    with session.head(url, timeout=timeout, allow_redirects=True) as resp:
+        status = resp.status_code
 
     if status in HEAD_FALLBACK_STATUSES:
         with session.get(
@@ -192,10 +193,19 @@ def host_key(url: str) -> str:
 
 
 def interleave_rows_by_host(rows: list[ResourceRow]) -> list[ResourceRow]:
-    buckets: dict[str, list[ResourceRow]] = defaultdict(list)
+    buckets: dict[str, deque[ResourceRow]] = defaultdict(deque)
     for row in rows:
-        buckets[host_key(row.url)].append(row)
-    return list(interleave_longest(*buckets.values()))
+        host = host_key(row.url)
+        buckets[host].append(row)
+
+    interleaved_rows: list[ResourceRow] = []
+
+    while buckets:
+        for host in list(buckets):
+            interleaved_rows.append(buckets[host].popleft())
+            if not buckets[host]:
+                del buckets[host]  # no rows left for this host
+    return interleaved_rows
 
 
 class Repository:
