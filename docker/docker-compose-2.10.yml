@@ -83,6 +83,8 @@ services:
     build:
       context: postgis/
       dockerfile: 13-3.1.Dockerfile
+    ports:
+      - "5432:5432"
     volumes:
       - pg_data-2.10:/var/lib/postgresql/data
     networks:
