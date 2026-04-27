@@ -3,8 +3,6 @@
 ## Prerequisites
 
 - Set environment variable `POSTGRES_URL`
-- [requests](https://pypi.org/project/requests/) (see requirements.txt)
-- [more-itertools](https://pypi.org/project/more-itertools/) (see requirements.txt)
 
 ***
 
