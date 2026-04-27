@@ -41,16 +41,14 @@ REPORT_HEADERS = [
     "package-name",
     "resource-id",
     "resource-url",
+    "org-name",
+    "org-id",
     "http-status",
     "category",
     "error-detail",
     "to-delete",
     "checked-at",
 ]
-
-# TODO:
-#  Add org to csv output - not sure how to do this without having
-#  a look at real data.
 
 
 def setup_logging(log_path: str) -> logging.Logger:
@@ -88,6 +86,8 @@ class ResourceRow:
     package_name: str
     resource_id: str
     url: str
+    org_name: str | None = None
+    org_id: str | None = None
 
 
 @dataclass
@@ -212,9 +212,10 @@ class Repository:
     """Handles all db access. One connection opened in __enter__."""
 
     SELECT_SQL = """
-        SELECT p.id, p.name, r.id, r.url
+        SELECT p.id, p.name, r.id, r.url, g.name as org_name, g.id as org_id
         FROM package p
         JOIN resource r ON r.package_id = p.id
+        LEFT JOIN "group" g on p.owner_org = g.id
         WHERE p.state = 'active'
           AND p.type = 'dataset'
           AND r.state = 'active'
@@ -252,7 +253,7 @@ class Repository:
                     resource_id=resource_id,
                     url=url,
                 )
-                for package_id, package_name, resource_id, url in cur
+                for package_id, package_name, resource_id, url, org_name, org_id in cur
             ]
 
     def mark_resource_deleted(self, resource_id: str, package_id: str) -> int:
@@ -301,8 +302,10 @@ class Reporter:
                 "package-name": result.row.package_name,
                 "resource-id": result.row.resource_id,
                 "resource-url": result.row.url,
+                "org-name": result.row.org_name,
+                "org-id": result.row.org_id,
                 "http-status": "" if result.http_status is None else result.http_status,
-                "category": result.category.value,
+                "category": result.category.name,
                 "error-detail": result.error_detail or "",
                 "to-delete": "true" if result.to_delete else "false",
                 "checked-at": result.checked_at.isoformat(timespec="seconds"),

@@ -25,6 +25,8 @@ def make_row():
             package_id="pkg-id",
             package_name="pkg-name",
             resource_id=resource_id,
+            org_name="public sector organisation",
+            org_id="org-1",
             url=url,
         )
 
@@ -39,6 +41,8 @@ def make_result():
         package_name: str = "pkg-name",
         resource_id: str = "res-1",
         url: str = "https://opendata.gov.uk",
+        org_name: str = "public sector organisation",
+        org_id: str = "org-1",
         http_status: int | None = 200,
         category: Category = Category.OK,
         error_detail: str | None = None,
@@ -49,6 +53,8 @@ def make_result():
                 package_name=package_name,
                 resource_id=resource_id,
                 url=url,
+                org_name=org_name,
+                org_id=org_id,
             ),
             http_status=http_status,
             category=category,
@@ -125,6 +131,8 @@ def test_reporter_creates_file_with_header(tmp_path):
             "package-name",
             "resource-id",
             "resource-url",
+            "org-name",
+            "org-id",
             "http-status",
             "category",
             "error-detail",
@@ -145,8 +153,10 @@ def test_reporter_writes_result_row(tmp_path, make_result):
         "pkg-name",
         "res-1",
         "https://opendata.gov.uk",
+        "public sector organisation",
+        "org-1",
         "404",
-        "404",
+        "NOT_FOUND",
         "",
         "true",
         "2026-01-02T03:04:05+00:00",
@@ -172,7 +182,11 @@ def test_reporter_appends_to_existing_file_without_duplicate_header(
 
 def test_check_task_uses_head_status(make_row):
     session = requests.Session()
-    session.head = Mock(return_value=Mock(status_code=200))
+    head_response = MagicMock()
+    head_response.status_code = 200
+    head_response.__enter__.return_value = head_response
+    head_response.__exit__.return_value = False
+    session.head = Mock(return_value=head_response)
 
     result = check_task(make_row("res-id", "https://opendata.gov.uk"), session)
 
@@ -188,7 +202,11 @@ def test_check_task_uses_head_status(make_row):
 def test_check_task_falls_back_to_get_for_head_fallback_status(make_row):
     session = requests.Session()
 
-    session.head = Mock(return_value=Mock(status_code=405))
+    head_response = MagicMock()
+    head_response.status_code = 405
+    head_response.__enter__.return_value = head_response
+    head_response.__exit__.return_value = False
+    session.head = Mock(return_value=head_response)
 
     get_response = MagicMock()
     get_response.status_code = 200
