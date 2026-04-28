@@ -242,10 +242,13 @@ class Repository:
             self._conn.close()
             self._conn = None
 
-    def fetch_resources(self) -> list[ResourceRow]:
+    def fetch_resources(self, limit: int | None = None) -> list[ResourceRow]:
         assert self._conn is not None, "Repository not entered"
         with self._conn, self._conn.cursor() as cur:
-            cur.execute(self.SELECT_SQL)
+            if limit is not None:
+                cur.execute(self.SELECT_SQL + " LIMIT %s", (limit,))
+            else:
+                cur.execute(self.SELECT_SQL)
             return [
                 ResourceRow(
                     package_id=package_id,
@@ -323,6 +326,7 @@ def run(
     report_path: str,
     reindex_path: str,
     mode: str,
+    limit: int | None = None,
 ) -> None:
 
     # **NOTE**
@@ -332,7 +336,7 @@ def run(
     # Once tested with real data, if there are issues, look into processing data in
     # chunks
 
-    rows_from_db = repository.fetch_resources()
+    rows_from_db = repository.fetch_resources(limit)
     rows = interleave_rows_by_host(rows_from_db)
     logger.info(f"loaded {len(rows)} resources")
 
@@ -383,6 +387,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="'dry-run' (default) reports only; 'live' marks 404/410 resources deleted",
     )
     parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="limit the number of resource URLs fetched from the database (default: no limit)",
+    )
+    parser.add_argument(
         "--output-dir",
         default=".",
         help="directory for CSV report and reindex list (default: current directory). "
@@ -393,7 +403,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M")
     log_path = LOG_FILE
     report_path = os.path.join(args.output_dir, REPORT_FILE.format(timestamp=timestamp))
     reindex_path = os.path.join(
@@ -401,6 +411,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     logger = setup_logging(log_path)
     logger.info(f"mode: {args.mode}")
+    logger.info(f"limit: {args.limit}")
     logger.info(f"report path: {report_path}")
     logger.info(f"reindex path: {reindex_path}")
     logger.info(f"workers: {WORKERS}, http_timeout: {HTTP_TIMEOUT}")
@@ -417,6 +428,7 @@ def main(argv: list[str] | None = None) -> int:
             report_path=report_path,
             reindex_path=reindex_path,
             mode=args.mode,
+            limit=args.limit,
         )
     return 0
 
