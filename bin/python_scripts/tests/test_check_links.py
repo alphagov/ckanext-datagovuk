@@ -33,36 +33,17 @@ def make_row():
     return _make
 
 
-@pytest.fixture
-def make_result():
-    def _factory(
-        *,
-        package_id: str = "pkg-1",
-        package_name: str = "pkg-name",
-        resource_id: str = "res-1",
-        url: str = "https://opendata.gov.uk",
-        org_name: str = "public sector organisation",
-        org_id: str = "org-1",
-        http_status: int | None = 200,
-        category: Category = Category.OK,
-        error_detail: str | None = None,
-    ) -> CheckResult:
-        return CheckResult(
-            row=ResourceRow(
-                package_id=package_id,
-                package_name=package_name,
-                resource_id=resource_id,
-                url=url,
-                org_name=org_name,
-                org_id=org_id,
-            ),
-            http_status=http_status,
-            category=category,
-            error_detail=error_detail,
-            checked_at=datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
-        )
-
-    return _factory
+def stub_result(
+    row: ResourceRow,
+    http_status: int | None = 200,
+    category: Category = Category.OK,
+) -> CheckResult:
+    return CheckResult(
+        row=row,
+        http_status=http_status,
+        category=category,
+        error_detail=None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -142,14 +123,18 @@ def test_reporter_creates_file_with_header(tmp_path):
     ]
 
 
-def test_reporter_writes_result_row(tmp_path, make_result):
+def test_reporter_writes_result_row(tmp_path, make_row):
     path = tmp_path / "report.csv"
     with Reporter(str(path)) as reporter:
-        reporter.write(make_result(http_status=404, category=Category.NOT_FOUND))
+        reporter.write(stub_result(
+            make_row("res-1", "https://opendata.gov.uk"),
+            404,
+            Category.NOT_FOUND,
+        ))
 
     rows = list(csv.reader(path.read_text().splitlines()))
     assert rows[1] == [
-        "pkg-1",
+        "pkg-id",
         "pkg-name",
         "res-1",
         "https://opendata.gov.uk",
@@ -159,18 +144,18 @@ def test_reporter_writes_result_row(tmp_path, make_result):
         "NOT_FOUND",
         "",
         "true",
-        "2026-01-02T03:04:05+00:00",
+        "",
     ]
 
 
 def test_reporter_appends_to_existing_file_without_duplicate_header(
-    tmp_path, make_result
+    tmp_path, make_row
 ):
     path = tmp_path / "report.csv"
     with Reporter(str(path)) as reporter:
-        reporter.write(make_result(resource_id="res-1"))
+        reporter.write(stub_result(make_row("res-1", "https://opendata.gov.uk")))
     with Reporter(str(path)) as reporter:
-        reporter.write(make_result(resource_id="res-2"))
+        reporter.write(stub_result(make_row("res-2", "https://opendata.gov.uk")))
 
     raw_lines = path.read_text().splitlines()
     assert len(raw_lines) == 3  # 1 header + 2 data rows

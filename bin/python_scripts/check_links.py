@@ -308,7 +308,9 @@ class Reporter:
                 "category": result.category.name,
                 "error-detail": result.error_detail or "",
                 "to-delete": "true" if result.to_delete else "false",
-                "checked-at": result.checked_at.isoformat(timespec="seconds"),
+                "checked-at": ""
+                if result.checked_at is None
+                else result.checked_at.isoformat(timespec="minutes"),
             }
         )
         self._fh.flush()
@@ -391,7 +393,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%")
     log_path = LOG_FILE
     report_path = os.path.join(args.output_dir, REPORT_FILE.format(timestamp=timestamp))
     reindex_path = os.path.join(
