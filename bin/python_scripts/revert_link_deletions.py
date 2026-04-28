@@ -19,6 +19,9 @@ import logging
 import os
 import sys
 from datetime import UTC, datetime
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from python_scripts.check_links import Repository, setup_logging
 

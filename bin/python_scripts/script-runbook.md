@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - Set environment variable `POSTGRES_URL`
+- Value from `docker/.env.example` == `postgresql://ckan:ckan@db/ckan`
 
 ***
 
@@ -83,3 +84,46 @@ Same convention as `check_links.py`: filenames are module-level constants (`LOG_
 The reindex output used as input to `solr_reindex_package_ids.py`.
 
 Note: the original `metadata_modified` that was updated in check links, can't be recovered, it gets updated to NOW() on revert.
+
+---
+
+## Testing locally
+
+### 1. Shell into running container
+
+Assumes in another terminal you've built and brought up local compose stack
+
+```bash
+docker exec -it ckan-2.10 bash
+cd $CKAN_VENV/src/ckanext-datagovuk/bin/python_scripts
+```
+
+### 2. Run tests
+
+```bash
+pytest tests/test_check_links.py
+pytest tests/test_revert_link_deletions.py
+```
+
+### 3. Test against local db
+
+Requires test data in the db (run `ckan datagovuk create-dgu-test-data`):
+
+```bash
+export POSTGRES_URL=postgresql://ckan:ckan@db/ckan
+python check_links.py
+```
+
+You can add the arg: 
+
+`--limit 10`
+
+which limits number of resources. Useful if you have a lot of test data. With the `create-dgu-test-data` task
+there aren't many so you don't need it.
+
+Test revert
+
+```bash
+export POSTGRES_URL=postgresql://ckan:ckan@db/ckan
+python revert_link_deletions --input [report_file.csv]
+```
