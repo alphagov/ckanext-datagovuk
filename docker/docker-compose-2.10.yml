@@ -20,6 +20,7 @@ services:
       - ckan_storage-2.10:/var/lib/ckan
       - ./logs/2.10:/var/log/ckan
       - ../ckanext/datagovuk/:/usr/lib/ckan/venv/src/ckanext-datagovuk/ckanext/datagovuk/
+      - ../bin/python_scripts/:/usr/lib/ckan/venv/src/ckanext-datagovuk/bin/python_scripts/
     depends_on: 
       - db-2.10
       - solr-2.10
