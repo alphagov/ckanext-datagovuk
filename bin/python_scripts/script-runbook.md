@@ -32,6 +32,8 @@ To update db instead of `--mode dry-run` use `--mode live`.
 | Flag | Required | Default | Purpose |
 |---|---|---|---|
 | `--mode` | no | `dry-run` | `dry-run` reports only; `live` marks 404/410 resources deleted |
+| `--limit` | no | no limit | limit number of resource URLs fetched from db — useful for sanity-checking a small batch |
+| `--verbose` | no | off | write all checked resources to the CSV report (default: only resources marked for deletion) |
 | `--output-dir` | no | `.` (cwd) | directory for the CSV report and reindex list |
 
 Filenames are module-level constants (`LOG_FILE` = `check_links.log`, `REPORT_FILE` = `check_links_report_{ts}.csv`, `REINDEX_FILE` = `packages_to_reindex_{ts}.txt`). 

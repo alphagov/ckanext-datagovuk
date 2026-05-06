@@ -327,6 +327,7 @@ def run(
     reindex_path: str,
     mode: str,
     limit: int | None = None,
+    verbose: bool = False,
 ) -> None:
 
     # **NOTE**
@@ -354,7 +355,8 @@ def run(
         for future in as_completed(futures):
             try:
                 result = future.result()
-                reporter.write(result)
+                if verbose or result.to_delete:
+                    reporter.write(result)
                 logger.info(
                     f"Checked resource: {result.row.resource_id} - url: {result.row.url}- outcome: {result.category}"
                 )
@@ -393,6 +395,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="limit the number of resource URLs fetched from the database (default: no limit)",
     )
     parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="write all checked resources to the CSV report (default: only deleted resources)",
+    )
+    parser.add_argument(
         "--output-dir",
         default=".",
         help="directory for CSV report and reindex list (default: current directory). "
@@ -414,6 +422,7 @@ def main(argv: list[str] | None = None) -> int:
     logger.info(f"limit: {args.limit}")
     logger.info(f"report path: {report_path}")
     logger.info(f"reindex path: {reindex_path}")
+    logger.info(f"verbose: {args.verbose}")
     logger.info(f"workers: {WORKERS}, http_timeout: {HTTP_TIMEOUT}")
 
     dsn = os.environ.get("POSTGRES_URL")
@@ -429,6 +438,7 @@ def main(argv: list[str] | None = None) -> int:
             reindex_path=reindex_path,
             mode=args.mode,
             limit=args.limit,
+            verbose=args.verbose,
         )
     return 0
 
