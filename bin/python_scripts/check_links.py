@@ -17,10 +17,11 @@ import logging
 import os
 import sys
 from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
+from itertools import islice
 from urllib.parse import urlsplit
 
 import psycopg2
@@ -34,9 +35,11 @@ REINDEX_FILE = "packages_to_reindex_{timestamp}.txt"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
 HTTP_TIMEOUT = (5, 5)  # (connect, read) seconds
 WORKERS = 50
+MAX_INFLIGHT = WORKERS * 4
 HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
 
 REPORT_HEADERS = [
+    "datagovuk-url",
     "package-id",
     "package-name",
     "resource-id",
@@ -139,10 +142,10 @@ def session_factory(
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
     retry = Retry(
-        total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
+        total=1,
+        status_forcelist=[500, 502, 503, 504],
         allowed_methods=["HEAD", "GET"],
-        backoff_factor=1,
+        backoff_factor=0.5,
         respect_retry_after_header=True,
     )
     adapter = HTTPAdapter(
@@ -301,6 +304,7 @@ class Reporter:
     def write(self, result: CheckResult) -> None:
         self._writer.writerow(
             {
+                "datagovuk-url": f"https://www.data.gov.uk/dataset/{result.row.package_id}/{result.row.package_name}",
                 "package-id": result.row.package_id,
                 "package-name": result.row.package_name,
                 "resource-id": result.row.resource_id,
@@ -330,13 +334,6 @@ def run(
     verbose: bool = False,
 ) -> None:
 
-    # **NOTE**
-    # This loads full result set in memory. pool.submit also queues all futures upfront.
-    # This will result in a fair amount of memory being allocated. Some tests were done
-    # locally with dummy data which isn't a substitute for testing with real data
-    # Once tested with real data, if there are issues, look into processing data in
-    # chunks
-
     rows_from_db = repository.fetch_resources(limit)
     rows = interleave_rows_by_host(rows_from_db)
     logger.info(f"loaded {len(rows)} resources")
@@ -351,23 +348,36 @@ def run(
         Reporter(report_path) as reporter,
         ThreadPoolExecutor(max_workers=WORKERS) as pool,
     ):
-        futures = [pool.submit(check_task, r, session) for r in rows]
-        for future in as_completed(futures):
-            try:
-                result = future.result()
-                if verbose or result.to_delete:
-                    reporter.write(result)
-                logger.info(
-                    f"Checked resource: {result.row.resource_id} - url: {result.row.url}- outcome: {result.category}"
-                )
-                if result.to_delete:
-                    to_reindex.add(result.row.package_id)
-                    if mode == "live":
-                        repository.mark_resource_deleted(
-                            result.row.resource_id, result.row.package_id
-                        )
-            except Exception as e:
-                logger.exception("URL check task failed")
+        row_iter = iter(rows)
+        inflight: set = set()
+
+        # grab first MAX_INFLIGHT rows to start process
+        for row in islice(row_iter, MAX_INFLIGHT):
+            inflight.add(pool.submit(check_task, row, session))
+
+        while inflight:
+            # blocks until ≥1 future complete - done is the completed and inflight is the still pending
+            done, inflight = wait(inflight, return_when=FIRST_COMPLETED)
+            for future in done:
+                try:
+                    result = future.result()
+                    if verbose or result.to_delete:
+                        reporter.write(result)
+                    logger.info(
+                        f"Checked resource: {result.row.resource_id} - url: {result.row.url} - outcome: {result.category}"
+                    )
+                    if result.to_delete:
+                        to_reindex.add(result.row.package_id)
+                        if mode == "live":
+                            repository.mark_resource_deleted(
+                                result.row.resource_id, result.row.package_id
+                            )
+                except Exception:
+                    logger.exception("URL check task failed")
+                # as each future completes, add one to top up the pool
+                next_row = next(row_iter, None)
+                if next_row is not None:
+                    inflight.add(pool.submit(check_task, next_row, session))
 
     with open(reindex_path, "w", encoding="utf-8") as f:
         for package_id in sorted(to_reindex):
