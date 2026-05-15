@@ -44,6 +44,8 @@ REPORT_HEADERS = [
     "package-name",
     "resource-id",
     "resource-url",
+    "resource-created",
+    "resource-last-modified",
     "org-name",
     "org-id",
     "http-status",
@@ -91,6 +93,8 @@ class ResourceRow:
     url: str
     org_name: str | None = None
     org_id: str | None = None
+    resource_created: datetime | None = None
+    resource_last_modified: datetime | None = None
 
 
 @dataclass
@@ -215,7 +219,8 @@ class Repository:
     """Handles all db access. One connection opened in __enter__."""
 
     SELECT_SQL = """
-        SELECT p.id, p.name, r.id, r.url, g.name as org_name, g.id as org_id
+        SELECT p.id, p.name, r.id, r.url, g.name as org_name, g.id as org_id,
+               r.created, r.last_modified
         FROM package p
         JOIN resource r ON r.package_id = p.id
         LEFT JOIN "group" g on p.owner_org = g.id
@@ -258,8 +263,13 @@ class Repository:
                     package_name=package_name,
                     resource_id=resource_id,
                     url=url,
+                    org_name=org_name,
+                    org_id=org_id,
+                    resource_created=resource_created,
+                    resource_last_modified=resource_last_modified,
                 )
-                for package_id, package_name, resource_id, url, org_name, org_id in cur
+                for package_id, package_name, resource_id, url, org_name, org_id,
+                    resource_created, resource_last_modified in cur
             ]
 
     def mark_resource_deleted(self, resource_id: str, package_id: str) -> int:
@@ -309,6 +319,12 @@ class Reporter:
                 "package-name": result.row.package_name,
                 "resource-id": result.row.resource_id,
                 "resource-url": result.row.url,
+                "resource-created": ""
+                if result.row.resource_created is None
+                else result.row.resource_created.date().isoformat(),
+                "resource-last-modified": ""
+                if result.row.resource_last_modified is None
+                else result.row.resource_last_modified.date().isoformat(),
                 "org-name": result.row.org_name,
                 "org-id": result.row.org_id,
                 "http-status": "" if result.http_status is None else result.http_status,

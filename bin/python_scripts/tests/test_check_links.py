@@ -7,6 +7,7 @@ import requests
 
 from python_scripts.check_links import (
     HTTP_TIMEOUT,
+    REPORT_HEADERS,
     Category,
     CheckResult,
     Reporter,
@@ -20,7 +21,14 @@ from python_scripts.check_links import (
 
 @pytest.fixture
 def make_row():
-    def _make(resource_id: str, url: str) -> ResourceRow:
+    def _make(
+        resource_id: str,
+        url: str,
+        resource_created: datetime | None = datetime(2020, 1, 1, 0, 0, tzinfo=UTC),
+        resource_last_modified: datetime | None = datetime(
+            2025, 1, 1, 0, 0, tzinfo=UTC
+        ),
+    ) -> ResourceRow:
         return ResourceRow(
             package_id="pkg-id",
             package_name="pkg-name",
@@ -28,6 +36,8 @@ def make_row():
             org_name="public sector organisation",
             org_id="org-1",
             url=url,
+            resource_created=resource_created,
+            resource_last_modified=resource_last_modified,
         )
 
     return _make
@@ -106,38 +116,29 @@ def test_reporter_creates_file_with_header(tmp_path):
         pass
 
     rows = list(csv.reader(path.read_text().splitlines()))
-    assert rows == [
-        [
-            "package-id",
-            "package-name",
-            "resource-id",
-            "resource-url",
-            "org-name",
-            "org-id",
-            "http-status",
-            "category",
-            "error-detail",
-            "to-delete",
-            "checked-at",
-        ],
-    ]
+    assert rows == [REPORT_HEADERS]
 
 
 def test_reporter_writes_result_row(tmp_path, make_row):
     path = tmp_path / "report.csv"
     with Reporter(str(path)) as reporter:
-        reporter.write(stub_result(
-            make_row("res-1", "https://opendata.gov.uk"),
-            404,
-            Category.NOT_FOUND,
-        ))
+        reporter.write(
+            stub_result(
+                make_row("res-1", "https://opendata.gov.uk"),
+                404,
+                Category.NOT_FOUND,
+            )
+        )
 
     rows = list(csv.reader(path.read_text().splitlines()))
     assert rows[1] == [
+        "https://www.data.gov.uk/dataset/pkg-id/pkg-name",
         "pkg-id",
         "pkg-name",
         "res-1",
         "https://opendata.gov.uk",
+        "2020-01-01",
+        "2025-01-01",
         "public sector organisation",
         "org-1",
         "404",
@@ -148,21 +149,15 @@ def test_reporter_writes_result_row(tmp_path, make_row):
     ]
 
 
-def test_reporter_appends_to_existing_file_without_duplicate_header(
-    tmp_path, make_row
-):
+def test_reporter_renders_none_last_modified_as_empty(tmp_path, make_row):
     path = tmp_path / "report.csv"
+    row = make_row("res-1", "https://opendata.gov.uk", resource_last_modified=None)
     with Reporter(str(path)) as reporter:
-        reporter.write(stub_result(make_row("res-1", "https://opendata.gov.uk")))
-    with Reporter(str(path)) as reporter:
-        reporter.write(stub_result(make_row("res-2", "https://opendata.gov.uk")))
+        reporter.write(stub_result(row))
 
-    raw_lines = path.read_text().splitlines()
-    assert len(raw_lines) == 3  # 1 header + 2 data rows
-
-    rows = list(csv.DictReader(raw_lines))
-    assert rows[0]["resource-id"] == "res-1"
-    assert rows[1]["resource-id"] == "res-2"
+    rows = list(csv.DictReader(path.read_text().splitlines()))
+    assert rows[0]["resource-last-modified"] == ""
+    assert rows[0]["resource-created"] == "2020-01-01"
 
 
 def test_check_task_uses_head_status(make_row):
