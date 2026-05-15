@@ -26,7 +26,16 @@ def make_row():
         url: str,
         resource_created: datetime | None = datetime(2020, 1, 1, 0, 0, tzinfo=UTC),
         resource_last_modified: datetime | None = datetime(
-            2025, 1, 1, 0, 0, tzinfo=UTC
+            2026, 1, 1, 0, 0, tzinfo=UTC
+        ),
+        resource_metadata_modified: datetime | None = datetime(
+            2026, 1, 1, 0, 0, tzinfo=UTC
+        ),
+        package_metadata_created: datetime | None = datetime(
+            2010, 1, 1, 0, 0, tzinfo=UTC
+        ),
+        package_metadata_modified: datetime | None = datetime(
+            2026, 1, 1, 0, 0, tzinfo=UTC
         ),
     ) -> ResourceRow:
         return ResourceRow(
@@ -38,6 +47,9 @@ def make_row():
             url=url,
             resource_created=resource_created,
             resource_last_modified=resource_last_modified,
+            resource_metadata_modified=resource_metadata_modified,
+            package_metadata_created=package_metadata_created,
+            package_metadata_modified=package_metadata_modified,
         )
 
     return _make
@@ -135,10 +147,13 @@ def test_reporter_writes_result_row(tmp_path, make_row):
         "https://www.data.gov.uk/dataset/pkg-id/pkg-name",
         "pkg-id",
         "pkg-name",
+        "2010-01-01",
+        "2026-01-01",
         "res-1",
         "https://opendata.gov.uk",
         "2020-01-01",
-        "2025-01-01",
+        "2026-01-01",
+        "2026-01-01",
         "public sector organisation",
         "org-1",
         "404",
@@ -149,14 +164,24 @@ def test_reporter_writes_result_row(tmp_path, make_row):
     ]
 
 
-def test_reporter_renders_none_last_modified_as_empty(tmp_path, make_row):
+def test_reporter_renders_none_dates_as_empty(tmp_path, make_row):
     path = tmp_path / "report.csv"
-    row = make_row("res-1", "https://opendata.gov.uk", resource_last_modified=None)
+    row = make_row(
+        "res-1",
+        "https://opendata.gov.uk",
+        resource_last_modified=None,
+        resource_metadata_modified=None,
+        package_metadata_created=None,
+        package_metadata_modified=None,
+    )
     with Reporter(str(path)) as reporter:
         reporter.write(stub_result(row))
 
     rows = list(csv.DictReader(path.read_text().splitlines()))
     assert rows[0]["resource-last-modified"] == ""
+    assert rows[0]["resource-metadata-modified"] == ""
+    assert rows[0]["package-metadata-created"] == ""
+    assert rows[0]["package-metadata-modified"] == ""
     assert rows[0]["resource-created"] == "2020-01-01"
 
 

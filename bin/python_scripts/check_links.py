@@ -42,10 +42,13 @@ REPORT_HEADERS = [
     "datagovuk-url",
     "package-id",
     "package-name",
+    "package-metadata-created",
+    "package-metadata-modified",
     "resource-id",
     "resource-url",
     "resource-created",
     "resource-last-modified",
+    "resource-metadata-modified",
     "org-name",
     "org-id",
     "http-status",
@@ -95,6 +98,9 @@ class ResourceRow:
     org_id: str | None = None
     resource_created: datetime | None = None
     resource_last_modified: datetime | None = None
+    resource_metadata_modified: datetime | None = None
+    package_metadata_created: datetime | None = None
+    package_metadata_modified: datetime | None = None
 
 
 @dataclass
@@ -220,7 +226,11 @@ class Repository:
 
     SELECT_SQL = """
         SELECT p.id, p.name, r.id, r.url, g.name as org_name, g.id as org_id,
-               r.created, r.last_modified
+               r.created as resource_created,
+               r.last_modified as resource_last_modified,
+               r.metadata_modified as resource_metadata_modified,
+               p.metadata_created as package_metadata_created,
+               p.metadata_modified as package_metadata_modified
         FROM package p
         JOIN resource r ON r.package_id = p.id
         LEFT JOIN "group" g on p.owner_org = g.id
@@ -251,6 +261,9 @@ class Repository:
             self._conn = None
 
     def fetch_resources(self, limit: int | None = None) -> list[ResourceRow]:
+        # TODO: positional unpacking of cursor is getting a bit shonky. circle back later
+        # possibly switch to NamedTupleCursor or DictCursor? might need some more aliases
+        # to avoid name clashes
         assert self._conn is not None, "Repository not entered"
         with self._conn, self._conn.cursor() as cur:
             if limit is not None:
@@ -267,9 +280,23 @@ class Repository:
                     org_id=org_id,
                     resource_created=resource_created,
                     resource_last_modified=resource_last_modified,
+                    resource_metadata_modified=resource_metadata_modified,
+                    package_metadata_created=package_metadata_created,
+                    package_metadata_modified=package_metadata_modified,
                 )
-                for package_id, package_name, resource_id, url, org_name, org_id,
-                    resource_created, resource_last_modified in cur
+                for (
+                    package_id,
+                    package_name,
+                    resource_id,
+                    url,
+                    org_name,
+                    org_id,
+                    resource_created,
+                    resource_last_modified,
+                    resource_metadata_modified,
+                    package_metadata_created,
+                    package_metadata_modified,
+                ) in cur
             ]
 
     def mark_resource_deleted(self, resource_id: str, package_id: str) -> int:
@@ -317,6 +344,12 @@ class Reporter:
                 "datagovuk-url": f"https://www.data.gov.uk/dataset/{result.row.package_id}/{result.row.package_name}",
                 "package-id": result.row.package_id,
                 "package-name": result.row.package_name,
+                "package-metadata-created": ""
+                if result.row.package_metadata_created is None
+                else result.row.package_metadata_created.date().isoformat(),
+                "package-metadata-modified": ""
+                if result.row.package_metadata_modified is None
+                else result.row.package_metadata_modified.date().isoformat(),
                 "resource-id": result.row.resource_id,
                 "resource-url": result.row.url,
                 "resource-created": ""
@@ -325,6 +358,9 @@ class Reporter:
                 "resource-last-modified": ""
                 if result.row.resource_last_modified is None
                 else result.row.resource_last_modified.date().isoformat(),
+                "resource-metadata-modified": ""
+                if result.row.resource_metadata_modified is None
+                else result.row.resource_metadata_modified.date().isoformat(),
                 "org-name": result.row.org_name,
                 "org-id": result.row.org_id,
                 "http-status": "" if result.http_status is None else result.http_status,
