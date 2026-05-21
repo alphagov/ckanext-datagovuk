@@ -57,7 +57,7 @@ class InventoryHarvester(DguHarvesterBase):
         content = test_content
         if not content:
             try:
-                req = requests.get(harvest_job.source.url)
+                req = requests.get(harvest_job.source.url, timeout=(5, 10))
                 e = req.raise_for_status()
                 content = req.content
             except requests.exceptions.RequestException as e:
