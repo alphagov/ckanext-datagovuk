@@ -28,5 +28,10 @@ class CkanOutputBucket(object):
         self.bucket.upload_file(path, s3_path)
 
 
-    def download_from_s3(self, s3_path):
-        self.bucket.download_file(s3_path)
+    def download_from_s3(self, s3_path, target_dir=None):
+        target_path = s3_path
+        if target_dir:
+            filename = s3_path.split("/")[-1]
+            target_path = target_dir + "/" + filename
+
+        self.bucket.download_file(s3_path, target_path)
