@@ -29,6 +29,9 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from lib.s3 import CkanOutputBucket
+
+
 LOG_FILE = "check_links.log"
 REPORT_FILE = "check_links_report_{timestamp}.csv"
 REINDEX_FILE = "packages_to_reindex_{timestamp}.txt"
@@ -375,6 +378,16 @@ class Reporter:
         self._fh.flush()
 
 
+def upload_to_s3(logger, reindex_path, report_path):
+    bucket = CkanOutputBucket()
+    bucket.upload_to_s3(reindex_path, "check_links")
+    logger.info(f"uploaded {reindex_path} to S3 bucket {bucket.bucket.name}")
+    bucket.upload_to_s3(report_path, "check_links")
+    logger.info(f"uploaded {report_path} to S3 bucket {bucket.bucket.name}")
+    logger.info("=== check_links/ ls")
+    bucket.get_s3_ls(path="check_links/")
+
+
 def run(
     *,
     logger: logging.Logger,
@@ -502,6 +515,8 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
             verbose=args.verbose,
         )
+    
+    upload_to_s3(logger, reindex_path, report_path)
     return 0
 
 
