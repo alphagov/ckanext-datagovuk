@@ -5,6 +5,10 @@
 - Set environment variable `POSTGRES_URL`
 - Value from `docker/.env.example` == `postgresql://ckan:ckan@db/ckan`
 
+Reports are uploaded to an s3 bucket if the environment variable is set, this is needed to be able to publish the reports 
+- Set environment variable `CKAN_OUTPUT_BUCKET_NAME`
+- Value set as `govuk-ckan-output-<integration|staging|production>`
+
 ***
 
 ### Link checking
