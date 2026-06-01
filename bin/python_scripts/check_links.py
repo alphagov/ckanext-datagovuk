@@ -385,7 +385,8 @@ def upload_to_s3(logger, reindex_path, report_path):
     bucket.upload_to_s3(report_path, "check_links")
     logger.info(f"uploaded {report_path} to S3 bucket {bucket.bucket.name}")
     logger.info("=== check_links/ ls")
-    bucket.get_s3_ls(path="check_links/")
+    for filename in bucket.get_s3_ls(path="check_links/"):
+        logger.info(filename)
 
 
 def run(
