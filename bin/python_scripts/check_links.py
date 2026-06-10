@@ -86,6 +86,8 @@ class Category(StrEnum):
     SERVER_ERROR = "SERVER_ERROR"
     TIMEOUT = "TIMEOUT"
     CONNECTION_ERROR = "CONNECTION_ERROR"
+    DNS_ERROR = "DNS_ERROR"
+    CONNECTION_REFUSED = "CONNECTION_REFUSED"
     OTHER_ERROR = "OTHER_ERROR"
 
 
@@ -118,7 +120,34 @@ class CheckResult:
 
     @property
     def to_delete(self) -> bool:
-        return self.category in {Category.NOT_FOUND, Category.GONE}
+        return self.category in {
+            Category.NOT_FOUND,
+            Category.GONE,
+            Category.DNS_ERROR,
+            Category.CONNECTION_REFUSED,
+        }
+
+
+def classify_connection_error(exc: ConnectionError) -> tuple[Category, str]:
+    """Try to disambiguate requests.ConnectionError 
+    into DNS error or refused, and if not return original 
+    generic ConnectionError
+    """
+    detail = str(exc)
+    text = detail.lower()
+    if any(
+        s in text
+        for s in (
+            "name or service not known",
+            "nodename nor servname",
+            "failed to resolve",
+            "name resolution",
+        )
+    ):
+        return Category.DNS_ERROR, detail
+    if "connection refused" in text:
+        return Category.CONNECTION_REFUSED, detail
+    return Category.CONNECTION_ERROR, detail
 
 
 def classify_response(
@@ -128,7 +157,7 @@ def classify_response(
         case (_, requests.Timeout()):
             return Category.TIMEOUT, str(exc)
         case (_, requests.ConnectionError()):
-            return Category.CONNECTION_ERROR, str(exc)
+            return classify_connection_error(exc)
         case (_, BaseException()):
             return Category.OTHER_ERROR, str(exc)
         case (None, None):
@@ -155,11 +184,12 @@ def session_factory(
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
     retry = Retry(
-        total=1,
+        total=3,
         status_forcelist=[500, 502, 503, 504],
         allowed_methods=["HEAD", "GET"],
         backoff_factor=0.5,
         respect_retry_after_header=True,
+        raise_on_status=False,
     )
     adapter = HTTPAdapter(
         max_retries=retry,
