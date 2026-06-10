@@ -16,6 +16,7 @@ from python_scripts.check_links import (
     classify_response,
     host_key,
     interleave_rows_by_host,
+    session_factory,
 )
 
 
@@ -68,6 +69,15 @@ def stub_result(
     )
 
 
+def _stub_dns_connection_error() -> requests.ConnectionError:
+    # stub error requests raises when the host fails to resolve.
+    return requests.ConnectionError(
+        "HTTPSConnectionPool(host='no-such-host.example', port=443): Max retries "
+        "exceeded (Caused by NameResolutionError(\"Failed to resolve "
+        "'no-such-host.example' ([Errno -2] Name or service not known)\"))"
+    )
+
+
 @pytest.mark.parametrize(
     "status, exc, expected_cat",
     [
@@ -81,6 +91,13 @@ def stub_result(
         (503, None, Category.SERVER_ERROR),
         (None, requests.Timeout("timeout"), Category.TIMEOUT),
         (None, requests.ConnectionError("connection error"), Category.CONNECTION_ERROR),
+        (None, _stub_dns_connection_error(), Category.DNS_ERROR),
+        (
+            None,
+            requests.ConnectionError(ConnectionRefusedError(111, "Connection refused")),
+            Category.CONNECTION_REFUSED,
+        ),
+        (None, requests.exceptions.SSLError("bad handshake"), Category.CONNECTION_ERROR),
         (None, ValueError("some other error"), Category.OTHER_ERROR),
         (None, None, Category.OTHER_ERROR),
     ],
@@ -103,6 +120,8 @@ def test_classify_maps_http_and_exceptions_to_categories(status, exc, expected_c
         (Category.SERVER_ERROR, False),
         (Category.TIMEOUT, False),
         (Category.CONNECTION_ERROR, False),
+        (Category.DNS_ERROR, True),
+        (Category.CONNECTION_REFUSED, True),
         (Category.OTHER_ERROR, False),
     ],
 )
@@ -202,6 +221,30 @@ def test_check_task_uses_head_status(make_row):
         timeout=HTTP_TIMEOUT,
         allow_redirects=True,
     )
+
+
+def test_check_task_classifies_server_error_with_status(make_row):
+    session = requests.Session()
+    head_response = MagicMock()
+    head_response.status_code = 503
+    head_response.__enter__.return_value = head_response
+    head_response.__exit__.return_value = False
+    session.head = Mock(return_value=head_response)
+
+    result = check_task(make_row("res-id", "https://opendata.gov.uk"), session)
+
+    assert result.http_status == 503
+    assert result.category is Category.SERVER_ERROR
+
+
+def test_session_factory_retry_does_not_raise_on_status():
+    # Retry must return the final 5xx response rather than raising RetryError,
+    # otherwise check_task loses the status code and misclassifies it as
+    # OTHER_ERROR instead of SERVER_ERROR.
+    session = session_factory()
+    retry = session.get_adapter("https://opendata.gov.uk").max_retries
+    assert retry.raise_on_status is False
+    assert set(retry.status_forcelist) == {500, 502, 503, 504}
 
 
 def test_check_task_falls_back_to_get_for_head_fallback_status(make_row):
