@@ -16,6 +16,9 @@ If testing locally you can skip wth S3 bucket output by passing the flag `--loca
 
 ### Link checking
 
+> [!WARNING]
+> `check_links.py` is being reduced to a **reporting-only** tool. The db updates (the `live` mode that marks resources deleted) will be removed and its flags changed accordingly. Applying deletions becomes the job of `apply_link_deletions.py` (below), which actions a report produced here. The `--mode live` behaviour documented in this section is therefore this will change once db updates removed from this script and there will be only one mode, the one that writes the report. 
+
 Two-step cycle: scan for broken links → reindex affected packages.
 
 ### 1. `check_links.py`
@@ -69,9 +72,23 @@ These are module constants near top of script. Change if needed according to tun
 - `check_links_report_{ts}.csv` — one row per resource (category + `to-delete` flag) - current dir unless `--output-dir` set
 - `packages_to_reindex_{ts}.txt` — unique package IDs that had a 404/410 — used as input to `solr_reindex_package_ids.py` - cuirrent dir unless `--output-dir` set
 
-### 2. `revert_link_deletions.py`
+### 2. `apply_link_deletions.py`
 
-Reverses a prior `check_links.py --mode live` run using its CSV report. Every row with `to-delete == "true"` has its resource `state` reverted to `active` (if currently `deleted`) and `package.metadata_modified` updated to NOW().
+Applies the deletions from a `check_links.py` CSV report directly, without fetching from the db or re-checking link liveness. Every row with `to-delete == "true"` has its resource `state` marked `deleted` (if currently `active`) and `package.metadata_modified` updated to NOW(). Use it to action a previously generated report without rerunning the database select and url scan.
+
+Run (inside the container, with `POSTGRES_URL` set):
+
+```bash
+    python apply_link_deletions.py --input check_links_report_<ts>.csv --mode dry-run
+```
+
+`--mode` defaults to `dry-run` (no db writes, only logs what would be deleted). Use `--mode live` to actually delete. The reindex list is populated only by resources actually deleted in `live` mode — in `dry-run` it is written empty, since nothing changed there is nothing to reindex.
+
+Same CLI flags as `revert_link_deletions.py` below (`--input` required, `--mode`, `--output-dir`). Filenames are module-level constants (`LOG_FILE` = `check_links_apply.log`, `REINDEX_FILE` = `packages_to_reindex_apply_{ts}.txt`); the reindex list feeds into `solr_reindex_package_ids.py`.
+
+### 3. `revert_link_deletions.py`
+
+The inverse of `apply_link_deletions.py`. Reverses a prior `check_links.py --mode live` (or `apply_link_deletions.py --mode live`) run using its CSV report. Every row with `to-delete == "true"` has its resource `state` reverted to `active` (if currently `deleted`) and `package.metadata_modified` updated to NOW().
 
 Run (inside the container, with `POSTGRES_URL` set):
 
@@ -81,12 +98,12 @@ Run (inside the container, with `POSTGRES_URL` set):
 
 `--mode` defaults to `dry-run` (no db writes, only logs and writes the revert reindex file). Use `--mode live` to actually restore.
 
-### CLI flags
+### CLI flags for apply and revert link deletions
 
 | Flag | Required | Default | Purpose |
 |---|---|---|---|
-| `--input` | **yes** | — | check_links CSV report to reverse (full path) |
-| `--mode` | no | `dry-run` | `dry-run` reports only; `live` restores deleted resources |
+| `--input` | **yes** | — | check_links CSV report to action (full path) |
+| `--mode` | no | `dry-run` | `dry-run` reports only; `live` applies the change (apply: delete / revert: restore) |
 | `--output-dir` | no | `.` (current dir) | directory for the reindex list |
 
 Same convention as `check_links.py`: filenames are module-level constants (`LOG_FILE` = `check_links_revert.log`, `REINDEX_FILE` = `packages_to_reindex_revert_{ts}.txt`). The log file uses a stable name and written to the current working directory. The reindex list is timestamped per run and outputs to current dir or `--output-dir`.
@@ -113,6 +130,7 @@ cd $CKAN_VENV/src/ckanext-datagovuk/bin/python_scripts
 ```bash
 pytest tests/test_check_links.py
 pytest tests/test_revert_link_deletions.py
+pytest tests/test_apply_link_deletions.py
 ```
 
 ### 3. Test against local db
