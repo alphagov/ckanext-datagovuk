@@ -20,7 +20,8 @@ services:
       - ckan_storage-2.10:/var/lib/ckan
       - ./logs/2.10:/var/log/ckan
       - ../ckanext/datagovuk/:/usr/lib/ckan/venv/src/ckanext-datagovuk/ckanext/datagovuk/
-      - ../bin/python_scripts/:/usr/lib/ckan/venv/src/ckanext-datagovuk/bin/python_scripts/
+      - ../bin/:/usr/lib/ckan/venv/src/ckanext-datagovuk/bin/
+      - ../test.ini:/usr/lib/ckan/venv/src/ckanext-datagovuk/test.ini
     depends_on: 
       - db-2.10
       - solr-2.10
@@ -58,8 +59,9 @@ services:
     # image: ghcr.io/alphagov/datagovuk_find:v3.2.6
     image: dev.datagovuk_find
     container_name: find-2.10
-    # build:  
-    #   context: ./src/2.10/datagovuk_find/dev.Dockerfile
+    build:  
+      context: ./src/2.10/datagovuk_find
+      dockerfile: docker/dev.Dockerfile
     env_file:
       - .env-2.10
     links:
@@ -70,6 +72,8 @@ services:
     # command: bash -c "tail -f /dev/null"
     volumes:
       - ./src/2.10/datagovuk_find:/srv/app/datagovuk_find
+      - ./src/2.10/datagovuk_find/app/:/app/app
+      - ./src/2.10/datagovuk_find/config/:/app/config
       - ./logs/2.10:/var/log/find
     networks:
       - ckan-2.10
