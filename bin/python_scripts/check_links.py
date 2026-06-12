@@ -512,6 +512,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="directory for CSV report and reindex list (default: current directory). "
         "Log file is always written to the current directory.",
     )
+    parser.add_argument(
+        "--local",
+        action="store_true",
+        default=False,
+        help="Skips pushing output files to S3, so local testing easier",
+    )
     return parser.parse_args(argv)
 
 
@@ -530,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
     logger.info(f"reindex path: {reindex_path}")
     logger.info(f"verbose: {args.verbose}")
     logger.info(f"workers: {WORKERS}, http_timeout: {HTTP_TIMEOUT}")
+    logger.info(f"local: {args.local}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
@@ -546,8 +553,10 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
             verbose=args.verbose,
         )
-    
-    upload_to_s3(logger, reindex_path, report_path)
+
+    if not args.local:
+        upload_to_s3(logger, reindex_path, report_path)
+
     return 0
 
 

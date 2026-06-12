@@ -5,9 +5,12 @@
 - Set environment variable `POSTGRES_URL`
 - Value from `docker/.env.example` == `postgresql://ckan:ckan@db/ckan`
 
-Reports are uploaded to an s3 bucket if the environment variable is set, this is needed to be able to publish the reports 
+Reports are uploaded to an s3 bucket and the following env variable will need to be set otherwise an exception will be thrown. This is needed to be able to publish the reports 
+
 - Set environment variable `CKAN_OUTPUT_BUCKET_NAME`
 - Value set as `govuk-ckan-output-<integration|staging|production>`
+
+If testing locally you can skip wth S3 bucket output by passing the flag `--local`
 
 ***
 
@@ -39,6 +42,7 @@ To update db instead of `--mode dry-run` use `--mode live`.
 | `--limit` | no | no limit | limit number of resource URLs fetched from db — useful for sanity-checking a small batch |
 | `--verbose` | no | off | write all checked resources to the CSV report (default: only resources marked for deletion) |
 | `--output-dir` | no | `.` (cwd) | directory for the CSV report and reindex list |
+| `--local` | no | False | If set will skip the attempt to write to output files to S3 |
 
 Filenames are module-level constants (`LOG_FILE` = `check_links.log`, `REPORT_FILE` = `check_links_report_{ts}.csv`, `REINDEX_FILE` = `packages_to_reindex_{ts}.txt`). 
 The CSV report and reindex list are timestamped per run and placed in current directory or `--output-dir`.
@@ -117,7 +121,7 @@ Requires test data in the db (run `ckan datagovuk create-dgu-test-data`):
 
 ```bash
 export POSTGRES_URL=postgresql://ckan:ckan@db/ckan
-python check_links.py
+python check_links.py --local
 ```
 
 You can add the arg: 
