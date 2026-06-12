@@ -69,8 +69,8 @@ These are module constants near top of script. Change if needed according to tun
 ### Outputs
 
 - `check_links.log` — run log (stable name, always current dir)
-- `check_links_report_{ts}.csv` — one row per resource (category + `to-delete` flag) - current dir unless `--output-dir` set
-- `packages_to_reindex_{ts}.txt` — unique package IDs that had a 404/410 — used as input to `solr_reindex_package_ids.py` - cuirrent dir unless `--output-dir` set
+- `check_links_report_{ts}.csv` - one row per resource (category + `to-delete` flag) - current dir unless `--output-dir` set
+- `packages_to_reindex_{ts}.txt`  unique package IDs that had a 404/410 — used as input to `solr_reindex_package_ids.py` - cuirrent dir unless `--output-dir` set
 
 ### 2. `apply_link_deletions.py`
 
@@ -84,9 +84,18 @@ Run (inside the container, with `POSTGRES_URL` set):
 
 `--mode` defaults to `dry-run` (no db writes, only logs what would be deleted). Use `--mode live` to actually delete. The reindex list is populated only by resources actually deleted in `live` mode — in `dry-run` it is written empty, since nothing changed there is nothing to reindex.
 
-Same CLI flags as `revert_link_deletions.py` below (`--input` required, `--mode`, `--output-dir`). Filenames are module-level constants (`LOG_FILE` = `check_links_apply.log`, `REINDEX_FILE` = `packages_to_reindex_apply_{ts}.txt`); the reindex list feeds into `solr_reindex_package_ids.py`.
+Same CLI flags as `revert_link_deletions.py` below (`--input` required, `--mode`, `--output-dir`). Filenames are module-level constants (`LOG_FILE` = `check_links_delete.log`, `REINDEX_FILE` = `deleted_packages_to_reindex_{ts}.txt`); the reindex list feeds into `solr_reindex_package_ids.py`.
+
+Outputs (only written in `live` mode, and only if at least one resource is actually deleted):
+
+- `check_links_delete.log`: run log (stable name, always current dir)
+- `<input-report-name>_deleted_{ts}.csv`: the input rows that were deleted, each timestamped with a `deleted-on` time, written next to the `--input` report
+- `deleted_packages_to_reindex_{ts}.txt`: package IDs of deleted resources, fed into `solr_reindex_package_ids.py`. current dir unless `--output-dir` set.
 
 ### 3. `revert_link_deletions.py`
+
+> [!NOTE]
+> This script has yet to be updated to to match apply_links_deletion.py, TODO in another PR
 
 The inverse of `apply_link_deletions.py`. Reverses a prior `check_links.py --mode live` (or `apply_link_deletions.py --mode live`) run using its CSV report. Every row with `to-delete == "true"` has its resource `state` reverted to `active` (if currently `deleted`) and `package.metadata_modified` updated to NOW().
 

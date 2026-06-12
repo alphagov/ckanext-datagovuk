@@ -1,5 +1,6 @@
 import csv
 import logging
+import os
 from unittest.mock import MagicMock, call
 
 import pytest
@@ -57,6 +58,7 @@ def test_dry_run_does_not_touch_db_or_reindex(tmp_path, write_csv, logger):
         ]
     )
     reindex_path = str(tmp_path / "reindex.txt")
+    deleted_path = str(tmp_path / "deleted.csv")
     repo = MagicMock()
 
     apply(
@@ -64,13 +66,14 @@ def test_dry_run_does_not_touch_db_or_reindex(tmp_path, write_csv, logger):
         repository=repo,
         input_path=input_path,
         reindex_path=reindex_path,
+        deleted_path=deleted_path,
         mode="dry-run",
     )
 
-    # dry-run makes no changes, so nothing is queued for reindex
     repo.mark_resource_deleted.assert_not_called()
     with open(reindex_path) as f:
         assert f.read().splitlines() == []
+    assert not os.path.exists(deleted_path)
 
 
 def test_live_calls_repository_only_for_to_delete_rows(tmp_path, write_csv, logger):
@@ -82,6 +85,7 @@ def test_live_calls_repository_only_for_to_delete_rows(tmp_path, write_csv, logg
         ]
     )
     reindex_path = str(tmp_path / "reindex.txt")
+    deleted_path = str(tmp_path / "deleted.csv")
     repo = MagicMock()
     repo.mark_resource_deleted.return_value = 1
 
@@ -90,6 +94,7 @@ def test_live_calls_repository_only_for_to_delete_rows(tmp_path, write_csv, logg
         repository=repo,
         input_path=input_path,
         reindex_path=reindex_path,
+        deleted_path=deleted_path,
         mode="live",
     )
 
@@ -99,3 +104,32 @@ def test_live_calls_repository_only_for_to_delete_rows(tmp_path, write_csv, logg
     ]
     with open(reindex_path) as f:
         assert f.read().splitlines() == ["pkg-1", "pkg-2"]
+
+
+def test_live_writes_applied_report_with_timestamp_per_row(tmp_path, write_csv, logger):
+    input_path = write_csv(
+        [
+            _row(resource_id="res-1", package_id="pkg-1", to_delete="true"),
+            _row(resource_id="res-skip", package_id="pkg-skip", to_delete="false"),
+            _row(resource_id="res-2", package_id="pkg-2", to_delete="true"),
+        ]
+    )
+    reindex_path = str(tmp_path / "reindex.txt")
+    deleted_path = str(tmp_path / "deleted.csv")
+    repo = MagicMock()
+    repo.mark_resource_deleted.return_value = 1
+
+    apply(
+        logger=logger,
+        repository=repo,
+        input_path=input_path,
+        reindex_path=reindex_path,
+        deleted_path=deleted_path,
+        mode="live",
+    )
+
+    with open(deleted_path, newline="") as f:
+        rows = list(csv.DictReader(f))
+    # only the to-delete rows are recorded, each stamped with an applied-on time
+    assert [r["resource-id"] for r in rows] == ["res-1", "res-2"]
+    assert all(r["deleted-on"] != "" for r in rows)
