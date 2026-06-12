@@ -47,6 +47,7 @@ REPORT_HEADERS = [
     "package-name",
     "package-metadata-created",
     "package-metadata-modified",
+    "guid",
     "resource-id",
     "resource-url",
     "resource-created",
@@ -106,6 +107,7 @@ class ResourceRow:
     resource_metadata_modified: datetime | None = None
     package_metadata_created: datetime | None = None
     package_metadata_modified: datetime | None = None
+    guid: str | None = None
 
 
 @dataclass
@@ -258,15 +260,22 @@ class Repository:
     """Handles all db access. One connection opened in __enter__."""
 
     SELECT_SQL = """
+        WITH harvest_objects_by_package_id AS (
+            SELECT package_id, guid
+            FROM harvest_object
+            GROUP BY package_id, guid
+        )
         SELECT p.id, p.name, r.id, r.url, g.name as org_name, g.id as org_id,
                r.created as resource_created,
                r.last_modified as resource_last_modified,
                r.metadata_modified as resource_metadata_modified,
                p.metadata_created as package_metadata_created,
-               p.metadata_modified as package_metadata_modified
+               p.metadata_modified as package_metadata_modified,
+               ho.guid as guid
         FROM package p
         JOIN resource r ON r.package_id = p.id
         LEFT JOIN "group" g on p.owner_org = g.id
+        LEFT JOIN harvest_objects_by_package_id AS ho ON p.id = ho.package_id
         WHERE p.state = 'active'
           AND p.type = 'dataset'
           AND r.state = 'active'
@@ -316,6 +325,7 @@ class Repository:
                     resource_metadata_modified=resource_metadata_modified,
                     package_metadata_created=package_metadata_created,
                     package_metadata_modified=package_metadata_modified,
+                    guid=guid,
                 )
                 for (
                     package_id,
@@ -329,6 +339,7 @@ class Repository:
                     resource_metadata_modified,
                     package_metadata_created,
                     package_metadata_modified,
+                    guid,
                 ) in cur
             ]
 
@@ -383,6 +394,7 @@ class Reporter:
                 "package-metadata-modified": ""
                 if result.row.package_metadata_modified is None
                 else result.row.package_metadata_modified.date().isoformat(),
+                "guid": "" if result.row.guid is None else result.row.guid,
                 "resource-id": result.row.resource_id,
                 "resource-url": result.row.url,
                 "resource-created": ""

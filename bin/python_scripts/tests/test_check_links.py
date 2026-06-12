@@ -168,6 +168,7 @@ def test_reporter_writes_result_row(tmp_path, make_row):
         "pkg-name",
         "2010-01-01",
         "2026-01-01",
+        "",
         "res-1",
         "https://opendata.gov.uk",
         "2020-01-01",
