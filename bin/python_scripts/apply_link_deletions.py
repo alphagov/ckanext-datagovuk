@@ -10,11 +10,15 @@ check link liveness, it uses the report and actions it directly.
 Use it to apply a previously generated report without rerunning the
 resource liveness check
 
-Writes a `packages_to_reindex_apply_{ts}.txt` for feeding into
+Writes a report of check links rows deleted with a "deleted-on" 
+timestamp.
+
+Writes a `deleted_packages_to_reindex_{ts}.txt` for feeding into
 `solr_reindex_package_ids.py`.
 """
 
 import argparse
+import contextlib
 import csv
 import logging
 import os
@@ -26,27 +30,25 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from python_scripts.check_links import Repository, setup_logging
 
-LOG_FILE = "check_links_apply.log"
-REINDEX_FILE = "packages_to_reindex_apply_{timestamp}.txt"
+LOG_FILE = "check_links_delete.log"
+REINDEX_FILE = "deleted_packages_to_reindex_{timestamp}.txt"
 
 
-def _create_applied_filename(filepath):
+def _create_deleted_filename(filepath, timestamp):
     path = Path(filepath)
-    filename = path.stem
-    extension = path.suffix
-    return f"{path.parent}{os.path.sep}{filename}_applied{extension}"
+    return str(path.with_name(f"{path.stem}_deleted_{timestamp}{path.suffix}"))
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Applies resource deletions from a check_links CSV report "
+        description="Deletes resources from a check_links CSV report "
         "without fetching from the database or checking link liveness. "
         "Filenames are timestamped templates (module-level constants).",
     )
     parser.add_argument(
         "--input",
         required=True,
-        help="check_links CSV report to apply (required)",
+        help="check_links CSV report of resources to delete (required)",
     )
     parser.add_argument(
         "--mode",
@@ -69,14 +71,17 @@ def apply(
     repository: Repository,
     input_path: str,
     reindex_path: str,
+    deleted_path: str,
     mode: str,
 ) -> None:
     to_reindex: set[str] = set()
     updated = 0
-    applied: list = []
+    outfile = None
+    writer: csv.DictWriter | None = None
 
-    with open(input_path, newline="", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
+    with contextlib.ExitStack() as stack:
+        infile = stack.enter_context(open(input_path, newline="", encoding="utf-8"))
+        for row in csv.DictReader(infile):
             if row["to-delete"] != "true":
                 continue
             resource_id = row["resource-id"]
@@ -87,42 +92,46 @@ def apply(
                 if rowcount > 0:
                     to_reindex.add(package_id)
                     updated += 1
-                    row_copy = row.copy()
-                    row_copy["applied-on"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-                    applied.append(row_copy)
+                    row["deleted-on"] = datetime.now(UTC).isoformat(timespec="minutes")
+                    # open the report lazily so a run that deletes nothing
+                    # doesn't create empty applied file
+                    if writer is None:
+                        outfile = stack.enter_context(
+                            open(deleted_path, "w", newline="", encoding="utf-8")
+                        )
+                        writer = csv.DictWriter(outfile, fieldnames=list(row))
+                        writer.writeheader()
+                    writer.writerow(row)
+                    outfile.flush()
                 else:
                     logger.info(f"skipped {resource_id} (not in active state)")
             else:
                 updated += 1
                 logger.info(f"would delete {resource_id}")
 
+    if writer is not None:
+        logger.info(f"deletion report: {deleted_path}")
+
     with open(reindex_path, "w", encoding="utf-8") as f:
         for package_id in sorted(to_reindex):
             f.write(f"{package_id}\n")
-    
-    if applied:
-        fieldnames = list(applied[0])
-        applied_report_file = _create_applied_filename(input_path)
-        with open(applied_report_file, "w", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(applied)
-            logger.info(f"report of deletions applied: {applied_report_file}")
 
     logger.info(f"deleted {updated} resources, {len(to_reindex)} packages to reindex")
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
     log_path = LOG_FILE
     reindex_path = os.path.join(
         args.output_dir, REINDEX_FILE.format(timestamp=timestamp)
     )
+    deleted_path = _create_deleted_filename(args.input, timestamp)
     logger = setup_logging(log_path)
     logger.info(f"mode: {args.mode}")
     logger.info(f"input: {args.input}")
     logger.info(f"reindex path: {reindex_path}")
+    logger.info(f"deleted report path: {deleted_path}")
 
     dsn = os.environ.get("POSTGRES_URL")
     if not dsn:
@@ -135,6 +144,7 @@ def main(argv: list[str] | None = None) -> int:
             repository=repository,
             input_path=args.input,
             reindex_path=reindex_path,
+            deleted_path=deleted_path,
             mode=args.mode,
         )
     return 0
