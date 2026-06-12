@@ -50,3 +50,4 @@ environment.sh
 .env*
 docker/src
 !.env.example
+*.pem
