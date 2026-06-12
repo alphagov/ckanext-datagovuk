@@ -1,16 +1,17 @@
-"""Reverses a prior `check_links.py --mode live` run using its CSV report.
+"""Applies resource deletions from a check_links.py CSV report.
 
 For every row with `to-delete == "true"`:
-  * `live`: flips the resource `state` back to 'active' (if currently
-    'deleted') and bumps the package `metadata_modified` to NOW().
+  * `live`: marks the resource `state` to 'deleted' (if currently 'active')
+    and bumps the package `metadata_modified` to NOW().
   * `dry-run`: logs the intended change, no DB writes.
 
-Writes a `packages_to_reindex_revert_{ts}.txt` for feeding into
-`solr_reindex_package_ids.py`.
+This does NOT fetch resources from the database or
+check link liveness, it uses the report and actions it directly. 
+Use it to apply a previously generated report without rerunning the
+resource liveness check
 
-Note: `metadata_modified` is bumped to NOW(). We don't have the pre-run
-value to restore. Keeps the timestamp honest for any downstream consumer
-that looks at it (scheduled reindexing? other?).
+Writes a `packages_to_reindex_apply_{ts}.txt` for feeding into
+`solr_reindex_package_ids.py`.
 """
 
 import argparse
@@ -25,25 +26,33 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from python_scripts.check_links import Repository, setup_logging
 
-LOG_FILE = "check_links_revert.log"
-REINDEX_FILE = "packages_to_reindex_revert_{timestamp}.txt"
+LOG_FILE = "check_links_apply.log"
+REINDEX_FILE = "packages_to_reindex_apply_{timestamp}.txt"
+
+
+def _create_applied_filename(filepath):
+    path = Path(filepath)
+    filename = path.stem
+    extension = path.suffix
+    return f"{path.parent}{os.path.sep}{filename}_applied{extension}"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Reverses a prior check_links --mode live run from its CSV report. "
+        description="Applies resource deletions from a check_links CSV report "
+        "without fetching from the database or checking link liveness. "
         "Filenames are timestamped templates (module-level constants).",
     )
     parser.add_argument(
         "--input",
         required=True,
-        help="check_links CSV report to reverse (required)",
+        help="check_links CSV report to apply (required)",
     )
     parser.add_argument(
         "--mode",
         choices=["dry-run", "live"],
         default="dry-run",
-        help="'dry-run' (default) reports only; 'live' restores deleted resources",
+        help="'dry-run' (default) reports only; 'live' marks to-delete resources deleted",
     )
     parser.add_argument(
         "--output-dir",
@@ -54,7 +63,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def revert(
+def apply(
     *,
     logger: logging.Logger,
     repository: Repository,
@@ -64,6 +73,7 @@ def revert(
 ) -> None:
     to_reindex: set[str] = set()
     updated = 0
+    applied: list = []
 
     with open(input_path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -73,24 +83,33 @@ def revert(
             package_id = row["package-id"]
 
             if mode == "live":
-                rowcount = repository.mark_resource_active(resource_id, package_id)
+                rowcount = repository.mark_resource_deleted(resource_id, package_id)
                 if rowcount > 0:
                     to_reindex.add(package_id)
                     updated += 1
+                    row_copy = row.copy()
+                    row_copy["applied-on"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    applied.append(row_copy)
                 else:
-                    logger.info(f"skipped {resource_id} (not in deleted state)")
+                    logger.info(f"skipped {resource_id} (not in active state)")
             else:
-                # TODO: remove this and fix test so it does same as apply
-                # no need to create reindex list for dry run. do as a separate PR
-                to_reindex.add(package_id)
                 updated += 1
-                logger.info(f"would revert {resource_id}")
+                logger.info(f"would delete {resource_id}")
 
     with open(reindex_path, "w", encoding="utf-8") as f:
         for package_id in sorted(to_reindex):
             f.write(f"{package_id}\n")
+    
+    if applied:
+        fieldnames = list(applied[0])
+        applied_report_file = _create_applied_filename(input_path)
+        with open(applied_report_file, "w", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(applied)
+            logger.info(f"report of deletions applied: {applied_report_file}")
 
-    logger.info(f"reverted {updated} resources, {len(to_reindex)} packages to reindex")
+    logger.info(f"deleted {updated} resources, {len(to_reindex)} packages to reindex")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -111,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     with Repository(dsn) as repository:
-        revert(
+        apply(
             logger=logger,
             repository=repository,
             input_path=args.input,
