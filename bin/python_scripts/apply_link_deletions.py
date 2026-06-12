@@ -30,6 +30,13 @@ LOG_FILE = "check_links_apply.log"
 REINDEX_FILE = "packages_to_reindex_apply_{timestamp}.txt"
 
 
+def _create_applied_filename(filepath):
+    path = Path(filepath)
+    filename = path.stem
+    extension = path.suffix
+    return f"{path.parent}{os.path.sep}{filename}_applied{extension}"
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Applies resource deletions from a check_links CSV report "
@@ -66,6 +73,7 @@ def apply(
 ) -> None:
     to_reindex: set[str] = set()
     updated = 0
+    applied: list = []
 
     with open(input_path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -79,6 +87,9 @@ def apply(
                 if rowcount > 0:
                     to_reindex.add(package_id)
                     updated += 1
+                    row_copy = row.copy()
+                    row_copy["applied-on"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    applied.append(row_copy)
                 else:
                     logger.info(f"skipped {resource_id} (not in active state)")
             else:
@@ -88,6 +99,15 @@ def apply(
     with open(reindex_path, "w", encoding="utf-8") as f:
         for package_id in sorted(to_reindex):
             f.write(f"{package_id}\n")
+    
+    if applied:
+        fieldnames = list(applied[0])
+        applied_report_file = _create_applied_filename(input_path)
+        with open(applied_report_file, "w", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(applied)
+            logger.info(f"report of deletions applied: {applied_report_file}")
 
     logger.info(f"deleted {updated} resources, {len(to_reindex)} packages to reindex")
 
