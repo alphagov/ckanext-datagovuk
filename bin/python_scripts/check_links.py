@@ -33,8 +33,8 @@ from lib.s3 import CkanOutputBucket
 
 
 LOG_FILE = "check_links.log"
-REPORT_FILE = "check_links_report_{timestamp}.csv"
-REINDEX_FILE = "packages_to_reindex_{timestamp}.txt"
+REPORT_FILE = "check_links_report_{timestamp}{verbose}.csv"
+REINDEX_FILE = "packages_to_reindex_{timestamp}{verbose}.txt"
 USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
 HTTP_TIMEOUT = (5, 5)  # (connect, read) seconds
 WORKERS = 50
@@ -537,9 +537,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M")
     log_path = LOG_FILE
-    report_path = os.path.join(args.output_dir, REPORT_FILE.format(timestamp=timestamp))
+    report_path = os.path.join(args.output_dir, REPORT_FILE.format(timestamp=timestamp, verbose="_verbose" if args.verbose else ""))
     reindex_path = os.path.join(
-        args.output_dir, REINDEX_FILE.format(timestamp=timestamp)
+        args.output_dir, REINDEX_FILE.format(timestamp=timestamp, verbose="_verbose" if args.verbose else "")
     )
     logger = setup_logging(log_path)
     logger.info(f"mode: {args.mode}")
