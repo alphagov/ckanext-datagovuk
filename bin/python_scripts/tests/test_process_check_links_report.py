@@ -1,17 +1,16 @@
 import csv
 import logging
-import os
 from unittest.mock import MagicMock, call
 
 import pytest
 
 from python_scripts.check_links import REPORT_HEADERS
-from python_scripts.apply_link_deletions import apply
+from python_scripts.process_check_links_report import apply
 
 
 @pytest.fixture
 def logger():
-    return logging.getLogger("test_apply_link_deletions")
+    return logging.getLogger("test_process_check_links_report")
 
 
 @pytest.fixture
@@ -49,7 +48,7 @@ def _row(
     }
 
 
-def test_dry_run_does_not_touch_db_or_reindex(tmp_path, write_csv, logger):
+def test_dry_run_skips_writing_reindex_and_updating_db(tmp_path, write_csv, logger):
     input_path = write_csv(
         [
             _row(resource_id="res-1", package_id="pkg-1", to_delete="true"),
@@ -58,7 +57,7 @@ def test_dry_run_does_not_touch_db_or_reindex(tmp_path, write_csv, logger):
         ]
     )
     reindex_path = str(tmp_path / "reindex.txt")
-    deleted_path = str(tmp_path / "deleted.csv")
+    output_report_path = str(tmp_path / "output_report_path.csv")
     repo = MagicMock()
 
     apply(
@@ -66,14 +65,15 @@ def test_dry_run_does_not_touch_db_or_reindex(tmp_path, write_csv, logger):
         repository=repo,
         input_path=input_path,
         reindex_path=reindex_path,
-        deleted_path=deleted_path,
+        output_report_path=output_report_path,
         mode="dry-run",
+        set_state="deleted",
     )
 
-    repo.mark_resource_deleted.assert_not_called()
+    repo.updated_resource.assert_not_called()
+
     with open(reindex_path) as f:
-        assert f.read().splitlines() == []
-    assert not os.path.exists(deleted_path)
+        assert f.read().splitlines() == ["pkg-1", "pkg-2"]
 
 
 def test_live_calls_repository_only_for_to_delete_rows(tmp_path, write_csv, logger):
@@ -85,28 +85,29 @@ def test_live_calls_repository_only_for_to_delete_rows(tmp_path, write_csv, logg
         ]
     )
     reindex_path = str(tmp_path / "reindex.txt")
-    deleted_path = str(tmp_path / "deleted.csv")
+    output_report_path = str(tmp_path / "output_report_path.csv")
     repo = MagicMock()
-    repo.mark_resource_deleted.return_value = 1
+    repo.update_resource.return_value = 2
 
     apply(
         logger=logger,
         repository=repo,
         input_path=input_path,
         reindex_path=reindex_path,
-        deleted_path=deleted_path,
+        output_report_path=output_report_path,
         mode="live",
+        set_state="deleted",
     )
 
-    assert repo.mark_resource_deleted.call_args_list == [
-        call("res-1", "pkg-1"),
-        call("res-2", "pkg-2"),
+    assert repo.update_resource.call_args_list == [
+        call("res-1", "pkg-1", "deleted"),
+        call("res-2", "pkg-2", "deleted"),
     ]
     with open(reindex_path) as f:
         assert f.read().splitlines() == ["pkg-1", "pkg-2"]
 
 
-def test_live_writes_applied_report_with_timestamp_per_row(tmp_path, write_csv, logger):
+def test_live_records_update_deleted_with_timestamp(tmp_path, write_csv, logger):
     input_path = write_csv(
         [
             _row(resource_id="res-1", package_id="pkg-1", to_delete="true"),
@@ -115,21 +116,60 @@ def test_live_writes_applied_report_with_timestamp_per_row(tmp_path, write_csv, 
         ]
     )
     reindex_path = str(tmp_path / "reindex.txt")
-    deleted_path = str(tmp_path / "deleted.csv")
+    output_report_path = str(tmp_path / "output_report_path.csv")
     repo = MagicMock()
-    repo.mark_resource_deleted.return_value = 1
+    repo.update_resource.return_value = 2
 
     apply(
         logger=logger,
         repository=repo,
         input_path=input_path,
         reindex_path=reindex_path,
-        deleted_path=deleted_path,
+        output_report_path=output_report_path,
         mode="live",
+        set_state="deleted",
     )
 
-    with open(deleted_path, newline="") as f:
-        rows = list(csv.DictReader(f))
-    # only the to-delete rows are recorded, each stamped with an applied-on time
-    assert [r["resource-id"] for r in rows] == ["res-1", "res-2"]
-    assert all(r["deleted-on"] != "" for r in rows)
+    assert repo.update_resource.call_args_list == [
+        call("res-1", "pkg-1", "deleted"),
+        call("res-2", "pkg-2", "deleted"),
+    ]
+    with open(output_report_path) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            assert row.get("update-applied", "") == "deleted"
+            assert row.get("update-applied-on", "") != ""
+
+
+def test_live_records_update_active_with_timestamp(tmp_path, write_csv, logger):
+    input_path = write_csv(
+        [
+            _row(resource_id="res-1", package_id="pkg-1", to_delete="true"),
+            _row(resource_id="res-skip", package_id="pkg-skip", to_delete="false"),
+            _row(resource_id="res-2", package_id="pkg-2", to_delete="true"),
+        ]
+    )
+    reindex_path = str(tmp_path / "reindex.txt")
+    output_report_path = str(tmp_path / "output_report_path.csv")
+    repo = MagicMock()
+    repo.update_resource.return_value = 2
+
+    apply(
+        logger=logger,
+        repository=repo,
+        input_path=input_path,
+        reindex_path=reindex_path,
+        output_report_path=output_report_path,
+        mode="live",
+        set_state="active",
+    )
+
+    assert repo.update_resource.call_args_list == [
+        call("res-1", "pkg-1", "active"),
+        call("res-2", "pkg-2", "active"),
+    ]
+    with open(output_report_path) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            assert row.get("update-applied", "") == "active"
+            assert row.get("update-applied-on", "") != ""

@@ -26,11 +26,9 @@ from urllib.parse import urlsplit
 
 import psycopg2
 import requests
+from lib.s3 import CkanOutputBucket
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-
-from lib.s3 import CkanOutputBucket
-
 
 LOG_FILE = "check_links.log"
 REPORT_FILE = "check_links_report_{timestamp}{verbose}.csv"
@@ -131,8 +129,8 @@ class CheckResult:
 
 
 def classify_connection_error(exc: ConnectionError) -> tuple[Category, str]:
-    """Try to disambiguate requests.ConnectionError 
-    into DNS error or refused, and if not return original 
+    """Try to disambiguate requests.ConnectionError
+    into DNS error or refused, and if not return original
     generic ConnectionError
     """
     detail = str(exc)
@@ -361,6 +359,15 @@ class Repository:
                 cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
         return rowcount
 
+    def update_resource(self, resource_id: str, package_id: str, action: str) -> int:
+        match action:
+            case "deleted":
+                return self.mark_resource_deleted(resource_id, package_id)
+            case "active":
+                return self.mark_resource_active(resource_id, package_id)
+            case _:
+                return 0
+
 
 class Reporter:
     """Handles the CSV report writing. Flushes after every row."""
@@ -537,9 +544,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M")
     log_path = LOG_FILE
-    report_path = os.path.join(args.output_dir, REPORT_FILE.format(timestamp=timestamp, verbose="_verbose" if args.verbose else ""))
+    report_path = os.path.join(
+        args.output_dir,
+        REPORT_FILE.format(
+            timestamp=timestamp, verbose="_verbose" if args.verbose else ""
+        ),
+    )
     reindex_path = os.path.join(
-        args.output_dir, REINDEX_FILE.format(timestamp=timestamp, verbose="_verbose" if args.verbose else "")
+        args.output_dir,
+        REINDEX_FILE.format(
+            timestamp=timestamp, verbose="_verbose" if args.verbose else ""
+        ),
     )
     logger = setup_logging(log_path)
     logger.info(f"mode: {args.mode}")
