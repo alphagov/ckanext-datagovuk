@@ -31,7 +31,7 @@ def read_resource_ids(csv_path):
     return ids
 
 
-def query_publishers(connection, resource_ids):
+def query_active_publisher_emails(connection, resource_ids):
     cursor = connection.cursor()
     placeholders = ', '.join(['%s'] * len(resource_ids))
 
@@ -67,7 +67,7 @@ def main():
     logger.info('Found %d resource IDs', len(resource_ids))
 
     logger.info('Querying database...')
-    rows = query_publishers(connection, resource_ids)
+    rows = query_active_publisher_emails(connection, resource_ids)
     logger.info('Found %d results', len(rows))
 
     if not rows:
