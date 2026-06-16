@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import csv
 import os
 import sys
@@ -50,20 +51,25 @@ def query_active_publisher_emails(connection, resource_ids):
     cursor.execute(sql, resource_ids)
     return cursor.fetchall()
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description='Get publisher emails associated with broken resource links/urls'
+    )
+    parser.add_argument("--csv_path", "-c", required=True, help='Path to CSV file containing resource IDs')
+    parser.add_argument("--output-dir", "-o", required=True, help='Directory to write publisher_emails.csv to')
 
-def main():
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
     setup_logging()
 
-    if len(sys.argv) < 2:
-        print('Usage: python emails_of_broken_links.py <resource_ids.csv>')
-        sys.exit(1)
-
-    csv_path = sys.argv[1]
+    args = parse_args(argv)
 
     connection = psycopg2.connect(POSTGRES_URL)
 
-    logger.info('Reading resource IDs from %s', csv_path)
-    resource_ids = read_resource_ids(csv_path)
+    logger.info('Reading resource IDs from %s', args.csv_path)
+    resource_ids = read_resource_ids(args.csv_path)
     logger.info('Found %d resource IDs', len(resource_ids))
 
     logger.info('Querying database...')
@@ -74,7 +80,7 @@ def main():
         logger.info('No results found.')
         return
 
-    output_path = '/check_links/publisher_emails.csv'
+    output_path = os.path.join(args.output_dir, 'publisher_emails.csv')
     with open(output_path, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['email', 'organisation'])
