@@ -5,7 +5,8 @@ from unittest.mock import patch, Mock
 
 from python_scripts.publisher_emails_of_broken_links import (
     query_active_publisher_emails,
-    read_resource_ids
+    read_resource_ids,
+    main
 )
 
 class TestPublisherEmailsOfBrokenLinks:
@@ -55,3 +56,22 @@ class TestPublisherEmailsOfBrokenLinks:
         result = read_resource_ids(csv)
 
         assert result == ['resource-1', 'resource-2']
+    
+    @patch('python_scripts.publisher_emails_of_broken_links.psycopg2.connect')
+    def test_query_results_outputted_to_csv(self, mock_connect, tmp_path):
+        mock_cursor = mock_connect.return_value.cursor.return_value
+        mock_cursor.fetchall.return_value = [
+            ('publisher1@example.com', 'Organisation A')
+        ]
+        mock_cursor.execute.return_value = 123
+        mock_cursor.rowcount = 4
+
+        csv = tmp_path / "test_data.csv"
+        csv.write_text("resource-id,organisation\nresource-1,Organisation A\nresource-2,Organisation B\n")
+
+        main(argv=['--csv_path', str(csv), '--output-dir', str(tmp_path)])
+
+        output_csv = tmp_path / "publisher_emails.csv"
+        assert output_csv.exists()
+        assert output_csv.read_text() == "email,organisation\npublisher1@example.com,Organisation A\n"
+        
