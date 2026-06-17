@@ -10,7 +10,6 @@ from python_scripts.publisher_emails_of_broken_links import (
 )
 
 class TestPublisherEmailsOfBrokenLinks:
-        
     @patch('python_scripts.publisher_emails_of_broken_links.psycopg2.connect')
     def test_query_active_publisher_emails(self, mock_connect):
         mock_cursor = mock_connect.cursor.return_value

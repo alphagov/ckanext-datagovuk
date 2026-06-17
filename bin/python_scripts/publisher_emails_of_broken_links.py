@@ -3,7 +3,6 @@
 import argparse
 import csv
 import os
-import sys
 import logging
 
 import psycopg2
@@ -66,14 +65,18 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parse_args(argv)
 
-    connection = psycopg2.connect(POSTGRES_URL)
-
     logger.info('Reading resource IDs from %s', args.csv_path)
     resource_ids = read_resource_ids(args.csv_path)
     logger.info('Found %d resource IDs', len(resource_ids))
 
     logger.info('Querying database...')
-    rows = query_active_publisher_emails(connection, resource_ids)
+    
+    try:
+        connection = psycopg2.connect(POSTGRES_URL)
+        rows = query_active_publisher_emails(connection, resource_ids)
+    finally:
+        connection.close()
+
     logger.info('Found %d results', len(rows))
 
     if not rows:
