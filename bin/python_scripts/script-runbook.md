@@ -4,6 +4,8 @@
 
 - Set environment variable `POSTGRES_URL`
 - Value from `docker/.env.example` == `postgresql://ckan:ckan@db/ckan`
+- The check links script depends on additional package not in the base ckan requirements. So you'll need to pip install the requirements in 
+`bin/python_scripts/requirements.txt
 
 Reports are uploaded to an s3 bucket and the following env variable will need to be set otherwise an exception will be thrown. This is needed to be able to publish the reports 
 
