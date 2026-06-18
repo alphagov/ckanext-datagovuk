@@ -39,8 +39,8 @@ HTTP_TIMEOUT = (5, 5)  # (connect, read) seconds
 WORKERS = 50
 MAX_INFLIGHT = WORKERS * 4
 HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
-PER_HOST_PER_SECOND = 1  # max reqs per/sec per host can increase if needed
-PER_HOST_BURST = 3  # up to 3 reqs per/sec burst allowed
+PER_HOST_PER_SECOND = 2  # max reqs per/sec per host can increase if needed
+PER_HOST_BURST = 5  # up to 5 reqs per/sec burst allowed
 
 REPORT_HEADERS = [
     "datagovuk-url",
@@ -203,6 +203,7 @@ def session_factory(
         max_retries=retry,
         pool_connections=workers,
         pool_maxsize=workers * 2,
+        limit_statuses=(403, 429)
     )
     session.mount("http://", adapter)
     session.mount("https://", adapter)
