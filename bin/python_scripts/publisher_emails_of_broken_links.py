@@ -20,41 +20,39 @@ def setup_logging():
     logger.addHandler(c_handler)
 
 
-def read_resource_ids(csv_path):
-    ids = []
+def read_org_names(csv_path):
+    org_names = []
     with open(csv_path, 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            resource_id = row.get('resource-id', '').strip()
-            if resource_id:
-                ids.append(resource_id)
-    return ids
+            org_name = row.get('org-name', '').strip()
+            if org_name:
+                org_names.append(org_name)
+    return org_names
 
 
-def query_active_publisher_emails(connection, resource_ids):
+def query_active_publisher_emails(connection, group_names):
     cursor = connection.cursor()
-    placeholders = ', '.join(['%s'] * len(resource_ids))
+    placeholders = ', '.join(['%s'] * len(group_names))
 
     sql = """
     SELECT DISTINCT u.email, g.name AS organisation
     FROM "user" u
     JOIN member m ON u.id = m.table_id AND m.table_name = 'user' AND m.state = 'active'
     JOIN "group" g ON g.id = m.group_id
-    JOIN package p ON p.owner_org = g.id
-    JOIN resource r ON r.package_id = p.id AND r.state = 'active'
-    WHERE r.id IN ({ids})
-      AND u.state = 'active'
+    AND g.name IN ({group_names})
+    AND u.state = 'active'
     ORDER BY g.name, u.email
-    """.format(ids=placeholders)
+    """.format(group_names=placeholders)
 
-    cursor.execute(sql, resource_ids)
+    cursor.execute(sql, group_names)
     return cursor.fetchall()
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description='Get publisher emails associated with broken resource links/urls'
     )
-    parser.add_argument("--csv_path", "-c", required=True, help='Path to CSV file containing resource IDs')
+    parser.add_argument("--csv_path", "-c", required=True, help='Path to CSV file containing organisation names')
     parser.add_argument("--output-dir", "-o", required=True, help='Directory to write publisher_emails.csv to')
 
     return parser.parse_args(argv)
@@ -65,15 +63,15 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parse_args(argv)
 
-    logger.info('Reading resource IDs from %s', args.csv_path)
-    resource_ids = read_resource_ids(args.csv_path)
-    logger.info('Found %d resource IDs', len(resource_ids))
+    logger.info('Reading organisation/group names from %s', args.csv_path)
+    org_names = read_org_names(args.csv_path)
+    logger.info('Found %d organisation/group names', len(org_names))
 
     logger.info('Querying database...')
     
     try:
         connection = psycopg2.connect(POSTGRES_URL)
-        rows = query_active_publisher_emails(connection, resource_ids)
+        rows = query_active_publisher_emails(connection, org_names)
     finally:
         connection.close()
 
