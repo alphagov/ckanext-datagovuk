@@ -10,17 +10,37 @@ The CKAN extension for data.gov.uk
 
 To run a development version of Find locally you will need to build the development image locally which will allow you to made modifications to the code directly on the docker container
 
-1. On the datagovuk_find root directory run `make dev-build` after making code updates and passing tests.
-2. Check that the image is available by running `docker images | grep dev.datagovuk_find`, if it's not showing then the build in the first step failed or the image is no longer available.
-3. If you run bootstrap then you can skip this step otherwise run `make bootstrap` to download the latest repositories
-  - NOTE - make sure that the `SRC_DIR` matches the source version in the docker-compose file.
-3. In the ckanext-datagovuk root directory run `make build` to build the images needed for the docker stack
-  - once the build is complete you can refer to the image of the docker build by uncommenting the image and comment out the build part of each stack.
-4. After the build is complete run `make run` to start the docker compose stack.
-  - after a few minutes it should be possible to access the different web apps and the search server
-    - CKAN - Publishing app - http://localhost:5001 
-    - Find - Public facing discovery app -  http://localhost:4001
-    - Solr - Search index server used by CKAN and Find - http://localhost:8983/solr
+### 1. Run datagovuk_find
+
+On the datagovuk_find root directory run `make dev-build` after making code updates and passing tests.
+
+Check that the image is available by running `docker images | grep dev.datagovuk_find`, if it's not showing then the build in the first step failed or the image is no longer available.
+
+### 2. Download latest repositories
+
+If you run bootstrap then you can skip this step otherwise run `make bootstrap` to download the latest repositories.
+
+If you're having trouble with this, you may need to delete any existing repos in the docker/src directory. e.g. `rm -rf ckanext-datagovuk/docker/src/2.10/ckanext-dcat`
+
+NOTE - make sure that the `SRC_DIR` matches the source version in the docker-compose file.
+
+### 3. Build the docker stack images
+
+In the ckanext-datagovuk root directory run `make build` to build the images needed for the docker stack
+
+Once the build is complete you can refer to the image of the docker build by uncommenting the image and comment out the build part of each stack.
+
+### 4. Run the docker compose stack
+
+Run `make run` to start the docker compose stack.
+
+After a few minutes it should be possible to access the different web apps and the search server:
+
+- CKAN - Publishing app - http://localhost:5001
+
+- Find - Public facing discovery app -  http://localhost:4001
+
+- Solr - Search index server used by CKAN and Find - http://localhost:8983/solr
 
 
 ## Development
