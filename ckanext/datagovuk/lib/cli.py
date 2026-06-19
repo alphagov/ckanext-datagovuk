@@ -367,7 +367,10 @@ def reindex_recent(context):
                 new_dict[key] = value
 
         package_index = PackageSearchIndex()
-        package_index.index_package(new_dict, defer_commit=defer_commit)
+        try:
+            package_index.index_package(new_dict, defer_commit=defer_commit)
+        except Exception as e:
+            print(f"Error occurred while indexing package {package_dict.get('name')}: {e}")
 
     package_index.commit()
 
