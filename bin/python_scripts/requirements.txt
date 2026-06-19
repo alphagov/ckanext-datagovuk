@@ -3,4 +3,4 @@ pathlib==1.0.1
 popen==0.1.20
 pytest==4.6.2
 pytest-mock==1.10.4
-psycopg2==2.4.5
+psycopg2==2.9.12

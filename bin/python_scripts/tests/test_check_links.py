@@ -245,7 +245,7 @@ def test_session_factory_retry_does_not_raise_on_status():
     session = session_factory()
     retry = session.get_adapter("https://opendata.gov.uk").max_retries
     assert retry.raise_on_status is False
-    assert set(retry.status_forcelist) == {500, 502, 503, 504}
+    assert set(retry.status_forcelist) == {429, 500, 502, 503, 504}
 
 
 def test_check_task_falls_back_to_get_for_head_fallback_status(make_row):
