@@ -6,6 +6,7 @@
 # python solr_reindex_package_ids.py
 #
 
+import argparse
 import logging
 import os
 import subprocess
@@ -33,14 +34,16 @@ def setup_logging(log_to_file=False):
     logger.info("====================================================================")
 
 
-def reindex_solr():
+def reindex_solr(filename=None):
+    if not filename:
+        filename = f"{FILENAME_BASE}.txt"
 
     ckan_ini = os.environ.get("CKAN_INI")
     if ckan_ini is None:
         logger.info("CKAN_INI env variable not set")
         sys.exit(1)
 
-    with open(f"{FILENAME_BASE}.txt", "r") as f:
+    with open(filename, "r") as f:
         lines = f.readlines()
         datasets = [l.strip() for l in lines if l.strip()]
         for i, line in enumerate(datasets):
@@ -57,7 +60,22 @@ def reindex_solr():
                 logger.exception("Subprocess Failed")
 
 
-def main(command=None):
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Reindex CKAN datasets in Solr based on a list of package IDs.",
+    )
+    parser.add_argument(
+        "--input-file",
+        "-i",
+        default=".",
+        help="directory for CSV report and reindex list (default: current directory). "
+        "Log file is always written to the current directory.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     setup_logging()
 
     logger.info("Executing REINDEX")
@@ -65,10 +83,10 @@ def main(command=None):
     logger.info("====================================================================")
 
     logger.info("Reindex datasets")
-    reindex_solr()
+    reindex_solr(filename=args.input_file)
 
     logger.info("Processing complete")
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
