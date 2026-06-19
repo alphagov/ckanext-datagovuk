@@ -317,7 +317,7 @@ class Repository:
                     package_id=package_id,
                     package_name=package_name,
                     resource_id=resource_id,
-                    url=url,
+                    url=url.strip(),
                     org_name=org_name,
                     org_id=org_id,
                     resource_created=resource_created,
