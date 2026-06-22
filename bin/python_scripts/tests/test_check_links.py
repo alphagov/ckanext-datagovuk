@@ -11,6 +11,7 @@ from python_scripts.check_links import (
     Category,
     CheckResult,
     Reporter,
+    Repository,
     ResourceRow,
     check_task,
     classify_response,
@@ -311,3 +312,36 @@ def test_interleave_rows_by_host_preserves_order_for_single_host(make_row):
     ]
 
     assert interleave_rows_by_host(rows) == rows
+
+def test_fetch_resources_strips_whitespace_from_urls():
+    mock_connection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.__enter__ = Mock(return_value=mock_cursor)
+    mock_connection.cursor.return_value = mock_cursor
+    mock_cursor.__iter__ = Mock(
+        return_value=iter(
+            [
+                (
+                    "package_id",
+                    "package_name",
+                    "resource_id",
+                    "  https://test.com/fake.csv  ",
+                    "org_name",
+                    "org_id",
+                    datetime(2026, 1, 1),
+                    datetime(2026, 1, 1),
+                    datetime(2026, 1, 1),
+                    datetime(2026, 1, 1),
+                    datetime(2026, 1, 1),
+                    "guid",
+                ),
+            ]
+        )
+    )
+
+    repo = Repository.__new__(Repository)
+    repo._conn = mock_connection
+
+    resource_rows = repo.fetch_resources()
+
+    assert resource_rows[0].url == "https://test.com/fake.csv"
