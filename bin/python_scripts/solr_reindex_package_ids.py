@@ -6,10 +6,12 @@
 # python solr_reindex_package_ids.py
 #
 
+import argparse
 import logging
 import os
 import subprocess
 import sys
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -33,42 +35,92 @@ def setup_logging(log_to_file=False):
     logger.info("====================================================================")
 
 
-def reindex_solr():
+def run_reindex_package(package_id: str, ckan_ini: str) -> tuple[str, bool, str]:
+    command = ["ckan", "-c", ckan_ini, "search-index", "rebuild", package_id]
+    try:
+        subprocess.check_call(command)
+        return package_id, True, ""
+    except Exception as exc:
+        return package_id, False, str(exc)
+
+
+def reindex_solr(filename=None, workers: int | None = None):
+    if not filename:
+        filename = f"{FILENAME_BASE}.txt"
 
     ckan_ini = os.environ.get("CKAN_INI")
     if ckan_ini is None:
-        logger.info("CKAN_INI env variable not set")
+        logger.error("CKAN_INI env variable not set")
         sys.exit(1)
 
-    with open(f"{FILENAME_BASE}.txt", "r") as f:
+    with open(filename, "r") as f:
         lines = f.readlines()
-        datasets = [l.strip() for l in lines if l.strip()]
-        for i, line in enumerate(datasets):
+
+    datasets = [line.strip() for line in lines if line.strip()]
+    if not datasets:
+        logger.warning("No package IDs found in %s", filename)
+        return
+
+    workers = workers or os.cpu_count() or 1
+    logger.info("Reindexing %d datasets using %d worker(s)", len(datasets), workers)
+
+    failures = []
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        future_to_package = {
+            executor.submit(run_reindex_package, package_id, ckan_ini): package_id
+            for package_id in datasets
+        }
+
+        for index, future in enumerate(as_completed(future_to_package), start=1):
+            package_id = future_to_package[future]
             try:
-                command = ["ckan", "-c", ckan_ini, "search-index", "rebuild", line]
-                logger.info(
-                    "CKAN reindex %d/%d - Running command: %s",
-                    i + 1,
-                    len(datasets),
-                    command,
-                )
-                subprocess.check_call(command)
+                _, success, error = future.result()
+                if success:
+                    logger.info("CKAN reindex %d/%d - %s succeeded", index, len(datasets), package_id)
+                else:
+                    logger.error("CKAN reindex %d/%d - %s failed: %s", index, len(datasets), package_id, error)
+                    failures.append(package_id)
             except Exception:
-                logger.exception("Subprocess Failed")
+                logger.exception("Unexpected exception while processing %s", package_id)
+                failures.append(package_id)
+
+    if failures:
+        logger.error("Reindexing failed for %d package(s): %s", len(failures), ", ".join(failures))
+        sys.exit(1)
 
 
-def main(command=None):
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Reindex CKAN datasets in Solr based on a list of package IDs.",
+    )
+    parser.add_argument(
+        "--input-file",
+        "-i",
+        default=f"{FILENAME_BASE}.txt",
+        help="Path to a text file containing package IDs, one per line.",
+    )
+    parser.add_argument(
+        "--workers",
+        "-w",
+        type=int,
+        default=None,
+        help="Number of worker processes to use for reindexing. Defaults to CPU count.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+
     setup_logging()
 
     logger.info("Executing REINDEX")
-
     logger.info("====================================================================")
-
     logger.info("Reindex datasets")
-    reindex_solr()
-
+    reindex_solr(filename=args.input_file, workers=args.workers)
     logger.info("Processing complete")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
