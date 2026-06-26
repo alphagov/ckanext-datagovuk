@@ -36,14 +36,15 @@ def get_harvest_source_for_org(connection: psycopg2.extensions.connection, org: 
     return cursor
 
 
-def run_harvester_subprocess(harvest_source_id: str) -> tuple[str, bool, str]:
+def run_harvester_subprocess(harvest_source_tuple: tuple) -> tuple[str, bool, str]:
     """Helper executed in worker process to run a single harvest source."""
+    harvest_source_id, org = harvest_source_tuple
     cmd = ["ckan", "harvester", "run-test", harvest_source_id]
     try:
         subprocess.check_call(cmd)
-        return harvest_source_id, True, ""
+        return harvest_source_id, org, True, ""
     except Exception as exc:
-        return harvest_source_id, False, str(exc)
+        return harvest_source_id, org, False, str(exc)
 
 
 def run_harvest_jobs(logger: logging.Logger, report_path: str) -> None:
@@ -64,35 +65,48 @@ def run_harvest_jobs(logger: logging.Logger, report_path: str) -> None:
 
     connection = psycopg2.connect(POSTGRES_URL)
 
+    all_harvest_sources = []
+    active_org_count = len(orgs)
     for org in orgs:
-        logger.info(f"Running harvest job(s) for organisation: {org}")
         cursor = get_harvest_source_for_org(connection, org)
-        harvest_sources = [row[0] for row in cursor]
+        harvest_sources = [(row[0], org) for row in cursor]
 
         if not harvest_sources:
             logger.info(f"No active harvest sources found for organisation: {org}")
+            active_org_count -= 1
             continue
 
-        workers = os.cpu_count() or 1
-        failures = []
-        with ProcessPoolExecutor(max_workers=workers) as executor:
-            future_to_source = {executor.submit(run_harvester_subprocess, hs): hs for hs in harvest_sources}
+        all_harvest_sources.extend(harvest_sources)
 
-            for future in as_completed(future_to_source):
-                hs = future_to_source[future]
-                try:
-                    source_id, success, error = future.result()
-                    if success:
-                        logger.info(f"Harvest job completed for harvest source: {source_id}")
-                    else:
-                        logger.error(f"Harvest job failed for harvest source: {source_id}. Error: {error}")
-                        failures.append(source_id)
-                except Exception:
-                    logger.exception("Unexpected exception while running harvest source: %s", hs)
-                    failures.append(hs)
+    harvest_source_size = len(all_harvest_sources)
+    workers = os.cpu_count() or 1
+    failures = []
+    succeeded = failed = 0
+    logger.info(f"Starting to process {harvest_source_size} harvest sources from {active_org_count} orgs using {workers} workers")
 
-        if failures:
-            logger.error("%d harvest source(s) failed for organisation %s: %s", len(failures), org, ", ".join(failures))
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        future_to_source = {executor.submit(run_harvester_subprocess, hs): hs for hs in all_harvest_sources}
+
+        for index, future in enumerate(as_completed(future_to_source), start=1):
+            hs = future_to_source[future]
+            try:
+                source_id, org, success, error = future.result()
+                if success:
+                    succeeded +=1
+                    logger.info(f"Harvest job completed for harvest source ({index} / {harvest_source_size}): {source_id} for {org}")
+                else:
+                    failed += 1
+                    logger.error(f"Harvest job failed for harvest source ({index} / {harvest_source_size}): {source_id} for {org}. Error: {error}")
+                    failures.append(source_id)
+            except Exception:
+                failed += 1
+                logger.exception(f"Unexpected exception while running harvest source ({index} / {harvest_source_size}): {hs}")
+                failures.append(hs)
+
+    if failures:
+        logger.error("%d harvest source(s) failed for organisation %s: %s", len(failures), org, ", ".join(failures))
+
+    logger.info(f"Harvest run completed: {harvest_source_size} processed, {succeeded} succeeded, {failed} failed")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
