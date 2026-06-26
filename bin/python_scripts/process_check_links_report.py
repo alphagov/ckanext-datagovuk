@@ -183,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         upload_to_s3(logger, output_report_path)
     except Exception as e:
-        logger.warn(f"Problem uploading {output_report_path} to s3")
+        logger.warn(f"Problem uploading {output_report_path} to s3 - {str(e)}")
     return 0
 
 
