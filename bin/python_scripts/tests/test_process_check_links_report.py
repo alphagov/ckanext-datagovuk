@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from python_scripts.check_links import REPORT_HEADERS
+from python_scripts.old_check_links import REPORT_HEADERS
 from python_scripts.process_check_links_report import apply
 
 

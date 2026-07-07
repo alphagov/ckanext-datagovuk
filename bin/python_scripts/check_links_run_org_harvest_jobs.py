@@ -9,7 +9,7 @@ import psycopg2
 import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from check_links import REPORT_HEADERS
+from old_check_links import REPORT_HEADERS
 
 
 def setup_logging() -> logging.Logger:

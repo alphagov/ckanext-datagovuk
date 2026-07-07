@@ -30,7 +30,7 @@ from lib.s3 import CkanOutputBucket
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from python_scripts.check_links import Repository, setup_logging
+from python_scripts.old_check_links import Repository, setup_logging
 
 LOG_FILE = "check_links_updated_to_{state}.log"
 REINDEX_FILE = "{state}_packages_to_reindex_{timestamp}.txt"
