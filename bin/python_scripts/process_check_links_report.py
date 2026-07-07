@@ -70,6 +70,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="directory for the reindex list (default: current directory). "
         "Log file is always written to the current directory.",
     )
+    parser.add_argument(
+        "--reindex-timestamp",
+        default=datetime.now(UTC).strftime("%Y%m%dT%H%M%S"),
+        help="timestamp for reindex file (default: current UTC time)",
+    )    
     return parser.parse_args(argv)
 
 
@@ -150,9 +155,10 @@ def upload_to_s3(logger, output_report_path):
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
+    reindex_timestamp = args.timestamp
     log_path = LOG_FILE.format(state=args.set_state)
     reindex_path = os.path.join(
-        args.output_dir, REINDEX_FILE.format(state=args.set_state, timestamp=timestamp)
+        args.output_dir, REINDEX_FILE.format(state=args.set_state, timestamp=reindex_timestamp)
     )
 
     logger = setup_logging(log_path)
