@@ -151,3 +151,6 @@ volumes:
 networks:
   ckan-2.10:
       driver: bridge
+  shared:
+    external: true
+    name: inter-project
