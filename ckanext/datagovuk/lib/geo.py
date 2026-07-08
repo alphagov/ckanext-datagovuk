@@ -31,7 +31,7 @@ def get_boundary(url):
         publisher_url = url + '.json'
         log.debug('Looking up publisher: %s', publisher_url)
         try:
-            req = requests.get(publisher_url)
+            req = requests.get(publisher_url, timeout=(5, 10))
             req.raise_for_status()
         except requests.exceptions.RequestException as e:
             log.error('Failed to retrieve publisher: %s %s', e, publisher_url)
@@ -53,7 +53,7 @@ def get_boundary(url):
     log.debug('Getting Geo boundary for authority: %s', gss_url)
 
     try:
-        req = requests.get(gss_url)
+        req = requests.get(gss_url, timeout=(5, 10))
         req.raise_for_status()
     except requests.exceptions.RequestException as e:
         log.error('Failed to retrieve publisher boundary: %s %s', e, gss_url)
