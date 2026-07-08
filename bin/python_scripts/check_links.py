@@ -290,7 +290,7 @@ class Repository:
           AND TRIM(r.url) <> ''
         ORDER BY p.id, r.id
     """
-    UPDATE_RESOURCE_SQL = "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND state = 'active'"
+    UPDATE_RESOURCE_SQL = "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND LOWER(TRIM(url)) = %(resource_url)s AND state = 'active'"
     UPDATE_RESOURCE_ACTIVE_SQL = "UPDATE resource SET state = 'active' WHERE id = %(resource_id)s AND state = 'deleted'"
     UPDATE_PACKAGE_MTIME_SQL = (
         "UPDATE package SET metadata_modified = NOW() WHERE id = %(package_id)s"
@@ -350,10 +350,10 @@ class Repository:
                 ) in cur
             ]
 
-    def mark_resource_deleted(self, resource_id: str, package_id: str) -> int:
+    def mark_resource_deleted(self, resource_id: str, resource_url: str, package_id: str) -> int:
         assert self._conn is not None, "Repository not entered"
         with self._conn, self._conn.cursor() as cur:
-            cur.execute(self.UPDATE_RESOURCE_SQL, {"resource_id": resource_id})
+            cur.execute(self.UPDATE_RESOURCE_SQL, {"resource_id": resource_id, "resource_url": resource_url})
             rowcount = cur.rowcount
             if rowcount > 0:
                 cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
@@ -368,10 +368,10 @@ class Repository:
                 cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
         return rowcount
 
-    def update_resource(self, resource_id: str, package_id: str, action: str) -> int:
+    def update_resource(self, resource_id: str, resource_url: str, package_id: str, action: str) -> int:
         match action:
             case "deleted":
-                return self.mark_resource_deleted(resource_id, package_id)
+                return self.mark_resource_deleted(resource_id, resource_url, package_id)
             case "active":
                 return self.mark_resource_active(resource_id, package_id)
             case _:
@@ -492,10 +492,6 @@ def run(
                     )
                     if result.to_delete:
                         to_reindex.add(result.row.package_id)
-                        if mode == "live":
-                            repository.mark_resource_deleted(
-                                result.row.resource_id, result.row.package_id
-                            )
                 except Exception:
                     logger.exception("URL check task failed")
                 # as each future completes, add one to top up the pool

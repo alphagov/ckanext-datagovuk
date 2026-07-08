@@ -99,12 +99,13 @@ def apply(
             if row.get("to-delete", "").lower().strip() != "true":
                 continue
             resource_id = row["resource-id"]
+            resource_url = row["resource-url"].lower().strip()
             package_id = row["package-id"]
             to_reindex.add(package_id)
 
             if mode == "live":
                 rowcount = repository.update_resource(
-                    resource_id, package_id, set_state
+                    resource_id, resource_url, package_id, set_state
                 )
                 if rowcount > 0:
                     row_copy = row.copy()
@@ -125,7 +126,7 @@ def apply(
                     outfile.flush()
                 else:
                     logger.info(
-                        f"skipped {resource_id} (not in correct state to set state to {set_state})"
+                        f"skipped {resource_id} (attempted to set state to {set_state} and looked up with URL {resource_url})"
                     )
             else:
                 updated += 1
