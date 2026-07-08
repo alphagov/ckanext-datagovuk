@@ -126,7 +126,7 @@ def apply(
                     outfile.flush()
                 else:
                     logger.info(
-                        f"skipped {resource_id} (not in correct state to set state to {set_state})"
+                        f"skipped {resource_id} (attempted to set state to {set_state} and looked up with URL {resource_url})"
                     )
             else:
                 updated += 1
