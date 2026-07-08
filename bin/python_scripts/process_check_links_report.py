@@ -89,7 +89,7 @@ def apply(
     set_state: str,
 ) -> None:
     to_reindex: set[str] = set()
-    updated = 0
+    updated = skipped = 0
     outfile = None
     writer: csv.DictWriter | None = None
 
@@ -107,27 +107,30 @@ def apply(
                 rowcount = repository.update_resource(
                     resource_id, resource_url, package_id, set_state
                 )
+                row_copy = row.copy()
                 if rowcount > 0:
-                    row_copy = row.copy()
                     row_copy["update-applied"] = set_state
                     row_copy["update-applied-on"] = datetime.now(UTC).isoformat(
                         timespec="minutes"
                     )
                     updated += 1
-                    # open the report lazily so a run that deletes nothing
-                    # doesn't create empty applied file
-                    if writer is None:
-                        outfile = stack.enter_context(
-                            open(output_report_path, "w", newline="", encoding="utf-8")
-                        )
-                        writer = csv.DictWriter(outfile, fieldnames=list(row_copy))
-                        writer.writeheader()
-                    writer.writerow(row_copy)
-                    outfile.flush()
                 else:
+                    row_copy = row.copy()
+                    row_copy["update-applied"] = "skipped"
+                    skipped += 1
                     logger.info(
                         f"skipped {resource_id} (attempted to set state to {set_state} and looked up with URL {resource_url})"
                     )
+                # open the report lazily so a run that deletes nothing
+                # doesn't create empty applied file
+                if writer is None:
+                    outfile = stack.enter_context(
+                        open(output_report_path, "w", newline="", encoding="utf-8")
+                    )
+                    writer = csv.DictWriter(outfile, fieldnames=list(row_copy))
+                    writer.writeheader()
+                writer.writerow(row_copy)
+                outfile.flush()
             else:
                 updated += 1
                 logger.info(f"would set state == {set_state} on resource {resource_id}")
@@ -140,7 +143,7 @@ def apply(
             f.write(f"{package_id}\n")
 
     logger.info(
-        f"{set_state} {updated} resources, {len(to_reindex)} packages to reindex"
+        f"{set_state} {updated} updated, {skipped} skipped, {len(to_reindex)} packages to reindex"
     )
 
 
