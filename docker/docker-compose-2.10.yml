@@ -151,3 +151,5 @@ volumes:
 networks:
   ckan-2.10:
       driver: bridge
+      external: true
+      name: docker_ckan-2.10
