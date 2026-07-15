@@ -63,7 +63,7 @@ jobs:
           echo "runs_on=$runs_on" >> "$GITHUB_OUTPUT"
           
   build_push_multiarch_image:
-    name: Build ${{ matrix.app.name }} for ${{ matrix.runs_on.arch }}
+    name: Build ${{ matrix.app.name }} for ${{ matrix.runs_on.arch }} with ${{ inputs.buildType }}
     needs: configure_builds
     strategy:
       matrix: 
