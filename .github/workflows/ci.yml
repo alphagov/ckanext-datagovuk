@@ -28,7 +28,7 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.10.4-e-base
+      image: ghcr.io/alphagov/ckan:2.10.7-d-base
       options: --user root
     services:
       solr:
@@ -70,6 +70,9 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -e .
+          # setuptools pkg_resources has been removed in setuptools 81 so pin it to 80 to avoid runtime errors, 
+          #   see https://github.com/pypa/setuptools/commit/8ba2f3829a8aae66165d9745bf838982dafb3f96
+          pip install setuptools==80
       - name: Install dev requirements
         run: |
           pip install -r dev-requirements.txt
@@ -80,7 +83,7 @@ jobs:
           # set the i18n directory
           sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" "${CKAN_CONFIG}"/production.ini
       - name: Init Database
-        run: |
-          ckan db init
+        run: ckan db init
       - name: Run tests
-        run: pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
+        run: |
+          PROMETHEUS_MULTIPROC_DIR="$RUNNER_TEMP" pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v

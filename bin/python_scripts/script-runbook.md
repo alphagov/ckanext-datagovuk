@@ -1,0 +1,163 @@
+# Script runbook
+
+## Prerequisites
+
+- Set environment variable `POSTGRES_URL`
+- Value from `docker/.env.example` == `postgresql://ckan:ckan@db/ckan`
+- The check links script depends on additional package not in the base ckan requirements. So you'll need to pip install the requirements in 
+`bin/python_scripts/requirements.txt
+
+Reports are uploaded to an s3 bucket and the following env variable will need to be set otherwise an exception will be thrown. This is needed to be able to publish the reports 
+
+- Set environment variable `CKAN_OUTPUT_BUCKET_NAME`
+- Value set as `govuk-ckan-output-<integration|staging|production>`
+
+If testing locally you can skip wth S3 bucket output by passing the flag `--local`
+
+***
+
+### Link checking
+
+> [!WARNING]
+> `check_links.py` is being reduced to a **reporting-only** tool. The db updates (the `live` mode that marks resources deleted) will be removed and its flags changed accordingly. Applying deletions becomes the job of `apply_link_deletions.py` (below), which actions a report produced here. The `--mode live` behaviour documented in this section is therefore this will change once db updates removed from this script and there will be only one mode, the one that writes the report. 
+
+Two-step cycle: scan for broken links → reindex affected packages.
+
+### 1. `check_links.py`
+
+Scans active resource URLs on active datasets, classifies each response, and (in `live` mode) marks 404/410 resources as deleted and updates `package.metadata_modified`. Writes a CSV report and a `packages_to_reindex_*.txt` list feeding into `solr_reindex_package_ids.py`.
+
+Then run:
+
+Set environment variable for: `POSTGRES_URL`
+
+```bash
+    python check_links.py --mode dry-run
+```
+
+CSV output will show results, including column `to-delete` which shows resources that would be updated in live mode.
+
+To update db instead of `--mode dry-run` use `--mode live`.
+
+### CLI flags
+
+| Flag | Required | Default | Purpose |
+|---|---|---|---|
+| `--mode` | no | `dry-run` | `dry-run` reports only; `live` marks 404/410 resources deleted |
+| `--limit` | no | no limit | limit number of resource URLs fetched from db — useful for sanity-checking a small batch |
+| `--verbose` | no | off | write all checked resources to the CSV report (default: only resources marked for deletion) |
+| `--output-dir` | no | `.` (cwd) | directory for the CSV report and reindex list |
+| `--local` | no | False | If set will skip the attempt to write to output files to S3 |
+
+Filenames are module-level constants (`LOG_FILE` = `check_links.log`, `REPORT_FILE` = `check_links_report_{ts}.csv`, `REINDEX_FILE` = `packages_to_reindex_{ts}.txt`). 
+The CSV report and reindex list are timestamped per run and placed in current directory or `--output-dir`.
+
+Tuning config (worker count, timeouts) remain module-level constants — see "What to tune" below.
+
+### What to tune
+
+1. **Reduce `WORKERS` first** (if container memory climbing or CPU saturating) — try 50 → 25 → 10.
+2. **Then `HTTP_TIMEOUT`** (a `(connect, read)` tuple) — a healthy host should connect in well under allowed time. Reducing the read timeout shortens total runtime on slow hosts.
+
+### Config
+
+| Constant | Current value | What it does |
+|---|---|---|
+| `WORKERS` | 50 | concurrent HTTP workers |
+| `HTTP_TIMEOUT` | `(5, 5)` | `(connect, read)` seconds |
+
+These are module constants near top of script. Change if needed according to tuning section above.
+
+### Outputs
+
+- `check_links.log` — run log (stable name, always current dir)
+- `check_links_report_{ts}.csv` - one row per resource (category + `to-delete` flag) - current dir unless `--output-dir` set
+- `packages_to_reindex_{ts}.txt`  unique package IDs that had a 404/410 — used as input to `solr_reindex_package_ids.py` - cuirrent dir unless `--output-dir` set
+
+### 2. `process_check_links_report.py`
+
+This script can be used to delete or undelete resources. It applies updates based on a `check_links.py` CSV report directly, without fetching from the db or re-checking link liveness. 
+
+It can be run to update resources to set `state` of the resource to `deleted` by passing the flag `--set-state deleted`. In that case every row with `to-delete == "true"` has its resource `state` marked `deleted` (if currently `active`) and `package.metadata_modified` updated to NOW(). 
+
+If run with `--action deleted` then every row with `to-delete == "true"` has its resource `state` marked `active` (if currently `deleted`), in other words resources that have been delete and we want to revert the deletion. As above `package.metadata_modified` updated to NOW(). 
+
+Run (inside the container, with `POSTGRES_URL` set):
+
+```bash
+    python process_check_links_report.py --input check_links_report_<ts>.csv --set-state deleted --mode dry-run
+```
+
+or
+
+```bash
+    python process_check_links_report.py --input check_links_report_<ts>.csv --set-state active --mode dry-run
+```
+
+`--input` is the report file that generated by running check links script. The report generated has a list of resources with a column `to-delete` with value true/false.
+
+`--mode` defaults to `dry-run` (no db writes, only logs what would be updated). Use `--mode live` to actually update the database. 
+
+The reindex list is populated only by resources actually updated in `live` mode — in `dry-run` it is written empty, since nothing changed there is nothing to reindex.
+
+Other log and output filenames are module-level constants (`LOG_FILE` = `check_links_[set-state].log`, `REINDEX_FILE` = `[set-state]_packages_to_reindex_{ts}.txt`); the reindex list feeds into `solr_reindex_package_ids.py`.
+
+Outputs (only written in `live` mode, and only if at least one resource is actually deleted):
+
+- `process_check_links_report.log`: run log (stable name, always current dir)
+- `<input-report-name>_{set-state}_{ts}.csv`: the input rows that were deleted, each timestamped with a `deleted-on` time, written next to the `--input` report
+- `{set-state}_packages_to_reindex_{ts}.txt`: package IDs of deleted resources, fed into `solr_reindex_package_ids.py`. current dir unless `--output-dir` set.
+
+
+### CLI flags for process check links report
+
+| Flag | Required | Default | Purpose |
+|---|---|---|---|
+| `--input` | **yes** | — | check_links CSV report to action (full path) |
+| `--set-state` | **yes** | — | Possible values `deleted` or `active` - update resources to on of those states|
+| `--mode` | no | `dry-run` | `dry-run` reports only; `live` applies the change (apply: delete / revert: restore) |
+| `--output-dir` | no | `.` (current dir) | directory for the reindex list |
+
+---
+
+## Testing locally
+
+### 1. Shell into running container
+
+Assumes in another terminal you've built and brought up local compose stack
+
+```bash
+docker exec -it ckan-2.10 bash
+cd $CKAN_VENV/src/ckanext-datagovuk/bin/python_scripts
+```
+
+### 2. Run tests
+
+```bash
+pytest tests/test_check_links.py
+pytest tests/process_check_links_report.py
+
+```
+
+### 3. Test against local db
+
+Requires test data in the db (run `ckan datagovuk create-dgu-test-data`):
+
+```bash
+export POSTGRES_URL=postgresql://ckan:ckan@db/ckan
+python check_links.py --local
+```
+
+You can add the arg: 
+
+`--limit 10`
+
+which limits number of resources. Useful if you have a lot of test data. With the `create-dgu-test-data` task
+there aren't many so you don't need it.
+
+Test revert
+
+```bash
+export POSTGRES_URL=postgresql://ckan:ckan@db/ckan
+python revert_link_deletions --input [report_file.csv]
+```

@@ -1,0 +1,6 @@
+.github
+.pytest_cache
+venv
+docker
+!docker/nginx/ckan.conf
+docs

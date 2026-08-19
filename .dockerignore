@@ -1,3 +1,5 @@
 .github
 .pytest_cache
 venv
+docker
+docs

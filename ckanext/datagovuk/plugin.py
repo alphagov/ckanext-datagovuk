@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 
 from ckan.plugins.toolkit import config
 import ckan.plugins as plugins
@@ -20,7 +21,7 @@ from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 from flask import Blueprint
 
-from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -306,15 +307,16 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
     ]
 
     def before_send(self, event, hint):
-        return None if [i for i in ['localhost', 'integration'] if i in config.get('ckan.site_url')] or \
+        return None if [i for i in ['localhost'] if i in config.get('ckan.site_url')] or \
             any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
             else event
 
     def make_middleware(self, app, config):
         sentry_sdk.init(before_send=self.before_send, integrations=[FlaskIntegration()])
 
-        if not hasattr(app, '_metrics'):
-            metrics = PrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'], group_by='url_rule')
+        # only add metrics once and on gunicorn startup command
+        if not hasattr(app, '_metrics') and 'gunicorn -c' in ' '.join(sys.argv):
+            metrics = GunicornPrometheusMetrics(app, excluded_paths=['/metrics', '/healthcheck'], group_by='url_rule')
             app._metrics = metrics
         return app
 

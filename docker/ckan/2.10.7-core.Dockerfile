@@ -63,17 +63,18 @@ ENV PATH=${CKAN_VENV}/bin:${PATH}
 # Set pip args
 ENV pipopt='--exists-action=b --force-reinstall'
 
-# ckan 2.10.7
+# ckan 2.10.7 - alphagov branch to fix smtp connections on eu-west-2, see ckan-fix fork for details
 
-ENV ckan_sha='9f2094b26721b28918d45d58fea16176df7a1ce1'
-ENV ckan_fork='ckan'
+ENV ckan_sha='dc5a8a6e4ab290f619fc52c5a3880376d7b3883c'
+ENV ckan_fork='alphagov'
+ENV ckan_repo='ckan-fix'
 
 # Setup CKAN - need to install prometheus-flask-exporter as part of CKAN for ckanext-datagovuk assets to be made available
 
 RUN pip install -U pip && \
     pip install $pipopt -U cython pycryptodome==3.20 && \
     pip install $pipopt -U prometheus-flask-exporter==0.20.3 && \
-    pip install $pipopt -U $(curl -s https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirement-setuptools.txt) && \
+    pip install $pipopt -U $(curl -s "https://raw.githubusercontent.com/$ckan_fork/$ckan_repo/$ckan_sha/requirement-setuptools.txt") && \
     curl "https://raw.githubusercontent.com/$ckan_fork/ckan/$ckan_sha/requirements.txt" > requirements.txt && \
     pip install --upgrade --no-cache-dir -r requirements.txt && \
     pip install $pipopt -Ue "git+https://github.com/$ckan_fork/ckan.git@$ckan_sha#egg=ckan" && \

@@ -12,4 +12,4 @@ ARG DATASTORE_READONLY_PASSWORD
 RUN rm -rf /var/lib/postgresql/data
 
 # Include extra setup scripts (eg datastore)
-ADD docker/postgis/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
+ADD docker-entrypoint-initdb.d /docker-entrypoint-initdb.d

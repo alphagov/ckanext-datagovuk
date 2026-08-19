@@ -1,0 +1,599 @@
+"""Checks active resource URLs of active dataset packages.
+
+For each URL:
+  * Classifies the response (OK / 404 / 410 / other 4xx / 5xx / timeout / etc.).
+  * in `dry-run` mode no db writes - just report/log output
+  * in `live' mode: if 404 or 410, updates resource `state` to 'deleted'
+  * and updates package `metadata_modified` to NOW().
+
+Writes `check_links_report_{ts}.csv` (one row per URL) and
+`packages_to_reindex_{ts}.txt` (unique packages with at least one
+to-delete resource) for feeding into `solr_reindex_package_ids.py`.
+"""
+
+import argparse
+import csv
+import logging
+import os
+import sys
+from collections import defaultdict, deque
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
+from itertools import islice
+from urllib.parse import urlsplit
+
+import psycopg2
+import requests
+
+from lib.s3 import CkanOutputBucket
+from requests_ratelimiter import LimiterAdapter
+from urllib3.util.retry import Retry
+
+LOG_FILE = "check_links.log"
+REPORT_FILE = "check_links_report_{timestamp}{verbose}.csv"
+REINDEX_FILE = "packages_to_reindex_{timestamp}{verbose}.txt"
+USER_AGENT = "data.gov.uk-link-checker/1.0 (+https://www.data.gov.uk)"
+HTTP_TIMEOUT = (5, 5)  # (connect, read) seconds
+WORKERS = 50
+MAX_INFLIGHT = WORKERS * 4
+HEAD_FALLBACK_STATUSES = {400, 403, 405, 501}
+PER_HOST_PER_SECOND = 2  # max reqs per/sec per host can increase if needed
+PER_HOST_BURST = 5  # up to 5 reqs per/sec burst allowed
+
+REPORT_HEADERS = [
+    "datagovuk-url",
+    "package-id",
+    "package-name",
+    "package-metadata-created",
+    "package-metadata-modified",
+    "guid",
+    "resource-id",
+    "resource-url",
+    "resource-created",
+    "resource-last-modified",
+    "resource-metadata-modified",
+    "org-name",
+    "org-id",
+    "http-status",
+    "category",
+    "error-detail",
+    "to-delete",
+    "checked-at",
+]
+
+
+def setup_logging(log_path: str) -> logging.Logger:
+    logger = logging.getLogger(__name__)
+    if logger.handlers:
+        return logger
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    console = logging.StreamHandler()
+    console.setFormatter(fmt)
+    logger.addHandler(console)
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setFormatter(fmt)
+    logger.addHandler(file_handler)
+    return logger
+
+
+class Category(StrEnum):
+    OK = "OK"
+    NOT_FOUND = "404"
+    GONE = "410"
+    TOO_MANY_REQUESTS = "429"
+    OTHER_CLIENT_ERROR = "OTHER_CLIENT_ERROR"
+    SERVER_ERROR = "SERVER_ERROR"
+    TIMEOUT = "TIMEOUT"
+    CONNECTION_ERROR = "CONNECTION_ERROR"
+    DNS_ERROR = "DNS_ERROR"
+    CONNECTION_REFUSED = "CONNECTION_REFUSED"
+    OTHER_ERROR = "OTHER_ERROR"
+
+
+@dataclass(frozen=True)
+class ResourceRow:
+    """Represents a package (dataset) resource and its URL from db"""
+
+    package_id: str
+    package_name: str
+    resource_id: str
+    url: str
+    org_name: str | None = None
+    org_id: str | None = None
+    resource_created: datetime | None = None
+    resource_last_modified: datetime | None = None
+    resource_metadata_modified: datetime | None = None
+    package_metadata_created: datetime | None = None
+    package_metadata_modified: datetime | None = None
+    guid: str | None = None
+
+
+@dataclass
+class CheckResult:
+    """A report row for one checked package resource URL"""
+
+    row: ResourceRow
+    http_status: int | None = None
+    category: Category | None = None
+    error_detail: str | None = None
+    checked_at: datetime | None = None
+
+    @property
+    def to_delete(self) -> bool:
+        return self.category in {
+            Category.NOT_FOUND,
+            Category.GONE,
+            Category.DNS_ERROR,
+            Category.CONNECTION_REFUSED,
+        }
+
+
+def classify_connection_error(exc: ConnectionError) -> tuple[Category, str]:
+    """Try to disambiguate requests.ConnectionError
+    into DNS error or refused, and if not return original
+    generic ConnectionError
+    """
+    detail = str(exc)
+    text = detail.lower()
+    if any(
+        s in text
+        for s in (
+            "name or service not known",
+            "nodename nor servname",
+            "failed to resolve",
+            "name resolution",
+        )
+    ):
+        return Category.DNS_ERROR, detail
+    if "connection refused" in text:
+        return Category.CONNECTION_REFUSED, detail
+    return Category.CONNECTION_ERROR, detail
+
+
+def classify_response(
+    status_code: int | None, exc: BaseException | None
+) -> tuple[Category, str | None]:
+    match (status_code, exc):
+        case (_, requests.Timeout()):
+            return Category.TIMEOUT, str(exc)
+        case (_, requests.ConnectionError()):
+            return classify_connection_error(exc)
+        case (_, BaseException()):
+            return Category.OTHER_ERROR, str(exc)
+        case (None, None):
+            return Category.OTHER_ERROR, "no status and no exception"
+        case (404, None):
+            return Category.NOT_FOUND, None
+        case (410, None):
+            return Category.GONE, None
+        case (429, None):
+            return Category.TOO_MANY_REQUESTS, None
+        case (int(s), None) if 200 <= s < 400:
+            return Category.OK, None
+        case (int(s), None) if 400 <= s < 500:
+            return Category.OTHER_CLIENT_ERROR, None
+        case (int(s), None) if 500 <= s < 600:
+            return Category.SERVER_ERROR, None
+        case _:
+            return Category.OTHER_ERROR, f"unexpected status {status_code}"
+
+
+def session_factory(
+    workers: int = WORKERS,
+) -> requests.Session:
+    session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
+    retry = Retry(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET"],
+        backoff_factor=0.5,
+        respect_retry_after_header=True,
+        raise_on_status=False,
+    )
+    # LimiterAdapter is an HTTPAdapter drop in, that maintains same retry
+    # config with in memory per host limit, no storage backend
+    adapter = LimiterAdapter(
+        per_second=PER_HOST_PER_SECOND,
+        burst=PER_HOST_BURST,
+        per_host=True,
+        max_retries=retry,
+        pool_connections=workers,
+        pool_maxsize=workers * 2,
+        limit_statuses=(403, 429)
+    )
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
+def fetch_status(
+    session: requests.Session,
+    url: str,
+    timeout: tuple[float, float] = HTTP_TIMEOUT,
+) -> int:
+
+    with session.head(url, timeout=timeout, allow_redirects=True) as resp:
+        status = resp.status_code
+
+    if status in HEAD_FALLBACK_STATUSES:
+        with session.get(
+            url, timeout=timeout, allow_redirects=True, stream=True
+        ) as resp:
+            return resp.status_code
+
+    return status
+
+
+def check_task(row: ResourceRow, session: requests.Session) -> CheckResult:
+    result = CheckResult(row=row)
+    try:
+        status = fetch_status(session, row.url)
+        result.http_status = status
+        result.category, result.error_detail = classify_response(status, None)
+    except Exception as exc:
+        result.category, result.error_detail = classify_response(None, exc)
+    result.checked_at = datetime.now(UTC)
+    return result
+
+
+def host_key(url: str) -> str:
+    try:
+        return urlsplit(url).netloc.lower() or url
+    except Exception:
+        return url
+
+
+def interleave_rows_by_host(rows: list[ResourceRow]) -> list[ResourceRow]:
+    buckets: dict[str, deque[ResourceRow]] = defaultdict(deque)
+    for row in rows:
+        host = host_key(row.url)
+        buckets[host].append(row)
+
+    interleaved_rows: list[ResourceRow] = []
+
+    while buckets:
+        for host in list(buckets):
+            interleaved_rows.append(buckets[host].popleft())
+            if not buckets[host]:
+                del buckets[host]  # no rows left for this host
+    return interleaved_rows
+
+
+class Repository:
+    """Handles all db access. One connection opened in __enter__."""
+
+    SELECT_SQL = """
+        WITH harvest_objects_by_package_id AS (
+            SELECT package_id, guid
+            FROM harvest_object
+            GROUP BY package_id, guid
+        )
+        SELECT p.id, p.name, r.id, r.url, g.name as org_name, g.id as org_id,
+               r.created as resource_created,
+               r.last_modified as resource_last_modified,
+               r.metadata_modified as resource_metadata_modified,
+               p.metadata_created as package_metadata_created,
+               p.metadata_modified as package_metadata_modified,
+               ho.guid as guid
+        FROM package p
+        JOIN resource r ON r.package_id = p.id
+        LEFT JOIN "group" g on p.owner_org = g.id
+        LEFT JOIN harvest_objects_by_package_id AS ho ON p.id = ho.package_id
+        WHERE p.state = 'active'
+          AND p.type = 'dataset'
+          AND r.state = 'active'
+          AND r.url IS NOT NULL
+          AND TRIM(r.url) <> ''
+        ORDER BY p.id, r.id
+    """
+    UPDATE_RESOURCE_SQL = "UPDATE resource SET state = 'deleted' WHERE id = %(resource_id)s AND LOWER(TRIM(url)) = %(resource_url)s AND state = 'active'"
+    UPDATE_RESOURCE_ACTIVE_SQL = "UPDATE resource SET state = 'active' WHERE id = %(resource_id)s AND state = 'deleted'"
+    UPDATE_PACKAGE_MTIME_SQL = (
+        "UPDATE package SET metadata_modified = NOW() WHERE id = %(package_id)s"
+    )
+
+    def __init__(self, dsn: str) -> None:
+        self._dsn = dsn
+        self._conn: psycopg2.extensions.connection | None = None
+
+    def __enter__(self):
+        self._conn = psycopg2.connect(self._dsn)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def fetch_resources(self, limit: int | None = None) -> list[ResourceRow]:
+        # TODO: positional unpacking of cursor is getting a bit shonky. circle back later
+        # possibly switch to NamedTupleCursor or DictCursor? might need some more aliases
+        # to avoid name clashes
+        assert self._conn is not None, "Repository not entered"
+        with self._conn, self._conn.cursor() as cur:
+            if limit is not None:
+                cur.execute(self.SELECT_SQL + " LIMIT %s", (limit,))
+            else:
+                cur.execute(self.SELECT_SQL)
+            return [
+                ResourceRow(
+                    package_id=package_id,
+                    package_name=package_name,
+                    resource_id=resource_id,
+                    url=url.strip(),
+                    org_name=org_name,
+                    org_id=org_id,
+                    resource_created=resource_created,
+                    resource_last_modified=resource_last_modified,
+                    resource_metadata_modified=resource_metadata_modified,
+                    package_metadata_created=package_metadata_created,
+                    package_metadata_modified=package_metadata_modified,
+                    guid=guid,
+                )
+                for (
+                    package_id,
+                    package_name,
+                    resource_id,
+                    url,
+                    org_name,
+                    org_id,
+                    resource_created,
+                    resource_last_modified,
+                    resource_metadata_modified,
+                    package_metadata_created,
+                    package_metadata_modified,
+                    guid,
+                ) in cur
+            ]
+
+    def mark_resource_deleted(self, resource_id: str, resource_url: str, package_id: str) -> int:
+        assert self._conn is not None, "Repository not entered"
+        with self._conn, self._conn.cursor() as cur:
+            cur.execute(self.UPDATE_RESOURCE_SQL, {"resource_id": resource_id, "resource_url": resource_url})
+            rowcount = cur.rowcount
+            if rowcount > 0:
+                cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
+        return rowcount
+
+    def mark_resource_active(self, resource_id: str, package_id: str) -> int:
+        assert self._conn is not None, "Repository not entered"
+        with self._conn, self._conn.cursor() as cur:
+            cur.execute(self.UPDATE_RESOURCE_ACTIVE_SQL, {"resource_id": resource_id})
+            rowcount = cur.rowcount
+            if rowcount > 0:
+                cur.execute(self.UPDATE_PACKAGE_MTIME_SQL, {"package_id": package_id})
+        return rowcount
+
+    def update_resource(self, resource_id: str, resource_url: str, package_id: str, action: str) -> int:
+        match action:
+            case "deleted":
+                return self.mark_resource_deleted(resource_id, resource_url, package_id)
+            case "active":
+                return self.mark_resource_active(resource_id, package_id)
+            case _:
+                return 0
+
+
+class Reporter:
+    """Handles the CSV report writing. Flushes after every row."""
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+
+    def __enter__(self) -> "Reporter":
+        new_file = not os.path.exists(self._path) or os.path.getsize(self._path) == 0
+        self._fh = open(self._path, "a", newline="", encoding="utf-8")
+        self._writer = csv.DictWriter(
+            self._fh, fieldnames=REPORT_HEADERS, quoting=csv.QUOTE_ALL
+        )
+        if new_file:
+            self._writer.writeheader()
+            self._fh.flush()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._fh.close()
+
+    def write(self, result: CheckResult) -> None:
+        self._writer.writerow(
+            {
+                "datagovuk-url": f"https://www.data.gov.uk/dataset/{result.row.package_id}/{result.row.package_name}",
+                "package-id": result.row.package_id,
+                "package-name": result.row.package_name,
+                "package-metadata-created": ""
+                if result.row.package_metadata_created is None
+                else result.row.package_metadata_created.date().isoformat(),
+                "package-metadata-modified": ""
+                if result.row.package_metadata_modified is None
+                else result.row.package_metadata_modified.date().isoformat(),
+                "guid": "" if result.row.guid is None else result.row.guid,
+                "resource-id": result.row.resource_id,
+                "resource-url": result.row.url,
+                "resource-created": ""
+                if result.row.resource_created is None
+                else result.row.resource_created.date().isoformat(),
+                "resource-last-modified": ""
+                if result.row.resource_last_modified is None
+                else result.row.resource_last_modified.date().isoformat(),
+                "resource-metadata-modified": ""
+                if result.row.resource_metadata_modified is None
+                else result.row.resource_metadata_modified.date().isoformat(),
+                "org-name": result.row.org_name,
+                "org-id": result.row.org_id,
+                "http-status": "" if result.http_status is None else result.http_status,
+                "category": result.category.name,
+                "error-detail": result.error_detail or "",
+                "to-delete": "true" if result.to_delete else "false",
+                "checked-at": ""
+                if result.checked_at is None
+                else result.checked_at.isoformat(timespec="minutes"),
+            }
+        )
+        self._fh.flush()
+
+
+def upload_to_s3(logger, reindex_path, report_path):
+    bucket = CkanOutputBucket()
+    bucket.upload_to_s3(reindex_path, "check_links")
+    logger.info(f"uploaded {reindex_path} to S3 bucket {bucket.bucket.name}")
+    bucket.upload_to_s3(report_path, "check_links")
+    logger.info(f"uploaded {report_path} to S3 bucket {bucket.bucket.name}")
+    logger.info("=== check_links/ ls")
+    for filename in bucket.get_s3_ls(path="check_links/"):
+        logger.info(filename)
+
+
+def run(
+    *,
+    logger: logging.Logger,
+    repository: Repository,
+    report_path: str,
+    reindex_path: str,
+    mode: str,
+    limit: int | None = None,
+    verbose: bool = False,
+) -> None:
+
+    rows_from_db = repository.fetch_resources(limit)
+    rows = interleave_rows_by_host(rows_from_db)
+    logger.info(f"loaded {len(rows)} resources")
+
+    to_reindex: set[str] = set()
+
+    # Shared session not formally thread safe, but the underlying pool is,
+    # and we don't mutate session state or rely on cookies
+    session = session_factory()
+
+    with (
+        Reporter(report_path) as reporter,
+        ThreadPoolExecutor(max_workers=WORKERS) as pool,
+    ):
+        row_iter = iter(rows)
+        inflight: set = set()
+
+        # grab first MAX_INFLIGHT rows to start process
+        for row in islice(row_iter, MAX_INFLIGHT):
+            inflight.add(pool.submit(check_task, row, session))
+
+        while inflight:
+            # blocks until ≥1 future complete - done is the completed and inflight is the still pending
+            done, inflight = wait(inflight, return_when=FIRST_COMPLETED)
+            for future in done:
+                try:
+                    result = future.result()
+                    if verbose or result.to_delete:
+                        reporter.write(result)
+                    logger.info(
+                        f"Checked resource: {result.row.resource_id} - url: {result.row.url} - outcome: {result.category}"
+                    )
+                    if result.to_delete:
+                        to_reindex.add(result.row.package_id)
+                except Exception:
+                    logger.exception("URL check task failed")
+                # as each future completes, add one to top up the pool
+                next_row = next(row_iter, None)
+                if next_row is not None:
+                    inflight.add(pool.submit(check_task, next_row, session))
+
+    with open(reindex_path, "w", encoding="utf-8") as f:
+        for package_id in sorted(to_reindex):
+            f.write(f"{package_id}\n")
+
+    logger.info(f"completed {len(rows)} checks, {len(to_reindex)} packages to reindex")
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Tuning knobs (workers, timeouts) are module-level constants "
+        "at the top of this file — edit there to change. Filenames are timestamped "
+        "templates (also module-level constants).",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["dry-run", "live"],
+        default="dry-run",
+        help="'dry-run' (default) reports only; 'live' marks 404/410 resources deleted",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="limit the number of resource URLs fetched from the database (default: no limit)",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="write all checked resources to the CSV report (default: only deleted resources)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=".",
+        help="directory for CSV report and reindex list (default: current directory). "
+        "Log file is always written to the current directory.",
+    )
+    parser.add_argument(
+        "--local",
+        action="store_true",
+        default=False,
+        help="Skips pushing output files to S3, so local testing easier",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M")
+    log_path = LOG_FILE
+    report_path = os.path.join(
+        args.output_dir,
+        REPORT_FILE.format(
+            timestamp=timestamp, verbose="_verbose" if args.verbose else ""
+        ),
+    )
+    reindex_path = os.path.join(
+        args.output_dir,
+        REINDEX_FILE.format(
+            timestamp=timestamp, verbose="_verbose" if args.verbose else ""
+        ),
+    )
+    logger = setup_logging(log_path)
+    logger.info(f"mode: {args.mode}")
+    logger.info(f"limit: {args.limit}")
+    logger.info(f"report path: {report_path}")
+    logger.info(f"reindex path: {reindex_path}")
+    logger.info(f"verbose: {args.verbose}")
+    logger.info(f"workers: {WORKERS}, http_timeout: {HTTP_TIMEOUT}")
+    logger.info(
+        f"per-host rate: {PER_HOST_PER_SECOND}/s, burst: {PER_HOST_BURST}"
+    )
+    logger.info(f"local: {args.local}")
+
+    dsn = os.environ.get("POSTGRES_URL")
+    if not dsn:
+        logger.error("POSTGRES_URL env var is not set")
+        return 1
+
+    with Repository(dsn) as repository:
+        run(
+            logger=logger,
+            repository=repository,
+            report_path=report_path,
+            reindex_path=reindex_path,
+            mode=args.mode,
+            limit=args.limit,
+            verbose=args.verbose,
+        )
+
+    if not args.local:
+        upload_to_s3(logger, reindex_path, report_path)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
