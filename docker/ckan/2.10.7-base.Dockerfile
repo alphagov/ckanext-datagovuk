@@ -11,8 +11,9 @@ WORKDIR $CKAN_VENV/src/ckanext-datagovuk/
 ENV ckan_harvest_fork='ckan'
 ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
 
+# dcat-json 2.4.4
 ENV ckan_dcat_fork='ckan'
-ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
+ENV ckan_dcat_sha='b059fb321f22c110bccff6083c7199e9fe455451'
 
 # allow errored harvest objects to continue processing if they have not been added before
 ENV ckan_spatial_sha='6f78ee7454b5fcdf7ef11d81bb08b06e9741de70'
