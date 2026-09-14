@@ -287,6 +287,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Errors found for object with GUID",                        # Spatial
         "CSW identifier '\{?(\w|-)+\}?' already used, skipping",    # Spatial
         "Exception during import:",                                 # Spatial
+        "Start tag expected, '<' not found, line 1, column 1",      # Spatial - pycsw load
         "Job timeout:",                                             # Harvest
         "was aborted or timed out",                                 # Harvest
         "Too many consecutive retries for object",                  # Harvest
