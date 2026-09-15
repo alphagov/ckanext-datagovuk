@@ -283,28 +283,30 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
 
     # Ignore these data errors on sentry as these would already be reported to publishers to resolve or raise
     IGNORED_DATA_ERRORS = [
-        "Found more than one dataset with the same guid",           # DCat
-        "Errors found for object with GUID",                        # Spatial
-        "CSW identifier '\{?(\w|-)+\}?' already used, skipping",    # Spatial
-        "Exception during import:",                                 # Spatial
-        "Start tag expected, '<' not found, line 1, column 1",      # Spatial - pycsw load
-        "Job timeout:",                                             # Harvest
-        "was aborted or timed out",                                 # Harvest
-        "Too many consecutive retries for object",                  # Harvest
-        "Harvest object does not exist:",                           # Harvest
-        "is not a valid format",                                    # Harvest
-        "Gather stage failed",                                      # Harvest
-        "Errors found by ETL were not picked up by spreadsheet",    # Datagovuk
-        "Organogram template XLS file expected but got:",           # Datagovuk
-        "User not found",                                           # CKAN
-        "Group not found",                                          # CKAN
-        "not authorised to",                                        # CKAN
-        "Action resource_create requires an authenticated user",    # CKAN
-        "Not Found: The requested URL was not found on the server.",# CKAN
-        "404 Not Found: Dataset not found",                         # CKAN
-        "404 Not Found: Resource not found",                        # CKAN
-        "401 Unauthorized: Not authorised to see this page",        # CKAN
-        "The email address '.+' belongs to a registered user.",     # CKAN
+        "Found more than one dataset with the same guid",                # DCat
+        "Errors found for object with GUID",                             # Spatial
+        "CSW identifier '\{?(\w|-)+\}?' already used, skipping",         # Spatial
+        "Exception during import:",                                      # Spatial
+        "Start tag expected, '<' not found, line 1, column 1",           # Spatial - pycsw load
+        "Job timeout:",                                                  # Harvest
+        "was aborted or timed out",                                      # Harvest
+        "Too many consecutive retries for object",                       # Harvest
+        "Harvest object does not exist:",                                # Harvest
+        "is not a valid format",                                         # Harvest
+        "Gather stage failed",                                           # Harvest
+        "Errors found by ETL were not picked up by spreadsheet",         # Datagovuk
+        "Organogram template XLS file expected but got:",                # Datagovuk
+        "User not found",                                                # CKAN
+        "Group not found",                                               # CKAN
+        "not authorised to",                                             # CKAN
+        "Action resource_create requires an authenticated user",         # CKAN
+        "Not Found: The requested URL was not found on the server.",     # CKAN
+        "404 Not Found: Dataset not found",                              # CKAN
+        "404 Not Found: Resource not found",                             # CKAN
+        "401 Unauthorized: Not authorised to see this page",             # CKAN
+        "The email address '.+' belongs to a registered user.",          # CKAN
+        "Could not build url for endpoint 'datastore.dump' with values", # CKAN
+        "Unicode strings with encoding declaration are not supported. ", # CKAN
     ]
 
     def before_send(self, event, hint):
