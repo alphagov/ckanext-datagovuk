@@ -13,6 +13,11 @@ RUN apt-get update && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=${LC_ALL}
 
+# RUN apt-get update && \
+# apt-get install software-properties-common && \
+# add-apt-repository ppa:deadsnakes/ppa
+## only installs python 3.11.15 not 16 for handling https://security.snyk.io/vuln/SNYK-WOLFILATEST-PYTHON311-19828110
+
 # Install required system packages
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
