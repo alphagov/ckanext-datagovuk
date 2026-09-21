@@ -16,5 +16,5 @@ sentry-sdk==2.43.0
 redis==7.4.1
 Shapely>=1.2.13
 six==1.15.0
-sqlalchemy==1.4.51
+sqlalchemy==2.0.54
 xlrd==2.0.1
