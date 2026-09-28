@@ -16,7 +16,7 @@ from ckan.model import User
 from ckanext.datagovuk.pii_helpers import remove_pii, remove_pii_from_api_search_dataset
 
 log = __import__('logging').getLogger(__name__)
-
+SOLR_STATUS_FIELD_LIMIT = 32000
 
 # defined as they are in ckan/action/get.py to save further hacks to the
 # function copied from there
@@ -72,9 +72,30 @@ def dgu_package_search(context, data_dict):
     return remove_pii_from_api_search_dataset(package_search(context, data_dict), json_dumps=False)
 
 
+def _trim_object_error_summary(data):
+    if not data.get('status') or not data['status'].get('last_job'):
+        return data
+
+    object_error_summary = data['status']['last_job'].get('object_error_summary')
+    if object_error_summary:
+        error_count = 0
+        while len(str(object_error_summary)) > SOLR_STATUS_FIELD_LIMIT:
+            object_error_summary.pop(-1)
+            error_count += 1
+
+        object_error_summary.append(
+            {
+                'message': 'Object error summary list exceeds 32k character limit, errors will be trimmed until listed errors are resolved',
+                'error_count': error_count
+            }
+        )
+    return data
+
+
 @side_effect_free
 def dgu_package_show(context, data_dict):
-    return remove_pii(package_show(context, data_dict))
+    data = remove_pii(package_show(context, data_dict))
+    return _trim_object_error_summary(data)
 
 
 @side_effect_free
