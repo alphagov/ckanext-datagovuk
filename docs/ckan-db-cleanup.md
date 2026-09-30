@@ -294,37 +294,37 @@ explicitly, so nothing is deleted that we have not listed.
 ```sql
 BEGIN;
 
-CREATE TEMP TABLE pkg(id text PRIMARY KEY) ON COMMIT DROP;
-INSERT INTO pkg SELECT id FROM package WHERE state = 'deleted' LIMIT 1000;
-ANALYZE pkg;
+CREATE TEMP TABLE pkg_to_purge(id text PRIMARY KEY) ON COMMIT DROP;
+INSERT INTO pkg_to_purge SELECT id FROM package WHERE state = 'deleted' LIMIT 1000;
+ANALYZE pkg_to_purge;
 
-CREATE TEMP TABLE res(id text PRIMARY KEY) ON COMMIT DROP;
-INSERT INTO res SELECT r.id FROM resource r JOIN pkg p ON r.package_id = p.id;
-ANALYZE res;
+CREATE TEMP TABLE res_to_purge(id text PRIMARY KEY) ON COMMIT DROP;
+INSERT INTO res_to_purge SELECT r.id FROM resource r JOIN pkg_to_purge p ON r.package_id = p.id;
+ANALYZE res_to_purge;
 
 -- resource views, then resources
-DELETE FROM resource_view WHERE resource_id IN (SELECT id FROM res);
-DELETE FROM resource      WHERE id IN (SELECT id FROM res);
+DELETE FROM resource_view WHERE resource_id IN (SELECT id FROM res_to_purge);
+DELETE FROM resource      WHERE id IN (SELECT id FROM res_to_purge);
 
 -- package children
-DELETE FROM package_extra    WHERE package_id IN (SELECT id FROM pkg);
-DELETE FROM package_tag      WHERE package_id IN (SELECT id FROM pkg);
-DELETE FROM package_member   WHERE package_id IN (SELECT id FROM pkg);
+DELETE FROM package_extra    WHERE package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM package_tag      WHERE package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM package_member   WHERE package_id IN (SELECT id FROM pkg_to_purge);
 DELETE FROM package_relationship
-  WHERE subject_package_id IN (SELECT id FROM pkg) OR object_package_id IN (SELECT id FROM pkg);
-DELETE FROM rating           WHERE package_id IN (SELECT id FROM pkg);
-DELETE FROM package_extent   WHERE package_id IN (SELECT id FROM pkg);
-DELETE FROM package_zip      WHERE package_id IN (SELECT id FROM pkg);
-DELETE FROM tracking_summary WHERE package_id IN (SELECT id FROM pkg);
-DELETE FROM feedback         WHERE package_id IN (SELECT id FROM pkg);
+  WHERE subject_package_id IN (SELECT id FROM pkg_to_purge) OR object_package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM rating           WHERE package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM package_extent   WHERE package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM package_zip      WHERE package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM tracking_summary WHERE package_id IN (SELECT id FROM pkg_to_purge);
+DELETE FROM feedback         WHERE package_id IN (SELECT id FROM pkg_to_purge);
 
 -- membership, table_id is not a foreign key so filter on table_name
-DELETE FROM member WHERE table_name = 'package' AND table_id IN (SELECT id FROM pkg);
+DELETE FROM member WHERE table_name = 'package' AND table_id IN (SELECT id FROM pkg_to_purge);
 
-DELETE FROM task_status WHERE entity_id IN (SELECT id FROM pkg);
+DELETE FROM task_status WHERE entity_id IN (pkg_to_purge);
 
 -- finally the owning record
-DELETE FROM package WHERE id IN (SELECT id FROM pkg);
+DELETE FROM package WHERE id IN (SELECT id FROM pkg_to_purge);
 
 COMMIT;
 ```
