@@ -89,8 +89,10 @@ We want to be able to clear as much as possible and then to be able to purge del
 - whether anything still writes to them is an open question. The `activity` plugin is not in
   `ckan.plugins` in `production.ini`, which would mean no activity screens and no new rows. But
   `ckanext/datagovuk/action/create.py` calls `activity_create` unconditionally in our `user_create`
-  override, which would fail if the plugin were absent. Check the deployed config in govuk-dgu-charts
-  before treating this data as historic.
+  override, which would fail if the plugin were absent.
+  - UPDATE - the activity plugin was left out of the local development stack but is set on the kubernetes CKAN
+  config map. There is some work to add the plugin on the local dev stack to investigate activity errors.
+  Upon checking the integration database for updates records have been created recently so it is being written to.
 
 ## CKAN Pre-2.9 revision tables
 
@@ -277,6 +279,9 @@ The same question applies to `activity` and `activity_detail`, 20 GB between the
 - the open question is `ckanext/datagovuk/action/create.py`, which calls `activity_create`
   unconditionally in our `user_create` override and would fail if the plugin were absent. Confirm
   against govuk-dgu-charts before truncating
+  - UPDATE - `activity` plugin is being used on the kubernetes cluster deployments and serve as a replacement of the
+  `revision` tables which have been deprecated. There are status 500 errors for some of the publisher and dataset activities,
+  but once these are resolved they will be available for publishers to view.
 
 ### 3. Purge deleted datasets
 
