@@ -1,8 +1,8 @@
 apps:
   ckan: &app_ckan
     name: ckan
-    version: "2.10.7"
-    patch: d
+    version: "2.10.11"
+    patch: a
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
@@ -17,6 +17,8 @@ build_types:
     - *app_ckan
     - *app_pycsw
     - *app_solr
+  build_push_ckan_base:
+    - *app_ckan
   build_push_ckan:
     - *app_ckan
   build_push_ckan_with_gittag:
@@ -33,7 +35,7 @@ build_types:
     - *app_ckan
 
 runs_on:
-  - runner_type: ubuntu-latest
-    arch: amd64
+  # - runner_type: ubuntu-latest
+  #   arch: amd64
   - runner_type: ubuntu-24.04-arm
     arch: arm64
