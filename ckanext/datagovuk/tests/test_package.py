@@ -7,7 +7,7 @@ from six.moves.urllib.parse import urlparse
 import ast
 from bs4 import BeautifulSoup
 import mock
-from ckantoolkit import url_for
+from ckan.lib.helpers import url_for
 
 import ckan.plugins
 from ckan import model
