@@ -6,3 +6,5 @@ pytest-factoryboy==2.6.0
 pytest-freezegun==0.4.2
 pytest-rerunfailures==13.0
 pytest-split==0.8.1
+
+flask_debugtoolbar==0.13.1
