@@ -26,9 +26,9 @@ on:
         description: Commit, tag or branch name to build
         required: false
         type: string
-#   push:
-#     branches:
-#       - upgrade-ckan-2.10.11
+  push:
+    branches:
+      - upgrade-ckan-2.10.11
 #   schedule:
 #     - cron: '0 3 * * 0'
 
