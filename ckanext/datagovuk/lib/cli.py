@@ -375,7 +375,7 @@ def reindex_recent(context):
 # Reindex organisation will only add organisations
 # To update an organisation you will need to remove it first before running it:
 #
-# curl -g "http://$CKAN_SOLR_URL/solr/ckan/update?commit=true" \
+# curl -g "$CKAN_SOLR_URL/update?commit=true" \
 #     -H 'Content-Type: application/json' \
 #     -d '{"delete":{"query":"site_id:<DGU_ORGANISATIONS_ID>%20AND%20name:org-name"}}'
 ###
