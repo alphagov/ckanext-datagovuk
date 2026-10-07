@@ -105,10 +105,10 @@ jobs:
           case $buildType in
             "build_push_ckan_base")
               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
-              echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
-              echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
-              echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
-              echo "APP_TAG_SUFFIX=-base" >> "$GITHUB_ENV"
+              echo "DOCKERFILE=ckan-base" >> "$GITHUB_ENV"
+              echo "BUILD_CKAN_BASE=true" >> "$GITHUB_ENV"
+            #   echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
+            #   echo "APP_TAG_SUFFIX=-base" >> "$GITHUB_ENV"
             ;;
 
             "build_push_ckan_with_gittag")
@@ -149,7 +149,7 @@ jobs:
         id: build-app-image
         uses: docker/build-push-action@v6
         with:
-          file: docker/${{ matrix.app.name }}/${{ matrix.app.version }}${{ env.APP_TAG_SUFFIX }}.Dockerfile
+          file: docker/${{ matrix.app.name }}/${{ env.DOCKERFILE }}.Dockerfile
           context: .
           platforms: "linux/${{ matrix.runs_on.arch }}"
           load: true
@@ -161,7 +161,7 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
 
       - name: Generate Core/Base Image Metadata
-        if: ${{ env.BUILD_CKAN_CORE_BASE == 'true' }}
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
         uses: docker/metadata-action@v5
         id: base-metadata
         with:
@@ -183,21 +183,21 @@ jobs:
             org.opencontainers.image.created=${{ steps.calculate-image-tags.outputs.createdDate }}
             org.opencontainers.image.vendor=GDS
 
-#       - name: Build Core/Base Image (CKAN Only)
-#         if: ${{ env.BUILD_CKAN_CORE_BASE == 'true' }}
-#         id: build-core-base-image
-#         uses: docker/build-push-action@v6
-#         with:
-#           file: docker/${{ matrix.app.name }}/${{ matrix.app.version }}${{ env.APP_TAG_SUFFIX }}.Dockerfile
-#           context: .
-#           platforms: "linux/${{ matrix.runs_on.arch }}"
-#           load: true
-#           provenance: false
-#           labels: ${{ steps.base-metadata.outputs.labels }}
-#           build-args: BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
-#           outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
-#           cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
-#           cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
+      - name: Build Core/Base Image (CKAN Only)
+        if: ${{ env.BUILD_CKAN_BASE == 'true' }}
+        id: build-core-base-image
+        uses: docker/build-push-action@v6
+        with:
+          file: docker/${{ matrix.app.name }}/${{ env.DOCKERFILE }}.Dockerfile
+          context: .
+          platforms: "linux/${{ matrix.runs_on.arch }}"
+          load: true
+          provenance: false
+          labels: ${{ steps.base-metadata.outputs.labels }}
+          build-args: BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
+          outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
+          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
 
 #       - name: Export Image Digests
 #         if: ${{ env.BUILD_TYPE != 'build_only' }}
@@ -209,7 +209,7 @@ jobs:
 #           touch "/tmp/digests/app/${DIGEST#sha256:}"
 
 #       - name: Export Core/Base Image Digests
-#         if: ${{ env.BUILD_TYPE != 'build_only' && env.BUILD_CKAN_CORE_BASE == 'true' }}
+#         if: ${{ env.BUILD_TYPE != 'build_only' && env.BUILD_CKAN_BASE == 'true' }}
 #         id: export-core-base-digests
 #         env:
 #           DIGEST: "${{ steps.build-core-base-image.outputs.digest }}"
@@ -273,21 +273,21 @@ jobs:
 #             "build_push_core")
 #               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
 #               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
-#               echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
+#               echo "BUILD_CKAN_BASE=true" >> "$GITHUB_ENV"
 #               echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
 #             ;;
 
 #             "build_push_base")
 #               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
 #               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
-#               echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
+#               echo "BUILD_CKAN_BASE=true" >> "$GITHUB_ENV"
 #               echo "APP_TAG_SUFFIX=-base" >> "$GITHUB_ENV"
 #             ;;
 
 #             "build_push_test_ckan")
 #               echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> "$GITHUB_ENV"
 #               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
-#               echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
+#               echo "BUILD_CKAN_BASE=true" >> "$GITHUB_ENV"
 #               echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
 #             ;;
 
@@ -343,7 +343,7 @@ jobs:
 #           docker buildx imagetools create $tag_args $sources
 
 #       - name: Generate Base Image Metadata
-#         if: ${{ env.BUILD_CKAN_CORE_BASE == 'true' }}
+#         if: ${{ env.BUILD_CKAN_BASE == 'true' }}
 #         uses: docker/metadata-action@v5
 #         id: base-metadata
 #         with:
@@ -366,7 +366,7 @@ jobs:
 #             org.opencontainers.image.vendor=GDS
 
 #       - name: Create Base Manifest Lists
-#         if: ${{ env.BUILD_CKAN_CORE_BASE == 'true' }}
+#         if: ${{ env.BUILD_CKAN_BASE == 'true' }}
 #         env:
 #           IMAGEREF_PREFIX: '${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}'
 #         working-directory: /tmp/digests/base
@@ -383,7 +383,7 @@ jobs:
 #           docker buildx imagetools inspect "$IMAGEREF"
 
 #       - name: Inspect Base Images
-#         if: ${{ env.BUILD_CKAN_CORE_BASE == 'true' }}
+#         if: ${{ env.BUILD_CKAN_BASE == 'true' }}
 #         env:
 #           IMAGEREF: '${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}:${{ steps.base-metadata.outputs.version }}'
 #         run: |
