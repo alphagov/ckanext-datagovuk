@@ -157,8 +157,8 @@ jobs:
           labels: ${{ steps.app-metadata.outputs.labels }}
           outputs: |
             type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
-          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
+          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.DOCKERFILE }}-${{ matrix.runs_on.arch }}
+          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.DOCKERFILE }}-${{ matrix.runs_on.arch }},mode=max
 
       - name: Generate Core/Base Image Metadata
         if: ${{ env.BUILD_CKAN_BASE == 'true' }}
@@ -196,8 +196,8 @@ jobs:
           labels: ${{ steps.base-metadata.outputs.labels }}
           build-args: BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
           outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
-          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
+          cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.DOCKERFILE }}-${{ matrix.runs_on.arch }}
+          cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.DOCKERFILE }}-${{ matrix.runs_on.arch }},mode=max
 
 #       - name: Export Image Digests
 #         if: ${{ env.BUILD_TYPE != 'build_only' }}
