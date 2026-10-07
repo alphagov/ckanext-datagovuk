@@ -113,12 +113,14 @@ jobs:
             ;;
 
             "build_push_ckan_with_gittag")
-              echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> "$GITHUB_ENV"
+            #   echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> "$GITHUB_ENV"
+              echo "BUILD_TAGS=ckan-base" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
             ;;
 
             *)
-              echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
+            #   echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
+              echo "BUILD_TAGS=ckan-base" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
             ;;
           esac
