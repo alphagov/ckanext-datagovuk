@@ -126,7 +126,7 @@ class DguHarvesterBase(HarvesterBase):
         context = {'model': model, 'session': model.Session, 'user': user,
                    'api_version': 3, 'extras_as_string': True}
 
-        if status == 'delete':
+        if status == 'deleted':
             # Delete package
             tk.get_action('package_delete')(context.copy(), {'id': harvest_object.package_id})
             log.info('Deleted package {0} with guid {1}'.format(harvest_object.package_id, harvest_object.guid))
