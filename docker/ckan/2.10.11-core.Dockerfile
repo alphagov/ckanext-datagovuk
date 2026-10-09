@@ -69,7 +69,8 @@ RUN apt-get install --no-install-recommends -y \
         supervisor && \
         mkdir -p /etc/supervisord.d
 
-COPY setup/supervisord.py3.conf /etc/supervisord.conf
+# COPY setup/supervisord.py3.conf /etc/supervisord.conf
+RUN wget https://raw.githubusercontent.com/ckan/ckan-docker-base/refs/tags/v20260826.1/ckan-2.10/setup/supervisord.py3.conf -o /etc/supervisord.conf
 
 # Install uwsgi, the CKAN application, the dependency packages for CKAN plus some confiquration
 RUN pip3 install -U pip && \
@@ -91,8 +92,11 @@ RUN groupadd -g 502 ckan-sys && \
     useradd -rm -d /srv/app -s /bin/bash -g ckan-sys -u 502 ckan-sys && \
     useradd -rm -d /srv/app -s /bin/bash -g ckan-sys -u 503 ckan
     
-COPY setup/prerun.py ${APP_DIR}
-COPY setup/start_ckan.sh ${APP_DIR}
+# COPY setup/prerun.py ${APP_DIR}
+# COPY setup/start_ckan.sh ${APP_DIR}
+RUN wget https://raw.githubusercontent.com/ckan/ckan-docker-base/612d0b916ec917c05bb31a67b5d5dff5d5f2e3fc/ckan-2.10/setup/prerun.py -o ${APP_DIR}/prerun.py
+RUN wget https://raw.githubusercontent.com/ckan/ckan-docker-base/6d47fd7951de68795e4f8b6a146342d7eb7cc477/ckan-2.10/setup/start_ckan.sh -o ${APP_DIR}/start_ckan.sh
+RUN chmod +x ${APP_DIR}/start_ckan.sh
 ADD https://raw.githubusercontent.com/ckan/ckan/${CKAN_REF}/wsgi.py ${APP_DIR}
 RUN chmod 644 ${APP_DIR}/wsgi.py
 
