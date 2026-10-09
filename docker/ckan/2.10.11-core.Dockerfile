@@ -1,3 +1,4 @@
+# based on github.com/ckan/ckan-docker-base/blob/v20260826.1/ckan-2.10/Dockerfile.py3.10
 ARG ENV=base
 
 FROM python:3.11-slim-bookworm AS python
@@ -14,10 +15,8 @@ FROM python:3.11-slim-bookworm AS python
 
 FROM python AS base
 
-# Tag passed through via the Makefile
-ARG CKAN_REF=${CKAN_REF}
-# Make it available to child images
-ENV CKAN_REF=${CKAN_REF}
+# Set CKAN_REF to the latest stable release of CKAN (2.10.11) by default
+ENV CKAN_REF=ckan-2.10.11
 
 # Internals, you probably don't need to change these
 ENV TZ=UTC
@@ -92,8 +91,8 @@ RUN groupadd -g 502 ckan-sys && \
     useradd -rm -d /srv/app -s /bin/bash -g ckan-sys -u 502 ckan-sys && \
     useradd -rm -d /srv/app -s /bin/bash -g ckan-sys -u 503 ckan
     
-COPY setup/prerun.py ${APP_DIR}
-COPY setup/start_ckan.sh ${APP_DIR}
+COPY docker/ckan/setup/prerun.py ${APP_DIR}
+COPY docker/ckan/setup/start_ckan.sh ${APP_DIR}
 ADD https://raw.githubusercontent.com/ckan/ckan/${CKAN_REF}/wsgi.py ${APP_DIR}
 RUN chmod 644 ${APP_DIR}/wsgi.py
 
@@ -139,7 +138,7 @@ USER root
 RUN cd ${SRC_DIR}/ckan && \ 
 pip3 install -r https://raw.githubusercontent.com/ckan/ckan/${CKAN_REF}/dev-requirements.txt
 
-COPY --chown=ckan-sys:ckan-sys setup/unsafe.cert setup/unsafe.key setup/start_ckan_development.sh setup/install_src.sh ${APP_DIR}
+COPY --chown=ckan-sys:ckan-sys docker/ckan/setup/unsafe.cert docker/ckan/setup/unsafe.key docker/ckan/setup/start_ckan_development.sh docker/ckan/setup/install_src.sh ${APP_DIR}
 
 # Update local directories
 RUN mkdir -p ${SRC_EXTENSIONS_DIR} /var/lib/ckan && \
