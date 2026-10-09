@@ -87,7 +87,7 @@ jobs:
           show-progress: false
       
       - name: Setup Docker BuildX
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3.6.1
 
       - name: Calculate Image Tags
         id: calculate-image-tags
@@ -269,7 +269,7 @@ jobs:
       packages: write
     steps:
       - name: Setup Docker BuildX
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3.6.1
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
