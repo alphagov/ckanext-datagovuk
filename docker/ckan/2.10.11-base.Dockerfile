@@ -1,0 +1,49 @@
+FROM ghcr.io/alphagov/ckan:2.10.11--core
+
+ENV CKAN_CONFIG=/etc/ckan
+
+WORKDIR $SRC_DIR/ckanext-datagovuk/
+
+ENV pipopt='--exists-action=b --force-reinstall'
+
+ENV ckan_harvest_fork='ckan'
+ENV ckan_harvest_sha='9fb44f79809a1c04dfeb0e1ca2540c5ff3cacef4'
+
+ENV ckan_dcat_fork='ckan'
+ENV ckan_dcat_sha='618928be5a211babafc45103a72b6aab4642e964'
+
+# allow errored harvest objects to continue processing if they have not been added before
+ENV ckan_spatial_sha='6f78ee7454b5fcdf7ef11d81bb08b06e9741de70'
+ENV ckan_spatial_fork='alphagov'
+
+USER root
+
+RUN apt-get -q -y update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
+    && apt-get -q -y install \
+        curl \
+        postgresql-client \
+    && apt-get -q clean \
+    && rm -rf /var/lib/apt/lists/*
+
+
+RUN echo "pip install DGU extensions..." && \
+
+    pip install $pipopt -U $(curl -s "https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt") && \
+    pip install $pipopt -U "git+https://github.com/$ckan_dcat_fork/ckanext-dcat.git@$ckan_dcat_sha#egg=ckanext-dcat" && \
+
+    # save spatial-requirements.txt locally before installing dependencies to work around pip error
+    curl -s "https://raw.githubusercontent.com/$ckan_spatial_fork/ckanext-spatial/$ckan_spatial_sha/requirements.txt" > spatial-requirements.txt && \
+    pip install $pipopt -r spatial-requirements.txt && \
+    pip install $pipopt -U "git+https://github.com/$ckan_spatial_fork/ckanext-spatial.git@$ckan_spatial_sha#egg=ckanext-spatial" && \
+
+    pip install $pipopt -U $(curl -s "https://raw.githubusercontent.com/$ckan_harvest_fork/ckanext-harvest/$ckan_harvest_sha/requirements.txt") && \
+    pip install $pipopt -U "git+https://github.com/$ckan_harvest_fork/ckanext-harvest.git@$ckan_harvest_sha#egg=ckanext-harvest" && \
+
+    # need these dependencies for harvester run-test to target harvest sources
+    pip install $pipopt -U factory-boy==3.3.0 mock==2.0.0 pytest==7.4.3 && \
+
+    # need to pin pyyaml to correctly pick up config settings
+    pip install $pipopt -U pyyaml==6.0.1
+
+EXPOSE 5000
