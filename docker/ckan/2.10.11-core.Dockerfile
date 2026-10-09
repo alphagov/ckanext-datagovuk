@@ -69,7 +69,8 @@ RUN apt-get install --no-install-recommends -y \
         supervisor && \
         mkdir -p /etc/supervisord.d
 
-COPY setup/supervisord.py3.conf /etc/supervisord.conf
+# COPY setup/supervisord.py3.conf /etc/supervisord.conf
+RUN wget https://raw.githubusercontent.com/ckan/ckan-docker-base/refs/tags/v20260826.1/ckan-2.10/setup/supervisord.py3.conf -o /etc/supervisord.conf
 
 # Install uwsgi, the CKAN application, the dependency packages for CKAN plus some confiquration
 RUN pip3 install -U pip && \
