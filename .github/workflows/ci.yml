@@ -28,7 +28,7 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/alphagov/ckan:2.10.7-d-base
+      image: ghcr.io/alphagov/ckan:2.10.11--base
       options: --user root
     services:
       solr:
@@ -81,7 +81,7 @@ jobs:
           # Replace default path to CKAN core config file with the one on the container
           sed -i -e 's|use = config:.*|use = config:/usr/lib/ckan/venv/src/ckan/test-core.ini|' test.ini
           # set the i18n directory
-          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" "${CKAN_CONFIG}"/production.ini
+          sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = $CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" "${CKAN_INI}"
       - name: Init Database
         run: ckan db init
       - name: Run tests
