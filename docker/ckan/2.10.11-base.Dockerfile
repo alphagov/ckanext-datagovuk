@@ -2,7 +2,7 @@ FROM ghcr.io/alphagov/ckan:2.10.11--core
 
 COPY ckan.ini $CKAN_INI
 
-WORKDIR $SRC_DIR/ckanext-datagovuk/
+WORKDIR $SRC_DIR
 
 ENV pipopt='--exists-action=b --force-reinstall'
 

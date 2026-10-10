@@ -245,7 +245,7 @@ class TestPackageController:
             }
         )
         assert 'name="title"' in response
-        assert f'value="{dataset["name"]}"' in response
+        assert f'value="{name}"' in response
 
     ## Test form validation
 
