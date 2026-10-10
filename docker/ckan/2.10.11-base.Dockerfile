@@ -1,6 +1,6 @@
 FROM ghcr.io/alphagov/ckan:2.10.11--core
 
-ENV CKAN_CONFIG=/etc/ckan
+COPY ckan.ini $CKAN_INI
 
 WORKDIR $SRC_DIR/ckanext-datagovuk/
 
