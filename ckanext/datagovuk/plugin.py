@@ -2,7 +2,7 @@ import logging
 import re
 import sys
 
-from ckan.common import CKANConfig
+from ckan.common import CKANConfig, config
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import model
@@ -24,6 +24,7 @@ from flask import Blueprint
 from prometheus_flask_exporter.multiprocess import GunicornPrometheusMetrics
 
 import sentry_sdk
+from sentry_sdk.types import Event, Hint
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
@@ -309,7 +310,7 @@ class DatagovukPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, Defau
         "Unicode strings with encoding declaration are not supported. ", # CKAN
     ]
 
-    def before_send(self, event, hint):
+    def before_send(self, event: Event, hint: Hint) -> Event | None:
         return None if [i for i in ['localhost'] if i in config.get('ckan.site_url')] or \
             any(re.search(s, event['logentry']['message']) for s in self.IGNORED_DATA_ERRORS) \
             else event
