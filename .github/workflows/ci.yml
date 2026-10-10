@@ -83,7 +83,9 @@ jobs:
           # set the i18n directory
           sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = /srv/app/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" "${CKAN_INI}"
       - name: Init Database
-        run: ckan db init
+        run: |
+          echo "DB connection: $CKAN_SQLALCHEMY_URL"
+          ckan db init
       - name: Run tests
         run: |
           PROMETHEUS_MULTIPROC_DIR="$RUNNER_TEMP" pytest --ckan-ini=test.ini ckanext/datagovuk/tests --cov=ckanext.datagovuk --cov-report=term-missing --disable-pytest-warnings -v
