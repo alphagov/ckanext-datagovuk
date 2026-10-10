@@ -1,5 +1,6 @@
 from copy import deepcopy
 import json
+# from ckanext.datagovuk.views import dataset
 import pytest
 import six
 from six.moves.urllib.parse import urlparse
@@ -12,13 +13,13 @@ from ckan.lib.helpers import url_for
 import ckan.plugins
 from ckan import model
 from ckan.lib.search import PackageSearchIndex
-from ckan.tests import factories, helpers
+from ckan.tests import factories , helpers
 
 
 @pytest.fixture
 def user_env():
-    user = factories.User()
-    return {"REMOTE_USER": six.ensure_str(user["name"])}
+    user = factories.UserWithToken()
+    return {"Authorization": user["token"]}
 
 
 def _get_location(res):
@@ -72,7 +73,7 @@ class TestPackageController:
 
 
     ## Test organogram file upload
-    @mock.patch("ckan.lib.helpers.uploader.get_storage_path", return_value='./')
+    @mock.patch("ckan.lib.uploader.get_storage_path", return_value='./')
     def test_resource_create_organogram_file_upload(self, mock_uploads_enabled):
         '''
         This should fail in 2.8 as the `upload` button isn't showing due to a
@@ -107,14 +108,15 @@ class TestPackageController:
         assert 'format' in fields
 
     ## Test standard dataset file upload
-    def test_resource_create_standard_file_upload(self, app):
-        user = factories.User()
+    def test_resource_create_standard_file_upload(self):
+        user = factories.UserWithToken()
         organization = factories.Organization(
-            users=[{'name': user['id'], 'capacity': 'admin'}]
+            users=[{'name': user['name'], 'capacity': 'admin'}]
         )
         dataset = factories.Dataset(owner_org=organization['id'])
 
-        env = {'REMOTE_USER': user['name'].encode('ascii')}
+        app = helpers._get_test_app()
+        env = {"Authorization": user["token"]}
         response = app.get(
             url_for(
                 "{}_resource.new".format(dataset["type"]),
@@ -197,29 +199,20 @@ class TestPackageController:
 
     ## Tests for rendering the forms
 
-    def test_form_renders(self, app):
+    def test_form_renders(self):
         self._create_org()
+        app = helpers._get_test_app()
         env, response = self._get_package_new_page(app)
         assert 'dataset-edit' in response.get_data(as_text=True)
 
-    @pytest.mark.skip("Originally copied from CKAN but since removed from 2.9")
-    def test_resource_form_renders(self, app):
-        self._create_org()
-        env, form = self._get_package_new_page(app)
-        form = response.forms['dataset-edit']
-        form['name'] = u'resource-form-renders'
-
-        response = submit_and_follow(app, form, env, 'save')
-        assert 'resource-edit' in response.forms
-
-    def test_previous_button_works(self, app, user_env):
+    def test_previous_button_works(self, user_env):
         url = url_for("dataset.new")
+        app = helpers._get_test_app()
         response = app.post(url, environ_overrides=user_env, data={
             "name": "previous-button-works",
             "save": "",
             "_ckan_phase": 1
         }, follow_redirects=False)
-
         location = _get_location(response)
         response = app.post(location, environ_overrides=user_env, data={
             "id": "",
@@ -228,29 +221,37 @@ class TestPackageController:
 
         assert '/dataset/edit/' in response.headers['location']
 
-    def test_previous_button_populates_form(self, app, user_env):
-        url = url_for("dataset.new")
-        response = app.post(url, environ_overrides=user_env,
+    def test_previous_button_populates_form(self):
+        user = factories.UserWithToken()
+        env = {"Authorization": user["token"]}
+        app = helpers._get_test_app()
+        name = factories.Dataset.stub().name
+        response = app.post(
+            url_for("dataset.new"),
+            environ_overrides=env,
             data={
-                "name": "previous-button-populates-form",
+                "name": name,
                 "save": "",
                 "_ckan_phase": 1
             },
             follow_redirects=False)
-
         location = _get_location(response)
-        response = app.post(location, environ_overrides=user_env, data={
-            "id": "",
-            "save": "go-dataset"
-        })
-
+        response = app.post(
+            location,
+            environ_overrides=env, 
+            data={
+                "id": "",
+                "save": "go-dataset"
+            }
+        )
         assert 'name="title"' in response
-        assert 'value="previous-button-populates-form"'
+        assert f'value="{dataset["name"]}"' in response
 
     ## Test form validation
 
     @pytest.mark.usefixtures("with_request_context")
-    def test_name_required(self, app, user_env):
+    def test_name_required(self, user_env):
+        app = helpers._get_test_app()
         response = app.post(
             url=url_for("dataset.new"), extra_environ=user_env, data={"save": ""}
         )
@@ -277,13 +278,14 @@ class TestPackageController:
             status=403,
         )
 
-    def test_organization_admin_can_edit(self, app):
-        user = factories.User()
+    def test_organization_admin_can_edit(self):
+        app = helpers._get_test_app()
+        user = factories.UserWithToken()
         organization = factories.Organization(
             users=[{"name": user["id"], "capacity": "admin"}]
         )
         dataset = factories.Dataset(owner_org=organization["id"])
-        env = {"REMOTE_USER": six.ensure_str(user["name"])}
+        env = {"Authorization": user["token"]}
         response = app.post(
             url_for("dataset.edit", id=dataset["name"]), extra_environ=env,
             data={
@@ -294,13 +296,14 @@ class TestPackageController:
         result = helpers.call_action("package_show", id=dataset["id"])
         assert u"edited description" == result["notes"]
 
-    def test_organization_editor_can_edit(self, app):
-        user = factories.User()
+    def test_organization_editor_can_edit(self):
+        app = helpers._get_test_app()
+        user = factories.UserWithToken()
         organization = factories.Organization(
             users=[{"name": user["id"], "capacity": "editor"}]
         )
         dataset = factories.Dataset(owner_org=organization["id"])
-        env = {"REMOTE_USER": six.ensure_str(user["name"])}
+        env = {"Authorization": user["token"]}
         response = app.post(
             url_for("dataset.edit", id=dataset["name"]), extra_environ=env,
             data={
