@@ -64,8 +64,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Install flask prometheus exporter
-        run: pip install prometheus-flask-exporter==0.20.3
       - name: Install requirements (ckanext-datagovuk)
         run: |
           pip install -r requirements.txt
@@ -82,6 +80,7 @@ jobs:
           sed -i -e 's|use = config:.*|use = config:/srv/app/src/ckan/test-core.ini|' test.ini
           # set the i18n directory
           sed -i -e "s|ckan.i18n_directory = .*$|ckan.i18n_directory = /srv/app/src/ckanext-datagovuk/ckanext/datagovuk/i18n|" "${CKAN_INI}"
+          sed -i -e "s|sqlalchemy.url = .*$|sqlalchemy.url = $CKAN_SQLALCHEMY_URL|" "${CKAN_INI}"
       - name: Init Database
         run: |
           echo "DB connection: $CKAN_SQLALCHEMY_URL"
