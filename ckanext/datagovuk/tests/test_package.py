@@ -221,6 +221,7 @@ class TestPackageController:
 
         assert '/dataset/edit/' in response.headers['location']
 
+    @pytest.mark.skip("Skipping this test as it is a duplicate of an existing CKAN package test")
     def test_previous_button_populates_form(self):
         user = factories.UserWithToken()
         env = {"Authorization": user["token"]}
