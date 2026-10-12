@@ -25,7 +25,7 @@ on:
           - build_push_base
           - build_push_pycsw
           - build_push_solr
-          - build_push_test_ckan
+          - build_push_dev_ckan
       gitRef:
         description: Commit, tag or branch name to build
         required: false
@@ -131,22 +131,23 @@ jobs:
               echo "APP_TAG_SUFFIX=-base" >> "$GITHUB_ENV"
             ;;
 
-            "build_push_test_ckan")
-              echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> "$GITHUB_ENV"
+            "build_push_dev_ckan")
+              echo "BUILD_TAGS=${{ matrix.app.version }}-dev" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
-              echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
               echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
-              echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
+              echo "BUILD_ENV=dev" >> "$GITHUB_ENV"
             ;;
 
             "build_push_ckan_with_gittag")
               echo "BUILD_TAGS=${{ inputs.gitRef || github.ref }}" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
+              echo "BUILD_ENV=prod" >> "$GITHUB_ENV"
             ;;
 
             *)
               echo "BUILD_TAGS=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}-${{ matrix.app.patch }}" >> "$GITHUB_ENV"
+              echo "BUILD_ENV=prod" >> "$GITHUB_ENV"
             ;;
           esac
 
@@ -187,6 +188,7 @@ jobs:
             type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
           cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
+          build-args: ENV=${{ env.BUILD_ENV }}
 
       - name: Generate Core/Base Image Metadata
         if: ${{ env.BUILD_CKAN_CORE_BASE == 'true' }}
@@ -312,11 +314,9 @@ jobs:
               echo "APP_TAG_SUFFIX=-base" >> "$GITHUB_ENV"
             ;;
 
-            "build_push_test_ckan")
-              echo "BUILD_TAGS=${{ matrix.app.version }}-test" >> "$GITHUB_ENV"
+            "build_push_dev_ckan")
+              echo "BUILD_TAGS=${{ matrix.app.version }}-dev" >> "$GITHUB_ENV"
               echo "DOCKERFILE=${{ matrix.app.version }}" >> "$GITHUB_ENV"
-              echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
-              echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
             ;;
 
             "build_push_ckan_with_gittag")
