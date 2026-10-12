@@ -7,7 +7,7 @@ USER root
 COPY . $SRC_DIR/ckanext-datagovuk/
 COPY ckan.ini $CKAN_INI
 
-COPY gunicorn_config.py $CKAN_CONFIG/gunicorn_config.py
+COPY gunicorn_config.py /etc/ckan/gunicorn_config.py
 RUN cp -v $SRC_DIR/ckanext-datagovuk/bin/setup_ckan.sh /ckan-entrypoint.sh && \
     chmod +x /ckan-entrypoint.sh
 ENV PROMETHEUS_MULTIPROC_DIR='/tmp'
