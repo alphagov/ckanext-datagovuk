@@ -1,6 +1,6 @@
 ARG ENV=prod
 
-FROM ghcr.io/alphagov/ckan:2.10.11--base AS prod
+FROM ghcr.io/alphagov/ckan:2.10.11-a-base AS prod
 
 USER root
 
