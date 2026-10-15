@@ -23,6 +23,7 @@ RUN apt-get -q -y update \
     && apt-get -q -y install \
         curl \
         postgresql-client \
+        procps \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
