@@ -121,6 +121,7 @@ jobs:
               echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
               echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
               echo "APP_TAG_SUFFIX=-core" >> "$GITHUB_ENV"
+              echo "BUILD_ENV=base" >> "$GITHUB_ENV"
             ;;
 
             "build_push_base")
@@ -129,6 +130,7 @@ jobs:
               echo "BUILD_CKAN_CORE_BASE=true" >> "$GITHUB_ENV"
               echo "ADD_PATCH_TAG=true" >> "$GITHUB_ENV"
               echo "APP_TAG_SUFFIX=-base" >> "$GITHUB_ENV"
+              echo "BUILD_ENV=" >> "$GITHUB_ENV"
             ;;
 
             "build_push_dev_ckan")
@@ -224,7 +226,9 @@ jobs:
           load: true
           provenance: false
           labels: ${{ steps.base-metadata.outputs.labels }}
-          build-args: BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }}@${{ steps.build-app-image.outputs.digest }}
+            ENV=${{ env.BUILD_ENV }}
           outputs: type=image,name=${{ env.REGISTRY_BASE }}/${{ matrix.app.name }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }}
           cache-to: type=gha,scope=${{ matrix.app.name }}-${{ env.BUILD_TAGS }}${{ env.APP_TAG_SUFFIX }}-${{ matrix.runs_on.arch }},mode=max
