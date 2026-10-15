@@ -1,4 +1,4 @@
-FROM ghcr.io/alphagov/ckan:2.10.11--core
+FROM ghcr.io/alphagov/ckan:2.10.11-a-core
 
 COPY ckan.ini $CKAN_INI
 
