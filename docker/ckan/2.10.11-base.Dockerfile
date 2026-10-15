@@ -27,7 +27,6 @@ RUN apt-get -q -y update \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
-
 RUN echo "pip install DGU extensions..." && \
 
     pip install $pipopt -U $(curl -s "https://raw.githubusercontent.com/$ckan_dcat_fork/ckanext-dcat/$ckan_dcat_sha/requirements.txt") && \
