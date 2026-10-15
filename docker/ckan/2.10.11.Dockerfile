@@ -48,6 +48,7 @@ RUN apt-get -q -y update \
         curl \
         vim \
         less \
+        pgrep \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
