@@ -11,7 +11,6 @@ services:
     env_file:
       - .env-2.10
     links:
-      - db-2.10:db
       - solr-2.10:solr
       - redis-2.10:redis
       - static-mock-harvest-source-2.10:static-mock-harvest-source
@@ -23,7 +22,6 @@ services:
       - ../ckanext/datagovuk/:/srv/app/src/ckanext-datagovuk/ckanext/datagovuk/
       - ../bin/python_scripts/:/srv/app/src/ckanext-datagovuk/bin/python_scripts/
     depends_on: 
-      - db-2.10
       - solr-2.10
       - redis-2.10
       - static-mock-harvest-source-2.10
@@ -42,30 +40,13 @@ services:
     env_file:
       - .env-2.10
     links:
-      - db-2.10:db
       - solr-2.10:solr
       - redis-2.10:redis
       - ckan-2.10:ckan
     ports:
       - "0.0.0.0:8003:8000"
-    depends_on: 
-      - db-2.10
     # command: bash -c "tail -f /dev/null"
     command: bash -c "python /usr/lib/ckan/venv/src/pycsw/pycsw/wsgi.py"
-    networks:
-      - ckan-2.10
-
-  db-2.10:
-    container_name: db-2.10
-    env_file:
-      - .env-2.10
-    build:
-      context: postgis/
-      dockerfile: 13-3.1.Dockerfile
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_data-2.10:/var/lib/postgresql/data
     networks:
       - ckan-2.10
 
