@@ -18,7 +18,7 @@ services:
     ports:
       - "0.0.0.0:3003:5000"
     volumes:
-      - ckan_storage-2.10.11:/var/lib/ckan
+      - ckan_storage-2.10:/var/lib/ckan
       - ./logs/2.10:/var/log/ckan
       - ../ckanext/datagovuk/:/srv/app/src/ckanext-datagovuk/ckanext/datagovuk/
       - ../bin/python_scripts/:/srv/app/src/ckanext-datagovuk/bin/python_scripts/
@@ -120,7 +120,6 @@ services:
 
 volumes:
   ckan_storage-2.10:
-  ckan_storage-2.10.11:
   pg_data-2.10:
   solr_data-2.10:
   redis_data-2.10:
