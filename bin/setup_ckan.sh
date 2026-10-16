@@ -31,6 +31,6 @@ if [ ! -z $SETUP_DGU_TEST_DATA ]; then
     ckan datagovuk create-dgu-test-data
 fi
 
-ckan config-tool "$CKAN_INI" "ckan.i18n_directory=$CKAN_VENV/src/ckanext-datagovuk/ckanext/datagovuk"
+ckan config-tool "$CKAN_INI" "ckan.i18n_directory=$SRC_DIR/ckanext-datagovuk/ckanext/datagovuk"
 
 exec "$@"

@@ -6,24 +6,20 @@ The CKAN extension for data.gov.uk
 
 - Configures Sentry automatically using a `SENTRY_DSN` environment variable.
 
-## Running CKAN and Find locally
-
-To run a development version of Find locally you will need to build the development image locally which will allow you to made modifications to the code directly on the docker container
-
-1. On the datagovuk_find root directory run `make dev-build` after making code updates and passing tests.
-2. Check that the image is available by running `docker images | grep dev.datagovuk_find`, if it's not showing then the build in the first step failed or the image is no longer available.
-3. If you run bootstrap then you can skip this step otherwise run `make bootstrap` to download the latest repositories
-  - NOTE - make sure that the `SRC_DIR` matches the source version in the docker-compose file.
-3. In the ckanext-datagovuk root directory run `make build` to build the images needed for the docker stack
-  - once the build is complete you can refer to the image of the docker build by uncommenting the image and comment out the build part of each stack.
-4. After the build is complete run `make run` to start the docker compose stack.
-  - after a few minutes it should be possible to access the different web apps and the search server
-    - CKAN - Publishing app - http://localhost:5001 
-    - Find - Public facing discovery app -  http://localhost:4001
-    - Solr - Search index server used by CKAN and Find - http://localhost:8983/solr
-
-
 ## Development
+
+### Pre-requisites
+
+In order to run CKAN locally you will need a local postgres 18 server running. 
+This server will need a `ckan` role and a `ckan` database created with permissions to access, read and write to it.
+
+On the postgres server run these commands:
+
+```sql
+CREATE USER ckan WITH PASSWORD 'ckan';
+CREATE DATABASE ckan OWNER ckan;
+GRANT ALL PRIVILEGES ON DATABASE "ckan" to ckan; 
+```
 
 ### Using the Makefile
 
