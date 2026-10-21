@@ -127,5 +127,5 @@ Exception: Harvest object xxx (https://example.harvest.source/xxx.xml) has a GUI
         ]
 
         for mock_event in mock_events:
-            response = DatagovukPlugin().before_send(mock_event, '')
+            response = DatagovukPlugin().before_send(mock_event, {})
             assert not response

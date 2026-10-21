@@ -1,8 +1,8 @@
 apps:
   ckan: &app_ckan
     name: ckan
-    version: "2.10.7"
-    patch: d
+    version: "2.10.11"
+    patch: a
   pycsw: &app_pycsw
     name: pycsw
     version: "2.6.1"
@@ -29,7 +29,7 @@ build_types:
     - *app_pycsw
   build_push_solr:
     - *app_solr
-  build_push_test_ckan:
+  build_push_dev_ckan:
     - *app_ckan
 
 runs_on:
